@@ -62,6 +62,20 @@ encoded at about 16 Mbps for 1080×1920. A cell can't be sharper than its own pi
 
 iOS Safari 16.4+ and Chrome on Android (WebCodecs is required for export). Desktop Chrome, Edge and Safari work too.
 
+## iPhone files (HEIC, HEVC .mov, MP3 / AAC)
+
+- **HEIC photos**: read by the browser when it can (Safari does). Otherwise the app converts them to a very
+  high quality JPEG (q 0.95) with a WebAssembly converter ([heic-to](https://github.com/hoppergee/heic-to),
+  LGPL-3.0, libheif) that is only downloaded the first time a HEIC photo needs it.
+- **iPhone .mov (HEVC / H.264)**: preview always works through the browser's player. For export, if WebCodecs
+  can't decode the video (or fails part-way) the app reads frames through the browser's player instead
+  ("compatibility mode": slower, same picture).
+- **Sound on Safari before iOS 26** (no WebCodecs audio): video and MP3/M4A sound is decoded with Web Audio
+  (whole file read into memory, files over 250 MB are skipped with a message) and AAC is encoded with a bundled
+  WebAssembly encoder ([@mediabunny/aac-encoder](https://www.npmjs.com/package/@mediabunny/aac-encoder), MPL-2.0),
+  loaded only when the browser has none.
+- **MPEG-1/2 (.mpg / .mpeg) video** can't be played by phone browsers. The app says so and asks for MP4 (H.264).
+
 ## Known limits
 
 - iPhone: Safari's photo picker can convert or shrink videos when you choose them; the volume slider only mutes

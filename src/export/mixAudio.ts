@@ -3,6 +3,8 @@ import { FADE_SECONDS, clipEnd, musicEnd, musicSegments, placedLanes, sortedClip
 import type { MediaItem, Project } from '../types'
 
 export const SAMPLE_RATE = 48000
+/** Without WebCodecs audio, the whole file has to be read into memory to decode its sound. */
+const MAX_WHOLE_FILE_DECODE = 250 * 1024 * 1024
 
 /** True if the export would contain any sound: a placed video that is not muted, or background music. */
 export function hasAudibleSound(project: Project, items: MediaItem[]): boolean {
@@ -10,32 +12,94 @@ export function hasAudibleSound(project: Project, items: MediaItem[]): boolean {
   return placedLanes(project).some((l) => l.volume > 0 && items.find((m) => m.id === l.mediaId)?.hasAudio)
 }
 
+interface Piece {
+  buffer: AudioBuffer
+  /** Where in the file this buffer starts, in seconds. */
+  timestamp: number
+  duration: number
+}
+
+interface AudioSource {
+  buffers(from: number, to: number): AsyncIterable<Piece>
+  dispose(): void
+}
+
 /**
- * Mixes the sound of the placed videos into one stereo buffer, following the timeline: trims, start offsets,
- * looping and volume. Returns null if nothing is audible.
+ * Opens the sound of a file for mixing. Preferred: WebCodecs through Mediabunny (streams only the part needed).
+ * Fallback for browsers without a WebCodecs audio decoder (Safari before iOS 26): the browser's Web Audio decoder,
+ * which reads the whole file. Returns null if neither works.
+ */
+async function openAudio(file: File, ctx: OfflineAudioContext): Promise<AudioSource | null> {
+  if (typeof AudioDecoder !== 'undefined') {
+    const input = new Input({ source: new BlobSource(file), formats: ALL_FORMATS })
+    try {
+      const track = await input.getPrimaryAudioTrack()
+      if (track && (await track.canDecode())) {
+        const sink = new AudioBufferSink(track)
+        return { buffers: (from, to) => sink.buffers(from, to), dispose: () => input.dispose() }
+      }
+    } catch {
+      // try the next way
+    }
+    input.dispose()
+  }
+  if (file.size > MAX_WHOLE_FILE_DECODE) return null
+  try {
+    const buffer = await ctx.decodeAudioData(await file.arrayBuffer())
+    return {
+      async *buffers() {
+        yield { buffer, timestamp: 0, duration: buffer.duration }
+      },
+      dispose() {},
+    }
+  } catch {
+    return null
+  }
+}
+
+export interface MixResult {
+  buffer: AudioBuffer | null
+  /** Names of files whose sound could not be added. */
+  skipped: string[]
+}
+
+/**
+ * Mixes the sound of the placed videos and the music ribbon into one stereo buffer, following the timeline: trims,
+ * start offsets, looping, volume and fade. `buffer` is null if nothing is audible.
  */
 export async function mixAudio(
   project: Project,
   items: MediaItem[],
   duration: number,
   signal?: AbortSignal,
-): Promise<AudioBuffer | null> {
-  const lanes = placedLanes(project).filter(
-    (l) => l.volume > 0 && items.find((m) => m.id === l.mediaId)?.hasAudio,
-  )
+): Promise<MixResult> {
+  const lanes = placedLanes(project).filter((l) => l.volume > 0 && items.find((m) => m.id === l.mediaId)?.hasAudio)
   const mu = project.music && project.music.volume > 0 ? project.music : null
-  if (lanes.length === 0 && !mu) return null
+  const skipped: string[] = []
+  if (lanes.length === 0 && !mu) return { buffer: null, skipped }
 
   const ctx = new OfflineAudioContext(2, Math.ceil(duration * SAMPLE_RATE), SAMPLE_RATE)
   let scheduled = 0
 
+  const schedule = (piece: Piece, gain: GainNode, from: number, to: number, at: number) => {
+    const a = Math.max(piece.timestamp, from)
+    const b = Math.min(piece.timestamp + piece.duration, to)
+    if (b - a <= 0) return
+    const src = ctx.createBufferSource()
+    src.buffer = piece.buffer
+    src.connect(gain)
+    src.start(at + (a - from), a - piece.timestamp, b - a)
+    scheduled++
+  }
+
   for (const lane of lanes) {
     const item = items.find((m) => m.id === lane.mediaId)!
-    const input = new Input({ source: new BlobSource(item.file), formats: ALL_FORMATS })
+    const audio = await openAudio(item.file, ctx)
+    if (!audio) {
+      skipped.push(item.name)
+      continue
+    }
     try {
-      const track = await input.getPrimaryAudioTrack()
-      if (!track) continue
-      const sink = new AudioBufferSink(track)
       const gain = ctx.createGain()
       gain.gain.value = lane.volume
       gain.connect(ctx.destination)
@@ -51,31 +115,22 @@ export async function mixAudio(
           const base = clip.start + k * span
           if (base >= duration) continue
           const limit = Math.min(clip.out, clip.in + (duration - base))
-          for await (const wb of sink.buffers(clip.in, limit)) {
+          for await (const piece of audio.buffers(clip.in, limit)) {
             if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
-            const bufStart = wb.timestamp
-            const a = Math.max(bufStart, clip.in)
-            const b = Math.min(bufStart + wb.duration, limit)
-            if (b - a <= 0) continue
-            const src = ctx.createBufferSource()
-            src.buffer = wb.buffer
-            src.connect(gain)
-            src.start(base + (a - clip.in), a - bufStart, b - a)
-            scheduled++
+            schedule(piece, gain, clip.in, limit, base)
           }
         }
       }
     } finally {
-      input.dispose()
+      audio.dispose()
     }
   }
 
   if (mu) {
-    const input = new Input({ source: new BlobSource(mu.file), formats: ALL_FORMATS })
-    try {
-      const track = await input.getPrimaryAudioTrack()
-      if (track) {
-        const sink = new AudioBufferSink(track)
+    const audio = await openAudio(mu.file, ctx)
+    if (!audio) skipped.push(mu.name)
+    else {
+      try {
         const gain = ctx.createGain()
         gain.gain.setValueAtTime(mu.volume, 0)
         if (mu.fadeOut) {
@@ -86,23 +141,17 @@ export async function mixAudio(
         }
         gain.connect(ctx.destination)
         for (const seg of musicSegments(mu, duration)) {
-          for await (const wb of sink.buffers(seg.from, seg.to)) {
+          for await (const piece of audio.buffers(seg.from, seg.to)) {
             if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError')
-            const a = Math.max(wb.timestamp, seg.from)
-            const b = Math.min(wb.timestamp + wb.duration, seg.to)
-            if (b - a <= 0) continue
-            const src = ctx.createBufferSource()
-            src.buffer = wb.buffer
-            src.connect(gain)
-            src.start(seg.at + (a - seg.from), a - wb.timestamp, b - a)
-            scheduled++
+            schedule(piece, gain, seg.from, seg.to, seg.at)
           }
         }
+      } finally {
+        audio.dispose()
       }
-    } finally {
-      input.dispose()
     }
   }
-  if (scheduled === 0) return null
-  return ctx.startRendering()
+
+  if (scheduled === 0) return { buffer: null, skipped }
+  return { buffer: await ctx.startRendering(), skipped }
 }

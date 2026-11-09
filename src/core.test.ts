@@ -220,3 +220,27 @@ describe('background music ribbon', () => {
     expect(musicSegments(song({ start: 12 }), 10)).toEqual([])
   })
 })
+
+describe('HEIC detection', () => {
+  const heic = (name: string, type: string, brand = 'heic') => {
+    const bytes = new Uint8Array(16)
+    bytes.set([0, 0, 0, 0x24], 0)
+    bytes.set([...'ftyp'].map((c) => c.charCodeAt(0)), 4)
+    bytes.set([...brand].map((c) => c.charCodeAt(0)), 8)
+    return new File([bytes], name, { type })
+  }
+
+  it('recognises HEIC by type, extension, or the first bytes of the file', async () => {
+    const { looksLikeHeic } = await import('./media/photo')
+    expect(await looksLikeHeic(heic('a.heic', 'image/heic'))).toBe(true)
+    expect(await looksLikeHeic(heic('IMG_0001.HEIC', ''))).toBe(true)
+    expect(await looksLikeHeic(heic('photo', '', 'heic'))).toBe(true)
+    expect(await looksLikeHeic(heic('photo', '', 'mif1'))).toBe(true)
+  })
+
+  it('does not mistake other files for HEIC', async () => {
+    const { looksLikeHeic } = await import('./media/photo')
+    expect(await looksLikeHeic(new File([new Uint8Array(16)], 'a.jpg', { type: 'image/jpeg' }))).toBe(false)
+    expect(await looksLikeHeic(heic('clip', '', 'qt  '))).toBe(false)
+  })
+})
