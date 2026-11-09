@@ -157,28 +157,39 @@ struct LayoutPanel: View {
         let carousel = store.isCarousel
         VStack(spacing: 6) {
             HStack(spacing: 6) {
-                Text(carousel ? "Slides" : "Cells").font(.caption.weight(.medium)).foregroundStyle(.secondary)
-                ScrollView(.horizontal, showsIndicators: false) {
-                    GlassEffectContainer(spacing: 6) {
-                        HStack(spacing: 6) {
-                            ForEach(carousel ? Array(minSlides...maxSlides) : Array(1...maxCells), id: \.self) { n in
-                                let on = (carousel ? store.project.slides : store.project.cellCount) == n
-                                Button {
-                                    withAnimation(.smooth) { carousel ? store.setSlides(n) : store.setCellCount(n) }
-                                } label: {
-                                    Text("\(n)")
-                                        .font(.footnote.weight(.semibold).monospacedDigit())
-                                        .frame(width: 28, height: 28)
-                                        .glassEffect(on ? .regular.tint(Color.brand.opacity(0.8)).interactive() : .regular.interactive(), in: .circle)
+                if carousel {
+                    // nobody picks the slide count: it follows the pictures and the style
+                    let photos = store.project.cellCount, slides = store.project.slides
+                    Label("\(photos) \(photos == 1 ? "photo" : "photos") · \(slides) slides, added for you", systemImage: "rectangle.split.3x1")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    Spacer(minLength: 0)
+                } else {
+                    Text("Cells").font(.caption.weight(.medium)).foregroundStyle(.secondary)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        GlassEffectContainer(spacing: 6) {
+                            HStack(spacing: 6) {
+                                ForEach(Array(1...maxCells), id: \.self) { n in
+                                    let on = store.project.cellCount == n
+                                    Button {
+                                        withAnimation(.smooth) { store.setCellCount(n) }
+                                    } label: {
+                                        Text("\(n)")
+                                            .font(.footnote.weight(.semibold).monospacedDigit())
+                                            .frame(width: 28, height: 28)
+                                            .glassEffect(on ? .regular.tint(Color.brand.opacity(0.8)).interactive() : .regular.interactive(), in: .circle)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel("\(n) cells")
+                                    .accessibilityAddTraits(on ? .isSelected : [])
                                 }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel(carousel ? "\(n) slides" : "\(n) cells")
-                                .accessibilityAddTraits(on ? .isSelected : [])
                             }
                         }
                     }
                 }
-                GlassIconButton(symbol: "shuffle", label: "Try another layout", size: 30) {
+                GlassIconButton(symbol: "shuffle", label: "Try another arrangement", size: 30) {
                     withAnimation(.smooth) { store.shuffleLayout() }
                 }
             }
@@ -186,12 +197,16 @@ struct LayoutPanel: View {
                 GlassEffectContainer(spacing: 8) {
                     HStack(spacing: 8) {
                         ForEach(options) { l in
-                            Button { withAnimation(.smooth) { store.setLayout(l.id) } } label: {
-                                LayoutThumb(layout: l, isOn: l.id == store.project.layoutId, slides: carousel ? store.project.slides : nil)
+                            let on = carousel ? (carouselStyle(of: l.id) == store.project.carouselStyleInUse) : (l.id == store.project.layoutId)
+                            Button {
+                                // a random style keeps its current arrangement when you tap it again
+                                withAnimation(.smooth) { store.setLayout(on ? store.project.layoutId : l.id) }
+                            } label: {
+                                LayoutThumb(layout: l, isOn: on, slides: carousel ? carouselStyle(of: l.id).map { autoSlides(count: store.project.cellCount, style: $0) } : nil)
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel(l.name)
-                            .accessibilityAddTraits(l.id == store.project.layoutId ? .isSelected : [])
+                            .accessibilityAddTraits(on ? .isSelected : [])
                         }
                     }
                 }

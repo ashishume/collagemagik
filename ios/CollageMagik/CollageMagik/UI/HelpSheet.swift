@@ -9,7 +9,7 @@ struct HelpSheet: View {
                 Section("Collage or Carousel") {
                     Label("Switch at the top: Collage makes one picture or video. Carousel makes a post with several slides.", systemImage: "rectangle.split.3x1")
                     Label("In a Carousel, pictures run across the line between slides, so half of a photo is on one slide and half on the next. People swipe to see the rest.", systemImage: "arrow.left.and.right")
-                    Label("Drag to swipe between slides, or tap a number under the preview. Tap a picture first, then drag it to move it. Choose how many slides and a style in Layout.", systemImage: "hand.draw")
+                    Label("Drag to swipe between slides, or tap a number under the preview. Tap a picture first, then drag it to move it. Slides are added for you to fit your pictures. Pick a style in Layout, and tap Shuffle to try another arrangement.", systemImage: "hand.draw")
                     Label("Export gives you one image per slide. Upload them to Instagram in order.", systemImage: "square.and.arrow.up")
                 }
                 Section("Build a collage") {

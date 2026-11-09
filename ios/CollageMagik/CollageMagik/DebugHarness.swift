@@ -29,7 +29,8 @@ enum DebugHarness {
             default: if let tab = Tab(rawValue: t) { store.tab = tab }
             }
         }
-        if let n = env["CM_SLIDES"], let v = Int(n) { store.setSlides(v) }
+        if let st = env["CM_STYLE"] { store.setLayout(st.hasPrefix(carouselLayoutPrefix) ? st : carouselLayoutPrefix + st) }
+        NSLog("CM_DEBUG slides=%d photos=%d layout=%@", store.project.slides, store.project.cellCount, store.project.layoutId)
         if let o = env["CM_OFFSET"], let v = Double(o) { store.carouselOffset = v }
         if let s = env["CM_SELECT"], let i = Int(s) { store.selectCell(i); store.openPicture() }
         if env["CM_MUSIC"] != nil, let m = env["CM_MUSIC"] { await store.importMusic(URL(fileURLWithPath: m)) }

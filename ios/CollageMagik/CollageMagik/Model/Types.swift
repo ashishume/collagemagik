@@ -125,8 +125,6 @@ enum EditMode: String, CaseIterable, Identifiable {
 
 struct Project: Equatable {
     var mode: EditMode = .collage
-    /// Carousel only: how many slides the design spans.
-    var slides: Int = initialCarouselSlides
     var format: FormatId = .story
     var cellCount: Int = initialCellCount
     var layoutId: String = defaultLayout(for: initialCellCount).id

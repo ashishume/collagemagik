@@ -5,9 +5,9 @@ import UniformTypeIdentifiers
 struct RootView: View {
     @Environment(CollageStore.self) private var store
     @Environment(LibraryStore.self) private var library
-    @State private var confirmNew = false
+    /// "New collage" / "New carousel" waiting for the user to confirm (their current work would be cleared).
+    @State private var pendingNew: EditMode?
     @State private var libraryOpen = false
-    @State private var aboutOpen = false
     /// Carousel needs photos only: asks before the videos are dropped.
     @State private var confirmCarousel = false
 
@@ -24,6 +24,15 @@ struct RootView: View {
                 AuroraBackground(paused: store.playback.isPlaying).ignoresSafeArea()
 
                 VStack(spacing: 6) {
+                    TopBar(
+                        openLibrary: { store.playback.pause(); libraryOpen = true },
+                        requestNew: { mode in
+                            if store.items.isEmpty { withAnimation(.smooth) { store.newCollage(mode: mode) } } else { pendingNew = mode }
+                        },
+                        requestMode: { mode in
+                            if mode == .carousel && store.videoCount > 0 { confirmCarousel = true } else { store.setMode(mode) }
+                        }
+                    )
                     StageView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     if store.isCarousel {
@@ -35,55 +44,17 @@ struct RootView: View {
                     ToolDock()
                 }
                 .padding(.horizontal, 12)
+                .padding(.top, 2)
                 .padding(.bottom, 4)
 
                 if let toast = store.toast {
                     ToastView(text: toast.text)
                         .transition(.move(edge: .top).combined(with: .opacity))
-                        .padding(.top, 4)
+                        .padding(.top, 52)
                         .zIndex(1)
                 }
             }
-            .navigationTitle("CollageMagik")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Menu {
-                        Button { store.openAdd() } label: { Label("Add from Photos", systemImage: "photo.on.rectangle") }
-                        Button { store.openFiles() } label: { Label("Add from Files", systemImage: "folder") }
-                        Button { store.playback.pause(); store.previewOpen = true } label: {
-                            Label("Full screen preview", systemImage: "arrow.up.left.and.arrow.down.right")
-                        }
-                        .disabled(store.placedMediaCount == 0)
-                        Divider()
-                        Button { store.playback.pause(); libraryOpen = true } label: {
-                            Label(library.entries.isEmpty ? "My Library" : "My Library (\(library.entries.count))", systemImage: "photo.stack")
-                        }
-                        Button { store.helpOpen = true } label: { Label("How it works", systemImage: "questionmark.circle") }
-                        Button { aboutOpen = true } label: { Label("About & Privacy", systemImage: "hand.raised") }
-                        Divider()
-                        Button(role: .destructive) { confirmNew = true } label: { Label("New collage", systemImage: "trash") }
-                    } label: {
-                        Image(systemName: "ellipsis")
-                    }
-                    .accessibilityLabel("More")
-                }
-                ToolbarItem(placement: .principal) {
-                    ModeSwitch { mode in
-                        if mode == .carousel && store.videoCount > 0 { confirmCarousel = true } else { store.setMode(mode) }
-                    }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        store.playback.pause()
-                        store.exportOpen = true
-                    } label: {
-                        Label("Export", systemImage: "square.and.arrow.up")
-                    }
-                    .buttonStyle(.glassProminent)
-                    .disabled(store.placedMediaCount == 0)
-                }
-            }
+            .toolbar(.hidden, for: .navigationBar)
         }
         .photosPicker(
             isPresented: $store.showPhotoPicker,
@@ -112,7 +83,7 @@ struct RootView: View {
         .sheet(isPresented: $store.exportOpen) { ExportSheet() }
         .sheet(isPresented: $store.helpOpen) { HelpSheet() }
         .sheet(isPresented: $libraryOpen) { LibrarySheet() }
-        .sheet(isPresented: $aboutOpen) { AboutSheet() }
+        .sheet(isPresented: $store.aboutOpen) { AboutSheet() }
         .fullScreenCover(isPresented: $store.previewOpen) { FullScreenPreview() }
         .fullScreenCover(item: Binding(
             get: { store.cropCell.map(CropTarget.init) },
@@ -130,10 +101,17 @@ struct RootView: View {
         } message: {
             Text("Carousels use photos only, so the videos in this collage will be removed.")
         }
-        .confirmationDialog("Start a new collage?", isPresented: $confirmNew, titleVisibility: .visible) {
-            Button("New collage", role: .destructive) { withAnimation(.smooth) { store.newCollage() } }
-        } message: {
-            Text("Your current collage will be cleared.")
+        .confirmationDialog(
+            pendingNew == .carousel ? "Start a new carousel?" : "Start a new collage?",
+            isPresented: Binding(get: { pendingNew != nil }, set: { if !$0 { pendingNew = nil } }),
+            titleVisibility: .visible,
+            presenting: pendingNew
+        ) { mode in
+            Button(mode == .carousel ? "New carousel" : "New collage", role: .destructive) {
+                withAnimation(.smooth) { store.newCollage(mode: mode) }
+            }
+        } message: { _ in
+            Text("Your current work will be cleared.")
         }
     }
 }

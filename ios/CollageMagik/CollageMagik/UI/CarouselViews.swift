@@ -18,12 +18,12 @@ struct ModeSwitch: View {
                         withAnimation(.bouncy(duration: 0.45)) { request(mode) }
                     } label: {
                         Label(mode.label, systemImage: symbol(mode))
-                            .labelStyle(.titleAndIcon)
+                            .labelStyle(CompactModeLabel(showTitle: on))
                             .font(.system(size: 12.5, weight: .semibold))
                             .foregroundStyle(on ? Color.white : Color.white.opacity(0.7))
                             .lineLimit(1)
-                            .padding(.horizontal, 11)
-                            .padding(.vertical, 7)
+                            .padding(.horizontal, on ? 11 : 10)
+                            .frame(height: 30)
                             .contentShape(Capsule())
                             .background {
                                 if on {
@@ -39,10 +39,21 @@ struct ModeSwitch: View {
                     .accessibilityAddTraits(on ? .isSelected : [])
                 }
             }
-            .padding(3)
+            .padding(2)
             .glassEffect(.regular, in: .capsule)
         }
         .sensoryFeedback(.selection, trigger: store.project.mode)
+    }
+}
+
+/// Icon plus name for the selected mode, just the icon for the other one, so the switch stays small.
+private struct CompactModeLabel: LabelStyle {
+    let showTitle: Bool
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 5) {
+            configuration.icon
+            if showTitle { configuration.title }
+        }
     }
 }
 

@@ -39,6 +39,7 @@ final class CollageStore {
     var returnTab: Tab = .media
     var videoSection: VideoSection = .timeline
     /// Carousel preview: the slide position at the left edge of the visible area (0 = first slide), and how many slides fit on screen.
+    var aboutOpen = false
     var carouselOffset: Double = 0
     var viewportSlides: Double = 1.28
     var importing = false
@@ -187,8 +188,7 @@ final class CollageStore {
             let lastFilled = project.cells.lastIndex { $0.mediaId != nil } ?? 0
             setCellCount(lastFilled + 1)
             if isCarousel {
-                // about two pictures per slide, in the style that suits that many
-                project.slides = defaultSlides(forPhotos: project.cellCount)
+                // the slide count follows the pictures on its own; start in the style that suits that many
                 project.layoutId = defaultLayoutId(for: project)
                 carouselOffset = 0
             }
@@ -256,6 +256,7 @@ final class CollageStore {
             project.layoutId = defaultLayoutId(for: project)
         }
         project.cellCount = count
+        clampCarouselOffset()
         selectedCell = idx
     }
 
@@ -329,15 +330,17 @@ final class CollageStore {
         if !keep { project.layoutId = defaultLayoutId(for: project) }
         if let s = selectedCell, s >= count { selectedCell = nil }
         swapFrom = nil
+        clampCarouselOffset()
     }
 
-    func setLayout(_ id: String) { project.layoutId = id }
+    func setLayout(_ id: String) {
+        project.layoutId = id
+        clampCarouselOffset()
+    }
 
-    /// Carousel: how many slides the design spans.
-    func setSlides(_ n: Int) {
-        let count = min(max(n, minSlides), maxSlides)
-        guard count != project.slides else { return }
-        project.slides = count
+    /// The slide count is automatic, so it can shrink when the style or the pictures change: keep the preview inside it.
+    func clampCarouselOffset() {
+        guard isCarousel else { return }
         carouselOffset = min(carouselOffset, maxCarouselOffset)
     }
 
@@ -373,7 +376,6 @@ final class CollageStore {
         let n = ids.isEmpty ? (mode == .carousel ? initialCarouselCells : initialCellCount) : ids.count
         project.cellCount = n
         project.cells = (0..<n).map { CellState(mediaId: ids.indices.contains($0) ? ids[$0] : nil) }
-        if mode == .carousel { project.slides = ids.isEmpty ? initialCarouselSlides : defaultSlides(forPhotos: n) }
         project.layoutId = defaultLayoutId(for: project)
         selectedCell = nil
         selectedClip = nil
@@ -383,9 +385,18 @@ final class CollageStore {
         playback.projectChanged()
     }
 
+    /// "Try another": a random style has a new arrangement dealt; any other style jumps to a different one.
     func shuffleLayout() {
-        let options = layoutOptions(for: project).filter { $0.id != project.layoutId }
-        if let pick = options.randomElement() { project.layoutId = pick.id }
+        if isCarousel, project.carouselStyleInUse.isRandom {
+            let current = carouselSeed(of: project.layoutId)
+            var seed = Int.random(in: 1...9999)
+            while seed == current { seed = Int.random(in: 1...9999) }
+            project.layoutId = carouselLayoutId(project.carouselStyleInUse, seed: seed)
+        } else {
+            let options = layoutOptions(for: project).filter { $0.id != project.layoutId }
+            if let pick = options.randomElement() { project.layoutId = pick.id }
+        }
+        clampCarouselOffset()
     }
 
     // MARK: Selection
@@ -466,20 +477,20 @@ final class CollageStore {
         if selectedClip == musicClipId { selectedClip = nil }
     }
 
-    func newCollage() {
+    /// Starts over, as a collage or a carousel. With no mode given the current mode is kept.
+    func newCollage(mode newMode: EditMode? = nil) {
         playback.pause()
         playback.playhead = 0
         for i in items { playback.dispose(i.id) }
         items = []
-        // a new carousel stays a carousel
-        let mode = project.mode
+        // without a mode given, a new carousel stays a carousel
+        let mode = newMode ?? project.mode
         project = Project()
         if mode == .carousel {
             project.mode = .carousel
             project.format = .post
             project.cellCount = initialCarouselCells
             project.cells = Array(repeating: CellState(), count: initialCarouselCells)
-            project.slides = initialCarouselSlides
             project.layoutId = defaultLayoutId(for: project)
         }
         carouselOffset = 0
