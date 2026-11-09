@@ -34,8 +34,8 @@ final class CollageExporter: @unchecked Sendable {
     private var isCancelled: Bool { lock.lock(); defer { lock.unlock() }; return cancelled }
 
     func size(quality: ExportQuality) -> (w: Int, h: Int) {
-        let f = snapshot.project.format
-        return (Int(f.width * quality.scale), Int(f.height * quality.scale))
+        let p = snapshot.project
+        return (Int(p.canvasWidth * quality.scale), Int(p.canvasHeight * quality.scale))
     }
 
     /// Can this device encode H.264 at this size?
@@ -95,6 +95,40 @@ final class CollageExporter: @unchecked Sendable {
         CGImageDestinationAddImage(dest, image, nil)
         guard CGImageDestinationFinalize(dest) else { throw ExportFailure("Couldn't save the picture.") }
         return url
+    }
+
+    // MARK: Carousel slides
+
+    /// The whole carousel drawn once, then cut into one JPEG per slide (in order), ready to post as a carousel.
+    func exportSlides() throws -> [URL] {
+        let p = snapshot.project
+        let slideW = Int(p.format.width), h = Int(p.format.height)
+        let slides = p.slides
+        let w = slideW * slides
+        let photos = CollageRenderer.decodePhotos(snapshot: snapshot, W: Double(w), H: Double(h))
+        guard let ctx = CollageRenderer.makeContext(width: w, height: h) else { throw ExportFailure("Couldn't create the pictures.") }
+        CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot) { photos[$0] }
+        guard let full = ctx.makeImage() else { throw ExportFailure("Couldn't create the pictures.") }
+        let stamp = Int(Date().timeIntervalSince1970)
+        var urls: [URL] = []
+        do {
+            for i in 0..<slides {
+                guard let slice = full.cropping(to: CGRect(x: i * slideW, y: 0, width: slideW, height: h)) else {
+                    throw ExportFailure("Couldn't cut slide \(i + 1).")
+                }
+                let url = FileManager.default.temporaryDirectory.appendingPathComponent("Carousel-\(stamp)-\(i + 1).jpg")
+                guard let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.jpeg.identifier as CFString, 1, nil) else {
+                    throw ExportFailure("Couldn't save slide \(i + 1).")
+                }
+                CGImageDestinationAddImage(dest, slice, [kCGImageDestinationLossyCompressionQuality: 0.95] as CFDictionary)
+                guard CGImageDestinationFinalize(dest) else { throw ExportFailure("Couldn't save slide \(i + 1).") }
+                urls.append(url)
+            }
+        } catch {
+            for u in urls { try? FileManager.default.removeItem(at: u) }
+            throw error
+        }
+        return urls
     }
 
     // MARK: MP4
@@ -324,12 +358,26 @@ final class CollageExporter: @unchecked Sendable {
 
 // MARK: - Saving
 
+/// Adding to Photos was refused. Only the person can change that, in Settings, so the UI offers a button for it.
+struct PhotosAccessDenied: LocalizedError {
+    var errorDescription: String? { "CollageMagik needs permission to add pictures to your Photos. You can allow it in Settings." }
+}
+
+/// Saves to Photos with add-only access: the app can add a collage but never read or change what is already there.
+/// iOS shows its permission prompt the first time this runs, which is when the person taps Save to Photos.
 enum PhotoSaver {
+    /// Saves several pictures in one go (a carousel's slides), in order.
+    static func saveAll(urls: [URL]) async throws {
+        let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+        guard status == .authorized || status == .limited else { throw PhotosAccessDenied() }
+        try await PHPhotoLibrary.shared().performChanges {
+            for url in urls { PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: url) }
+        }
+    }
+
     static func save(url: URL, isVideo: Bool) async throws {
         let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
-        guard status == .authorized || status == .limited else {
-            throw ExportFailure("Allow CollageMagik to add to your photos in Settings to save the collage.")
-        }
+        guard status == .authorized || status == .limited else { throw PhotosAccessDenied() }
         try await PHPhotoLibrary.shared().performChanges {
             if isVideo {
                 PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)

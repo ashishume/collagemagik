@@ -111,13 +111,26 @@ enum FormatId: String, CaseIterable, Identifiable {
         case .square: "1:1"
         }
     }
+    /// Instagram carousels take 4:5 or square slides (not 9:16).
+    static let carouselFormats: [FormatId] = [.post, .square]
+}
+
+/// Collage: one picture or video frame. Carousel: several Instagram slides designed as one long picture, so photos
+/// run across the seams between slides and people swipe to see the rest.
+enum EditMode: String, CaseIterable, Identifiable {
+    case collage, carousel
+    var id: String { rawValue }
+    var label: String { self == .collage ? "Collage" : "Carousel" }
 }
 
 struct Project: Equatable {
+    var mode: EditMode = .collage
+    /// Carousel only: how many slides the design spans.
+    var slides: Int = initialCarouselSlides
     var format: FormatId = .story
-    var cellCount: Int = 4
-    var layoutId: String = defaultLayout(for: 4).id
-    var cells: [CellState] = Array(repeating: CellState(), count: 4)
+    var cellCount: Int = initialCellCount
+    var layoutId: String = defaultLayout(for: initialCellCount).id
+    var cells: [CellState] = Array(repeating: CellState(), count: initialCellCount)
     /// Pixels at 1080 px wide; scaled for other sizes.
     var gap: Double = 12
     var radius: Double = 16
@@ -127,16 +140,16 @@ struct Project: Equatable {
     var music: MusicTrack? = nil
 }
 
+/// The editor's bottom tabs. Picture is not one of them: it opens by itself while a picture is selected.
 enum Tab: String, CaseIterable, Identifiable {
-    case media, layout, style, timeline, audio, picture
+    case media, layout, style, video, picture
     var id: String { rawValue }
     var label: String {
         switch self {
         case .media: "Media"
         case .layout: "Layout"
         case .style: "Style"
-        case .timeline: "Timeline"
-        case .audio: "Audio"
+        case .video: "Video"
         case .picture: "Picture"
         }
     }
@@ -145,11 +158,22 @@ enum Tab: String, CaseIterable, Identifiable {
         case .media: "photo.on.rectangle.angled"
         case .layout: "square.grid.2x2"
         case .style: "paintpalette"
-        case .timeline: "film.stack"
-        case .audio: "speaker.wave.2"
+        case .video: "film.stack"
         case .picture: "slider.horizontal.3"
         }
     }
+
+    /// The tabs shown in the dock. Carousels are photos only, so they have no Video tab.
+    static func dock(for mode: EditMode) -> [Tab] {
+        mode == .carousel ? [.media, .layout, .style] : [.media, .layout, .style, .video]
+    }
+}
+
+/// Inside the Video tab: cutting clips, or sound.
+enum VideoSection: String, CaseIterable, Identifiable {
+    case timeline, sound
+    var id: String { rawValue }
+    var label: String { self == .timeline ? "Timeline" : "Sound" }
 }
 
 // MARK: - Colour helpers

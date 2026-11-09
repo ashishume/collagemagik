@@ -156,3 +156,24 @@ struct ToastView: View {
             .accessibilityAddTraits(.updatesFrequently)
     }
 }
+
+/// A failed Save to Photos. When the cause is a refused permission it offers a button straight to this app's Settings page.
+struct SaveFailureNote: View {
+    let error: Error
+    @Environment(\.openURL) private var openURL
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Text(error.localizedDescription)
+                .font(.footnote)
+                .foregroundStyle(.orange)
+                .multilineTextAlignment(.center)
+            if error is PhotosAccessDenied {
+                Button("Open Settings", systemImage: "gearshape") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                }
+                .buttonStyle(.glass)
+            }
+        }
+    }
+}

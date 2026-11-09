@@ -8,7 +8,7 @@ struct ToolDock: View {
     var body: some View {
         GlassEffectContainer(spacing: 10) {
             HStack(spacing: 0) {
-                ForEach(Tab.allCases) { tab in
+                ForEach(Tab.dock(for: store.project.mode)) { tab in
                     let selected = store.tab == tab
                     Button {
                         withAnimation(.bouncy(duration: 0.45)) { store.tab = tab }

@@ -8,6 +8,8 @@ final class ExportJob {
         case idle
         case running
         case done(URL, isVideo: Bool)
+        /// A carousel: one picture per slide, in order.
+        case doneSlides([URL])
         case failed(String)
     }
 
@@ -46,6 +48,23 @@ final class ExportJob {
         }
     }
 
+    /// Carousel: renders the whole design once and cuts it into slides.
+    func startSlides(snapshot: ExportSnapshot) {
+        state = .running
+        progress = 0
+        saved = false
+        let exporter = CollageExporter(snapshot: snapshot)
+        self.exporter = exporter
+        task = Task {
+            do {
+                let urls = try await Task.detached { try exporter.exportSlides() }.value
+                state = .doneSlides(urls)
+            } catch {
+                state = .failed(error.localizedDescription)
+            }
+        }
+    }
+
     func cancel() {
         exporter?.cancel()
     }
@@ -53,7 +72,11 @@ final class ExportJob {
 
 struct ExportSheet: View {
     @Environment(CollageStore.self) private var store
+    @Environment(LibraryStore.self) private var library
     @Environment(\.dismiss) private var dismiss
+
+    /// Every finished export is also kept in My Library, on this iPhone.
+    private enum LibrarySave: Equatable { case idle, saving, saved, failed(String) }
 
     private enum Kind: String, CaseIterable, Identifiable {
         case video = "Video (MP4)", still = "Still (PNG)"
@@ -65,13 +88,16 @@ struct ExportSheet: View {
     @State private var ultraAvailable = true
     @State private var job = ExportJob()
     @State private var resultPlayer: AVPlayer?
-    @State private var saveError: String?
+    @State private var saveError: Error?
+    @State private var librarySave: LibrarySave = .idle
     @State private var detent: PresentationDetent = .fraction(0.62)
 
     private var project: Project { store.project }
+    /// Pixels of one picture: the whole collage, or a single carousel slide.
     private var dims: (w: Int, h: Int) {
         (Int(project.format.width * quality.scale), Int(project.format.height * quality.scale))
     }
+    private var isCarousel: Bool { project.mode == .carousel }
 
     var body: some View {
         NavigationStack {
@@ -81,6 +107,7 @@ struct ExportSheet: View {
                     case .idle, .failed: options
                     case .running: running
                     case .done(let url, let isVideo): done(url, isVideo)
+                    case .doneSlides(let urls): doneSlides(urls)
                     }
                 }
                 .padding(16)
@@ -106,13 +133,94 @@ struct ExportSheet: View {
         }
         .onChange(of: job.state) { _, new in
             if case .done(let url, true) = new { resultPlayer = AVPlayer(url: url) } else { resultPlayer?.pause(); resultPlayer = nil }
-            if case .done = new { withAnimation(.smooth) { detent = .large } }
+            switch new {
+            case .done(let url, let isVideo):
+                withAnimation(.smooth) { detent = .large }
+                keepInLibrary(url, isVideo: isVideo)
+            case .doneSlides(let urls):
+                withAnimation(.smooth) { detent = .large }
+                keepCarouselInLibrary(urls)
+            default:
+                librarySave = .idle
+            }
+        }
+    }
+
+    private func keepCarouselInLibrary(_ urls: [URL]) {
+        librarySave = .saving
+        let size = dims
+        let label = "Carousel \(project.format.short)"
+        Task {
+            do {
+                try await library.addCarousel(files: urls, width: size.w, height: size.h, formatLabel: label)
+                librarySave = .saved
+            } catch {
+                librarySave = .failed(error.localizedDescription)
+            }
+        }
+    }
+
+    private func keepInLibrary(_ url: URL, isVideo: Bool) {
+        librarySave = .saving
+        let size = dims
+        let duration = isVideo ? store.totalDuration : 0
+        let label = project.format.label
+        Task {
+            do {
+                try await library.add(file: url, isVideo: isVideo, width: size.w, height: size.h, duration: duration, formatLabel: label)
+                librarySave = .saved
+            } catch {
+                librarySave = .failed(error.localizedDescription)
+            }
         }
     }
 
     // MARK: Options
 
+    @ViewBuilder
     private var options: some View {
+        if isCarousel { carouselOptions } else { collageOptions }
+    }
+
+    private var carouselOptions: some View {
+        VStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 10) {
+                row("Format", "Carousel \(project.format.short)")
+                row("Slides", "\(project.slides)")
+                row("Size", "\(dims.w) × \(dims.h) each")
+                row("Files", "JPEG, one per slide")
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .glassEffect(.regular, in: .rect(cornerRadius: 24))
+
+            Text("Upload the slides to Instagram in order, and the pictures that cross a seam join up as people swipe.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+
+            if case .failed(let message) = job.state {
+                Label(message, systemImage: "exclamationmark.triangle.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(.orange)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            Button { startSlides() } label: {
+                Label("Export \(project.slides) slides", systemImage: "square.and.arrow.up")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+            }
+            .buttonStyle(.glassProminent)
+            .disabled(store.placedMediaCount == 0)
+
+            if store.placedMediaCount == 0 {
+                Text("Add a photo first.").font(.footnote).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var collageOptions: some View {
         VStack(spacing: 16) {
             VStack(alignment: .leading, spacing: 10) {
                 row("Format", "\(project.format.label)")
@@ -237,6 +345,16 @@ struct ExportSheet: View {
             Label("Your collage is ready", systemImage: "checkmark.seal.fill")
                 .font(.headline)
                 .foregroundStyle(Color.musicGreen)
+            switch librarySave {
+            case .saved:
+                Label("Kept in My Library on this iPhone", systemImage: "photo.stack")
+                    .font(.footnote).foregroundStyle(.secondary)
+            case .failed(let why):
+                Label("Couldn't add it to My Library: \(why)", systemImage: "exclamationmark.triangle")
+                    .font(.footnote).foregroundStyle(.orange)
+            case .idle, .saving:
+                EmptyView()
+            }
 
             GlassEffectContainer(spacing: 10) {
                 VStack(spacing: 10) {
@@ -252,7 +370,7 @@ struct ExportSheet: View {
                                 withAnimation { job.saved = true }
                                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                             } catch {
-                                saveError = error.localizedDescription
+                                saveError = error
                             }
                         }
                     } label: {
@@ -269,7 +387,93 @@ struct ExportSheet: View {
                 }
             }
             if let saveError {
-                Text(saveError).font(.footnote).foregroundStyle(.orange)
+                SaveFailureNote(error: saveError)
+            }
+        }
+    }
+
+    private func startSlides() {
+        store.playback.pause()
+        let snapshot = ExportSnapshot(
+            project: store.project,
+            items: Dictionary(uniqueKeysWithValues: store.items.map { ($0.id, $0) })
+        )
+        job.startSlides(snapshot: snapshot)
+    }
+
+    // MARK: Done (carousel)
+
+    @ViewBuilder
+    private func doneSlides(_ urls: [URL]) -> some View {
+        VStack(spacing: 14) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(Array(urls.enumerated()), id: \.offset) { i, url in
+                        if let img = UIImage(contentsOfFile: url.path) {
+                            Image(uiImage: img)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 250)
+                                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                                .overlay(alignment: .topLeading) {
+                                    Text("\(i + 1)")
+                                        .font(.caption2.weight(.bold).monospacedDigit())
+                                        .padding(.horizontal, 7).padding(.vertical, 3)
+                                        .glassEffect(.regular, in: .capsule)
+                                        .padding(6)
+                                }
+                        }
+                    }
+                }
+            }
+            .scrollClipDisabled()
+
+            Label("Your carousel is ready", systemImage: "checkmark.seal.fill")
+                .font(.headline)
+                .foregroundStyle(Color.musicGreen)
+            switch librarySave {
+            case .saved:
+                Label("Kept in My Library on this iPhone", systemImage: "photo.stack")
+                    .font(.footnote).foregroundStyle(.secondary)
+            case .failed(let why):
+                Label("Couldn't add it to My Library: \(why)", systemImage: "exclamationmark.triangle")
+                    .font(.footnote).foregroundStyle(.orange)
+            case .idle, .saving:
+                EmptyView()
+            }
+
+            GlassEffectContainer(spacing: 10) {
+                VStack(spacing: 10) {
+                    ShareLink(items: urls) {
+                        Label("Share all \(urls.count) slides", systemImage: "square.and.arrow.up").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 6)
+                    }
+                    .buttonStyle(.glassProminent)
+
+                    Button {
+                        Task {
+                            do {
+                                try await PhotoSaver.saveAll(urls: urls)
+                                withAnimation { job.saved = true }
+                                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            } catch {
+                                saveError = error
+                            }
+                        }
+                    } label: {
+                        Label(job.saved ? "Saved to Photos" : "Save all to Photos", systemImage: job.saved ? "checkmark" : "photo.badge.arrow.down")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.glass)
+                    .disabled(job.saved)
+
+                    Button { job.state = .idle } label: {
+                        Label("Export again", systemImage: "arrow.counterclockwise").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.glass)
+                }
+            }
+            if let saveError {
+                SaveFailureNote(error: saveError)
             }
         }
     }

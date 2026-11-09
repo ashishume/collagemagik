@@ -17,6 +17,27 @@ press-and-hold-to-swap, rotate / flip / crop / straighten, a timeline (trim, mov
 own background music (volume, trim, repeat, fade out), and export to MP4 (H.264 + AAC, 30 fps, 1080 wide or 2x) or PNG,
 shared or saved to Photos.
 
+## Carousel mode
+
+The Collage | Carousel switch in the top bar changes what you are making. A carousel is one wide design, `slides` Instagram
+slides side by side (4:5 or square, 2 to 10 slides, up to 10 photos, photos only), with pictures laid out so they cross the
+seams between slides. `Model/CarouselLayouts.swift` builds the layouts (Flow, Two rows, Stagger, Mosaic, Panorama) and
+guarantees every seam cuts through a picture. The preview (`StageView`) shows one slide and a peek of the next: a drag on an
+unselected area swipes, a drag inside the selected picture moves it, and the numbered bar jumps between slides. Export draws
+the whole design once and cuts it into one JPEG per slide (`CollageExporter.exportSlides`); My Library keeps them as one entry.
+
+The bottom dock has Media, Layout, Style and (collage only) Video, which holds the Timeline and Sound tools. Picture tools
+open by themselves while a picture is selected.
+
+## My Library and privacy
+
+There is no account, server or network code. Every export is also copied into the app's own `Documents/MyLibrary/`
+folder (`Model/LibraryStore.swift`: the MP4 or PNG, a JPEG thumbnail and a `library.json` index) and shows up in
+**More ••• → My Library** (`UI/LibrarySheet.swift`): play, share, save to Photos, delete. **More ••• → About & Privacy**
+(`UI/AboutSheet.swift`) has the legal links and **Delete all my data**. Temporary working copies are cleared at launch.
+`CollageMagik/PrivacyInfo.xcprivacy` declares no tracking and no collected data. The legal pages are on the Axpo Creation
+site (`axpo-creations-apps/landing-page`, routes under `/collagemagik`). Submission steps and listing text: [APP_STORE.md](APP_STORE.md).
+
 ## Apple components used
 
 `NavigationStack` + toolbar, `GlassEffectContainer` / `glassEffect` / `glassEffectID` (the dock's selected tab morphs),

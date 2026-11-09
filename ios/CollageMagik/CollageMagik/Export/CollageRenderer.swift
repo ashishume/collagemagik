@@ -17,14 +17,13 @@ enum CollageRenderer {
         image: (String) -> CGImage?
     ) {
         let project = snapshot.project
-        let layout = layout(byId: project.layoutId)
         ctx.saveGState()
         ctx.interpolationQuality = .high
         ctx.setFillColor(UIColor(hex: project.bg).cgColor)
         ctx.fill(CGRect(x: 0, y: 0, width: W, height: H))
 
-        let rects = cellPixelRects(layout.rects, W: W, H: H, gap: project.gap)
-        let radius = project.radius * (W / 1080)
+        let rects = project.cellRects(W: W, H: H)
+        let radius = project.cornerRadius(W: W)
         for (i, r) in rects.enumerated() {
             guard i < project.cells.count else { break }
             let cell = project.cells[i]
@@ -58,8 +57,7 @@ enum CollageRenderer {
     /// Photos decoded straight to the size each cell needs (never upscaled).
     static func decodePhotos(snapshot: ExportSnapshot, W: Double, H: Double) -> [String: CGImage] {
         let project = snapshot.project
-        let layout = layout(byId: project.layoutId)
-        let rects = cellPixelRects(layout.rects, W: W, H: H, gap: project.gap)
+        let rects = project.cellRects(W: W, H: H)
         var out: [String: CGImage] = [:]
         for (i, cell) in project.cells.enumerated() where i < rects.count {
             guard let id = cell.mediaId, let item = snapshot.items[id], item.kind == .photo else { continue }

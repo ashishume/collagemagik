@@ -24,8 +24,8 @@ struct CropEditor: View {
 
     /// Aspect ratio of the cell this picture sits in, so the frame matches what will be used.
     private var aspect: Double {
-        let f = store.project.format
-        let rects = cellPixelRects(store.currentLayout.rects, W: f.width, H: f.height, gap: store.project.gap)
+        let p = store.project
+        let rects = p.cellRects(W: p.canvasWidth, H: p.canvasHeight)
         guard rects.indices.contains(cellIndex) else { return 1 }
         return rects[cellIndex].w / rects[cellIndex].h
     }

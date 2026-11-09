@@ -7,6 +7,7 @@ import SwiftUI
 enum DebugHarness {
     static func run(_ store: CollageStore) async {
         let env = ProcessInfo.processInfo.environment
+        if env["CM_MODE"] == "carousel" { store.setMode(.carousel) }
         if let list = env["CM_AUTOLOAD"] {
             let urls = list.split(separator: ",").map { URL(fileURLWithPath: String($0)) }
             // import one by one so each file's result (or error) is logged
@@ -21,7 +22,15 @@ enum DebugHarness {
             NSLog("CM_DEBUG batch -> cells=%d items=%d tab=%@", store.project.cellCount, store.items.count, store.tab.rawValue)
         }
         if let l = env["CM_LAYOUT"] { store.setCellCount(Int(l) ?? 4) }
-        if let t = env["CM_TAB"], let tab = Tab(rawValue: t) { store.tab = tab }
+        if let t = env["CM_TAB"] {
+            switch t {
+            case "timeline": store.tab = .video; store.videoSection = .timeline
+            case "audio": store.tab = .video; store.videoSection = .sound
+            default: if let tab = Tab(rawValue: t) { store.tab = tab }
+            }
+        }
+        if let n = env["CM_SLIDES"], let v = Int(n) { store.setSlides(v) }
+        if let o = env["CM_OFFSET"], let v = Double(o) { store.carouselOffset = v }
         if let s = env["CM_SELECT"], let i = Int(s) { store.selectCell(i); store.openPicture() }
         if env["CM_MUSIC"] != nil, let m = env["CM_MUSIC"] { await store.importMusic(URL(fileURLWithPath: m)) }
         if let c = env["CM_CROP"], let i = Int(c) { store.cropCell = i }

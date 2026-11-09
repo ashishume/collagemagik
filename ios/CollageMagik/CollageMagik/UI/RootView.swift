@@ -4,12 +4,17 @@ import UniformTypeIdentifiers
 
 struct RootView: View {
     @Environment(CollageStore.self) private var store
+    @Environment(LibraryStore.self) private var library
     @State private var confirmNew = false
+    @State private var libraryOpen = false
+    @State private var aboutOpen = false
+    /// Carousel needs photos only: asks before the videos are dropped.
+    @State private var confirmCarousel = false
 
     /// Replacing a picture takes one item; adding to the collage (or filling an empty cell) takes as many as there is room for.
     private var pickLimit: Int {
         if let t = store.pickTarget, store.project.cells.indices.contains(t), store.project.cells[t].mediaId != nil { return 1 }
-        return max(1, maxCells - store.items.count)
+        return max(1, store.cellLimit - store.items.count)
     }
 
     var body: some View {
@@ -21,7 +26,9 @@ struct RootView: View {
                 VStack(spacing: 6) {
                     StageView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    if store.hasPlacedVideo && store.tab != .timeline {
+                    if store.isCarousel {
+                        SlideBar()
+                    } else if store.hasPlacedVideo && !(store.tab == .video && store.videoSection == .timeline) {
                         TransportBar()
                     }
                     PanelCard()
@@ -49,22 +56,22 @@ struct RootView: View {
                         }
                         .disabled(store.placedMediaCount == 0)
                         Divider()
+                        Button { store.playback.pause(); libraryOpen = true } label: {
+                            Label(library.entries.isEmpty ? "My Library" : "My Library (\(library.entries.count))", systemImage: "photo.stack")
+                        }
                         Button { store.helpOpen = true } label: { Label("How it works", systemImage: "questionmark.circle") }
+                        Button { aboutOpen = true } label: { Label("About & Privacy", systemImage: "hand.raised") }
+                        Divider()
                         Button(role: .destructive) { confirmNew = true } label: { Label("New collage", systemImage: "trash") }
                     } label: {
                         Image(systemName: "ellipsis")
                     }
                     .accessibilityLabel("More")
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        store.playback.pause()
-                        store.previewOpen = true
-                    } label: {
-                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                ToolbarItem(placement: .principal) {
+                    ModeSwitch { mode in
+                        if mode == .carousel && store.videoCount > 0 { confirmCarousel = true } else { store.setMode(mode) }
                     }
-                    .disabled(store.placedMediaCount == 0)
-                    .accessibilityLabel("Full screen preview")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -83,7 +90,7 @@ struct RootView: View {
             selection: $store.pickedItems,
             maxSelectionCount: pickLimit,
             selectionBehavior: .ordered,
-            matching: .any(of: [.images, .videos])
+            matching: store.isCarousel ? .images : .any(of: [.images, .videos])
         )
         .onChange(of: store.pickedItems) { _, picked in
             guard !picked.isEmpty else { return }
@@ -94,7 +101,7 @@ struct RootView: View {
         }
         .fileImporter(
             isPresented: $store.showFileImporter,
-            allowedContentTypes: store.importerIsMusic ? [.audio] : [.image, .movie, .video],
+            allowedContentTypes: store.importerIsMusic ? [.audio] : (store.isCarousel ? [.image] : [.image, .movie, .video]),
             allowsMultipleSelection: !store.importerIsMusic
         ) { result in
             guard case .success(let urls) = result else { return }
@@ -104,6 +111,8 @@ struct RootView: View {
         }
         .sheet(isPresented: $store.exportOpen) { ExportSheet() }
         .sheet(isPresented: $store.helpOpen) { HelpSheet() }
+        .sheet(isPresented: $libraryOpen) { LibrarySheet() }
+        .sheet(isPresented: $aboutOpen) { AboutSheet() }
         .fullScreenCover(isPresented: $store.previewOpen) { FullScreenPreview() }
         .fullScreenCover(item: Binding(
             get: { store.cropCell.map(CropTarget.init) },
@@ -115,6 +124,12 @@ struct RootView: View {
         #if DEBUG
         .task { await DebugHarness.run(store) }
         #endif
+        .confirmationDialog("Switch to Carousel?", isPresented: $confirmCarousel, titleVisibility: .visible) {
+            Button("Remove videos and switch", role: .destructive) { withAnimation(.smooth) { store.setMode(.carousel) } }
+            Button("Keep my collage", role: .cancel) {}
+        } message: {
+            Text("Carousels use photos only, so the videos in this collage will be removed.")
+        }
         .confirmationDialog("Start a new collage?", isPresented: $confirmNew, titleVisibility: .visible) {
             Button("New collage", role: .destructive) { withAnimation(.smooth) { store.newCollage() } }
         } message: {
@@ -131,15 +146,16 @@ struct PanelCard: View {
         let pad: CGFloat = 20
         switch store.tab {
         case .media: return 96 + pad
-        case .layout: return 106 + pad
+        case .layout: return (store.isCarousel ? 100 : 106) + pad
         case .style: return (store.project.format == .story ? 156 : 124) + pad
-        case .timeline:
-            let n = placedLanes(store.project).count
-            return n == 0 ? 44 + pad : timelineContentHeight(lanes: n) + pad + 6
-        case .audio:
+        case .video:
             let n = placedLanes(store.project).count
             if n == 0 { return 44 + pad }
-            return CGFloat(n) * 36 + (store.project.music == nil ? 34 : 3 * 36) + pad + 4
+            let picker: CGFloat = 40
+            switch store.videoSection {
+            case .timeline: return picker + timelineContentHeight(lanes: n) + pad + 6
+            case .sound: return picker + CGFloat(n) * 36 + (store.project.music == nil ? 34 : 3 * 36) + pad + 4
+            }
         case .picture:
             guard let s = store.selectedCell, store.project.cells.indices.contains(s) else { return 44 + pad }
             if store.swapFrom != nil { return 36 + pad }
@@ -154,8 +170,7 @@ struct PanelCard: View {
                 case .media: MediaPanel()
                 case .layout: LayoutPanel()
                 case .style: StylePanel()
-                case .timeline: TimelinePanel()
-                case .audio: AudioPanel()
+                case .video: VideoPanel()
                 case .picture: PicturePanel()
                 }
             }
@@ -164,7 +179,7 @@ struct PanelCard: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         // the timeline owns every drag inside it; the card must not scroll under the finger
-        .scrollDisabled(store.tab == .timeline)
+        .scrollDisabled(store.tab == .video && store.videoSection == .timeline)
         .frame(height: height)
         .glassEffect(.regular, in: .rect(cornerRadius: 24))
         .animation(.smooth(duration: 0.3), value: store.tab)

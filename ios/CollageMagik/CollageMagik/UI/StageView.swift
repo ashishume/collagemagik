@@ -5,6 +5,7 @@ struct StageGestureLayer: UIViewRepresentable {
     var onTap: (CGPoint) -> Void
     var onPanBegin: (CGPoint) -> Void
     var onPan: (CGSize) -> Void
+    var onPanEnd: (CGSize) -> Void = { _ in }
     var onPinchBegin: (CGPoint) -> Void
     var onPinch: (CGFloat) -> Void
     var onLiftBegin: (CGPoint) -> Void
@@ -49,6 +50,9 @@ struct StageGestureLayer: UIViewRepresentable {
                 let t = g.translation(in: g.view)
                 g.setTranslation(.zero, in: g.view)
                 parent.onPan(CGSize(width: t.x, height: t.y))
+            case .ended, .cancelled:
+                let v = g.velocity(in: g.view)
+                parent.onPanEnd(CGSize(width: v.x, height: v.y))
             default: break
             }
         }
@@ -95,28 +99,111 @@ struct StageView: View {
     @State private var pinchCell = -1
     @State private var lift: Lift?
 
+    /// How a carousel is laid out on screen: one slide plus a peek of the next, scrolled sideways.
+    private struct CarouselFrame {
+        var slideW: Double
+        var slideH: Double
+        var slides: Int
+        var viewport: CGSize
+        var size: CGSize { CGSize(width: slideW * Double(slides), height: slideH) }
+        var viewportSlides: Double { viewport.width / slideW }
+        var maxOffset: Double { max(0, Double(slides) - viewportSlides) }
+    }
+
+    /// True while a drag that started outside the selected picture is swiping the carousel.
+    @State private var swiping = false
+
     var body: some View {
         GeometryReader { geo in
-            let f = store.project.format
-            let aspect = f.width / f.height
-            let fitW = min(geo.size.width, geo.size.height * aspect)
-            let size = CGSize(width: fitW, height: fitW / aspect)
-            stage(size: size)
-                .frame(width: size.width, height: size.height)
-                .position(x: geo.size.width / 2, y: geo.size.height / 2)
+            let p = store.project
+            if p.mode == .carousel && interactive {
+                carouselStage(geo.size)
+            } else {
+                let aspect = p.canvasAspect
+                let fitW = min(geo.size.width, geo.size.height * aspect)
+                let size = CGSize(width: fitW, height: fitW / aspect)
+                stage(size: size)
+                    .frame(width: size.width, height: size.height)
+                    .position(x: geo.size.width / 2, y: geo.size.height / 2)
+            }
         }
     }
 
     private func rects(_ size: CGSize) -> [PxRect] {
-        cellPixelRects(store.currentLayout.rects, W: size.width, H: size.height, gap: store.project.gap)
+        store.project.cellRects(W: size.width, H: size.height)
     }
 
-    @ViewBuilder
+    // MARK: Collage and full-screen preview
+
     private func stage(size: CGSize) -> some View {
+        ZStack(alignment: .topLeading) {
+            canvas(size: size)
+            if interactive { gestures(size: size, shift: .zero, frame: nil) }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: interactive ? 6 : 0, style: .continuous))
+        .shadow(color: .black.opacity(interactive ? 0.45 : 0), radius: 22, y: 10)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Collage preview. Tap a picture for options, drag to move it, pinch to zoom, press and hold then drag to swap.")
+    }
+
+    // MARK: Carousel
+
+    private func carouselStage(_ vp: CGSize) -> some View {
+        let p = store.project
+        let slideAspect = p.format.width / p.format.height
+        // one slide and about a quarter of the next, so the picture that crosses the seam is visible
+        let slideH = min(vp.height, vp.width * 0.78 / slideAspect)
+        let frame = CarouselFrame(slideW: slideH * slideAspect, slideH: slideH, slides: p.slides, viewport: CGSize(width: vp.width, height: slideH))
+        let offset = clamp(store.carouselOffset, 0, frame.maxOffset)
+        let shift = CGPoint(x: offset * frame.slideW, y: 0)
+        return ZStack(alignment: .topLeading) {
+            canvas(size: frame.size)
+                .frame(width: frame.size.width, height: frame.size.height)
+                .offset(x: -shift.x)
+            gestures(size: frame.size, shift: shift, frame: frame)
+                .frame(width: frame.viewport.width, height: frame.viewport.height)
+        }
+        .frame(width: frame.viewport.width, height: frame.viewport.height, alignment: .topLeading)
+        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .shadow(color: .black.opacity(0.45), radius: 22, y: 10)
+        .position(x: vp.width / 2, y: vp.height / 2)
+        .onAppear { store.viewportSlides = frame.viewportSlides }
+        .onChange(of: frame.viewportSlides) { _, v in store.viewportSlides = v }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Carousel preview, slide \(store.visibleSlide) of \(p.slides). Drag to swipe between slides. Tap a picture to edit it.")
+    }
+
+    /// Dashed lines where one slide ends and the next begins, and a number on each slide.
+    private func seamGuides(_ size: CGSize) -> some View {
+        let slides = store.project.slides
+        let slideW = size.width / Double(slides)
+        return ZStack(alignment: .topLeading) {
+            ForEach(1..<max(slides, 1), id: \.self) { k in
+                Path { path in
+                    path.move(to: CGPoint(x: slideW * Double(k), y: 0))
+                    path.addLine(to: CGPoint(x: slideW * Double(k), y: size.height))
+                }
+                .stroke(.white.opacity(0.55), style: StrokeStyle(lineWidth: 1.2, dash: [7, 6]))
+            }
+            ForEach(0..<slides, id: \.self) { k in
+                Text("\(k + 1)")
+                    .font(.caption2.weight(.bold).monospacedDigit())
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .glassEffect(.regular, in: .capsule)
+                    .offset(x: slideW * Double(k) + 8, y: 8)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    // MARK: Canvas and gestures
+
+    /// Everything drawn on the design itself, in canvas coordinates.
+    @ViewBuilder
+    private func canvas(size: CGSize) -> some View {
         let project = store.project
         let px = rects(size)
-        let scale = size.width / 1080
-        let radius = project.radius * scale
+        let radius = project.cornerRadius(W: size.width)
 
         ZStack(alignment: .topLeading) {
             Rectangle().fill(Color(hex: project.bg))
@@ -126,38 +213,41 @@ struct StageView: View {
             }
 
             if interactive {
-            // selection and swap marks
-            if let s = store.selectedCell, px.indices.contains(s) {
-                ring(px[s], color: .brand, radius: radius)
-            }
-            if let s = store.swapFrom, px.indices.contains(s) {
-                ring(px[s], color: .orange, radius: radius)
-            }
+                if project.mode == .carousel { seamGuides(size) }
+                // selection and swap marks
+                if let s = store.selectedCell, px.indices.contains(s) {
+                    ring(px[s], color: .brand, radius: radius)
+                }
+                if let s = store.swapFrom, px.indices.contains(s) {
+                    ring(px[s], color: .orange, radius: radius)
+                }
 
-            if project.safeZone && project.format == .story {
-                safeZone(size)
-            }
+                if project.safeZone && project.format == .story && project.mode == .collage {
+                    safeZone(size)
+                }
 
-            if let lift, px.indices.contains(lift.from) {
-                liftOverlay(lift, px: px, radius: radius, size: size)
-            }
-
-            StageGestureLayer(
-                onTap: { tap($0, size) },
-                onPanBegin: { panBegin($0, size) },
-                onPan: { pan($0, size) },
-                onPinchBegin: { pinchBegin($0, size) },
-                onPinch: { pinch($0) },
-                onLiftBegin: { liftBegin($0, size) },
-                onLiftMove: { liftMove($0, size) },
-                onLiftEnd: { liftEnd($0, size, completed: $1) }
-            )
+                if let lift, px.indices.contains(lift.from) {
+                    liftOverlay(lift, px: px, radius: radius, size: size)
+                }
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: interactive ? 6 : 0, style: .continuous))
-        .shadow(color: .black.opacity(interactive ? 0.45 : 0), radius: 22, y: 10)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Collage preview. Tap a picture for options, drag to move it, pinch to zoom, press and hold then drag to swap.")
+        .frame(width: size.width, height: size.height, alignment: .topLeading)
+    }
+
+    /// The touch layer. `shift` is how far the canvas is scrolled, so a touch maps to a canvas point.
+    private func gestures(size: CGSize, shift: CGPoint, frame: CarouselFrame?) -> some View {
+        func at(_ p: CGPoint) -> CGPoint { CGPoint(x: p.x + shift.x, y: p.y + shift.y) }
+        return StageGestureLayer(
+            onTap: { tap(at($0), size) },
+            onPanBegin: { panBegin(at($0), size, carousel: frame != nil) },
+            onPan: { pan($0, size, frame: frame) },
+            onPanEnd: { panEnd($0, frame: frame) },
+            onPinchBegin: { pinchBegin(at($0), size) },
+            onPinch: { pinch($0) },
+            onLiftBegin: { liftBegin(at($0), size) },
+            onLiftMove: { liftMove(at($0), size) },
+            onLiftEnd: { liftEnd(at($0), size, completed: $1) }
+        )
     }
 
     @ViewBuilder
@@ -175,12 +265,7 @@ struct StageView: View {
             } else if !interactive {
                 Color.white.opacity(0.06)
             } else {
-                Color.white.opacity(0.08)
-                Image(systemName: "plus")
-                    .font(.system(size: min(r.w, r.h) * 0.2, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.85))
-                    .padding(min(r.w, r.h) * 0.14)
-                    .glassEffect(.regular, in: .circle)
+                EmptySlot(index: i, side: min(r.w, r.h), radius: min(radius, r.w / 2, r.h / 2))
             }
         }
         .frame(width: r.w, height: r.h)
@@ -265,15 +350,31 @@ struct StageView: View {
         }
     }
 
-    private func panBegin(_ p: CGPoint, _ size: CGSize) {
+    private func panBegin(_ p: CGPoint, _ size: CGSize, carousel: Bool) {
         let cell = hitCell(rects(size), x: p.x, y: p.y)
         gestureCell = cell
+        if carousel {
+            // In a carousel a drag moves a picture only if it is already selected; anywhere else it swipes the slides,
+            // like swiping the finished post.
+            swiping = !(cell >= 0 && cell == store.selectedCell && store.project.cells[cell].mediaId != nil && store.swapFrom == nil)
+            return
+        }
         if cell >= 0, store.swapFrom == nil, store.project.cells[cell].mediaId != nil, cell != store.selectedCell {
             selectAndOpen(cell)
         }
     }
 
-    private func pan(_ d: CGSize, _ size: CGSize) {
+    private func panEnd(_ velocity: CGSize, frame: CarouselFrame?) {
+        guard swiping, let frame else { swiping = false; return }
+        swiping = false
+        store.settleCarousel(velocitySlidesPerSecond: -velocity.width / frame.slideW)
+    }
+
+    private func pan(_ d: CGSize, _ size: CGSize, frame: CarouselFrame?) {
+        if swiping, let frame {
+            store.carouselOffset = clamp(store.carouselOffset - d.width / frame.slideW, 0, frame.maxOffset)
+            return
+        }
         let ci = gestureCell
         guard ci >= 0, store.swapFrom == nil, store.project.cells.indices.contains(ci),
               let id = store.project.cells[ci].mediaId, let item = store.item(id) else { return }
@@ -322,5 +423,32 @@ struct StageView: View {
         guard completed, let l = lift else { return }
         let over = hitCell(rects(size), x: p.x, y: p.y)
         if over >= 0 && over != l.from { store.swapCells(l.from, over) }
+    }
+}
+
+
+/// An empty cell: a dashed slot with a "+". They pop in one after another, so a new collage reads as nine places to fill.
+private struct EmptySlot: View {
+    let index: Int
+    let side: CGFloat
+    let radius: CGFloat
+    @State private var shown = false
+
+    var body: some View {
+        ZStack {
+            Color.white.opacity(0.07)
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .strokeBorder(.white.opacity(0.3), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5]))
+            Image(systemName: "plus")
+                .font(.system(size: side * 0.2, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.85))
+                .padding(side * 0.14)
+                .glassEffect(.regular, in: .circle)
+        }
+        .scaleEffect(shown ? 1 : 0.8)
+        .opacity(shown ? 1 : 0)
+        .onAppear {
+            withAnimation(.spring(duration: 0.5, bounce: 0.3).delay(Double(index) * 0.05)) { shown = true }
+        }
     }
 }

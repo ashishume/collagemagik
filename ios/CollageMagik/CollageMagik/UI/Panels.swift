@@ -9,7 +9,9 @@ struct MediaPanel: View {
         let placed = Set(store.project.cells.compactMap(\.mediaId))
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("\(store.items.count) of \(maxCells)  ·  \(store.videoCount) of \(maxVideos) videos")
+                Text(store.isCarousel
+                     ? "\(store.items.count) of \(store.cellLimit) photos"
+                     : "\(store.items.count) of \(maxCells)  ·  \(store.videoCount) of \(maxVideos) videos")
                     .font(.caption.weight(.medium))
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -21,6 +23,10 @@ struct MediaPanel: View {
                         addTile
                         ForEach(store.items) { m in
                             thumb(m, used: placed.contains(m.id))
+                        }
+                        // Faint empty slots up to the limit: the strip shows how much room is left.
+                        ForEach(0..<max(0, store.cellLimit - store.items.count), id: \.self) { _ in
+                            emptySlot
                         }
                     }
                     .padding(.vertical, 2)
@@ -44,8 +50,21 @@ struct MediaPanel: View {
             .glassEffect(.regular.tint(Color.brand.opacity(0.55)).interactive(), in: .rect(cornerRadius: 14))
         }
         .buttonStyle(.plain)
-        .disabled(store.importing || store.items.count >= maxCells)
+        .disabled(store.importing || store.items.count >= store.cellLimit)
         .accessibilityLabel("Add photos or videos")
+    }
+
+    private var emptySlot: some View {
+        Button { store.openAdd() } label: {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(.white.opacity(0.22), style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
+                .frame(width: 58, height: 58)
+                .overlay { Image(systemName: "plus").font(.caption.weight(.semibold)).foregroundStyle(.white.opacity(0.35)) }
+                .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(store.importing)
+        .accessibilityHidden(true)
     }
 
     private func thumb(_ m: MediaItem, used: Bool) -> some View {
@@ -91,6 +110,8 @@ struct MediaPanel: View {
 struct LayoutThumb: View {
     let layout: CollageLayout
     let isOn: Bool
+    /// Carousel layouts: how many slides, so the thumbnail can show where the seams fall.
+    var slides: Int? = nil
 
     var body: some View {
         VStack(spacing: 2) {
@@ -99,16 +120,26 @@ struct LayoutThumb: View {
                     ForEach(Array(layout.rects.enumerated()), id: \.offset) { _, r in
                         RoundedRectangle(cornerRadius: 2.5, style: .continuous)
                             .fill(isOn ? Color.white : Color.white.opacity(0.55))
-                            .frame(width: max(2, geo.size.width * (r.w - 0.045)), height: max(2, geo.size.height * (r.h - 0.03)))
-                            .offset(x: geo.size.width * (r.x + 0.0225), y: geo.size.height * (r.y + 0.015))
+                            .frame(width: max(2, geo.size.width * (r.w - (slides == nil ? 0.045 : 0.012))), height: max(2, geo.size.height * (r.h - 0.03)))
+                            .offset(x: geo.size.width * (r.x + (slides == nil ? 0.0225 : 0.006)), y: geo.size.height * (r.y + 0.015))
+                    }
+                    if let slides {
+                        ForEach(1..<max(slides, 1), id: \.self) { k in
+                            Path { p in
+                                let x = geo.size.width * Double(k) / Double(slides)
+                                p.move(to: CGPoint(x: x, y: -2))
+                                p.addLine(to: CGPoint(x: x, y: geo.size.height + 2))
+                            }
+                            .stroke(Color.brand, style: StrokeStyle(lineWidth: 1.2, dash: [2.5, 2]))
+                        }
                     }
                 }
             }
-            .frame(width: 28, height: 44)
+            .frame(width: slides == nil ? 28 : 76, height: slides == nil ? 44 : 30)
             Text(layout.name)
                 .font(.system(size: 9, weight: .medium))
                 .lineLimit(1)
-                .frame(width: 52)
+                .frame(width: slides == nil ? 52 : 76)
                 .foregroundStyle(isOn ? .primary : .secondary)
         }
         .padding(.horizontal, 6)
@@ -122,23 +153,26 @@ struct LayoutPanel: View {
     @Environment(CollageStore.self) private var store
 
     var body: some View {
-        let options = layouts(for: store.project.cellCount)
+        let options = layoutOptions(for: store.project)
+        let carousel = store.isCarousel
         VStack(spacing: 6) {
             HStack(spacing: 6) {
-                Text("Cells").font(.caption.weight(.medium)).foregroundStyle(.secondary)
+                Text(carousel ? "Slides" : "Cells").font(.caption.weight(.medium)).foregroundStyle(.secondary)
                 ScrollView(.horizontal, showsIndicators: false) {
                     GlassEffectContainer(spacing: 6) {
                         HStack(spacing: 6) {
-                            ForEach(1...maxCells, id: \.self) { n in
-                                let on = store.project.cellCount == n
-                                Button { withAnimation(.smooth) { store.setCellCount(n) } } label: {
+                            ForEach(carousel ? Array(minSlides...maxSlides) : Array(1...maxCells), id: \.self) { n in
+                                let on = (carousel ? store.project.slides : store.project.cellCount) == n
+                                Button {
+                                    withAnimation(.smooth) { carousel ? store.setSlides(n) : store.setCellCount(n) }
+                                } label: {
                                     Text("\(n)")
                                         .font(.footnote.weight(.semibold).monospacedDigit())
                                         .frame(width: 28, height: 28)
                                         .glassEffect(on ? .regular.tint(Color.brand.opacity(0.8)).interactive() : .regular.interactive(), in: .circle)
                                 }
                                 .buttonStyle(.plain)
-                                .accessibilityLabel("\(n) cells")
+                                .accessibilityLabel(carousel ? "\(n) slides" : "\(n) cells")
                                 .accessibilityAddTraits(on ? .isSelected : [])
                             }
                         }
@@ -153,7 +187,7 @@ struct LayoutPanel: View {
                     HStack(spacing: 8) {
                         ForEach(options) { l in
                             Button { withAnimation(.smooth) { store.setLayout(l.id) } } label: {
-                                LayoutThumb(layout: l, isOn: l.id == store.project.layoutId)
+                                LayoutThumb(layout: l, isOn: l.id == store.project.layoutId, slides: carousel ? store.project.slides : nil)
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel(l.name)
@@ -177,7 +211,7 @@ struct StylePanel: View {
         @Bindable var store = store
         VStack(spacing: 6) {
             Picker("Format", selection: $store.project.format) {
-                ForEach(FormatId.allCases) { f in Text(f.label).tag(f) }
+                ForEach(store.isCarousel ? FormatId.carouselFormats : FormatId.allCases) { f in Text(f.label).tag(f) }
             }
             .pickerStyle(.segmented)
 

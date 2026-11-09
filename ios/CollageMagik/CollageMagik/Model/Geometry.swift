@@ -17,8 +17,9 @@ struct PxRect: Equatable {
 @inline(__always) func clamp(_ v: Double, _ lo: Double, _ hi: Double) -> Double { min(hi, max(lo, v)) }
 
 /// Cell rectangles in pixels. `gap` (pixels at 1080 wide) is both the space between cells and the margin around the collage.
-func cellPixelRects(_ rects: [LayoutRect], W: Double, H: Double, gap: Double) -> [PxRect] {
-    let g = gap * (W / 1080)
+/// `unit` is how many canvas pixels one "1080 wide" pixel is worth (W / 1080 for a collage, per slide for a carousel).
+func cellPixelRects(_ rects: [LayoutRect], W: Double, H: Double, gap: Double, unit: Double? = nil) -> [PxRect] {
+    let g = gap * (unit ?? W / 1080)
     let half = g / 2
     let areaW = W - g
     let areaH = H - g
