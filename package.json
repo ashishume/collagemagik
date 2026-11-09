@@ -1,0 +1,32 @@
+{
+  "name": "collagemagik-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host",
+    "test": "vitest run",
+    "lan": "CM_HTTPS=1 vite build && CM_HTTPS=1 vite preview --host --port 5180 --strictPort"
+  },
+  "dependencies": {
+    "@mediabunny/aac-encoder": "^1.65.2",
+    "heic-to": "^1.6.7",
+    "lucide-react": "^1.70.0",
+    "mediabunny": "^1.65.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-basic-ssl": "^1.2.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.9"
+  }
+}
