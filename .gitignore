@@ -10,3 +10,4 @@ ios/**/xcuserdata/
 ios/**/*.xcuserstate
 ios/**/DerivedData/
 ios/**/build/
+.DS_Store
