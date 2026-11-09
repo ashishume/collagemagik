@@ -4,3 +4,9 @@ public/_dev
 *.log
 *.tsbuildinfo
 .vercel
+
+# iOS
+ios/**/xcuserdata/
+ios/**/*.xcuserstate
+ios/**/DerivedData/
+ios/**/build/
