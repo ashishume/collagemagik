@@ -7,17 +7,17 @@ struct MediaPanel: View {
 
     var body: some View {
         let placed = Set(store.project.cells.compactMap(\.mediaId))
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text("\(store.items.count) of \(maxCells)  ·  \(store.videoCount) of \(maxVideos) videos")
-                    .font(.footnote.weight(.medium))
+                    .font(.caption.weight(.medium))
                     .foregroundStyle(.secondary)
                 Spacer()
                 if store.importing { ProgressView().controlSize(.small) }
             }
             ScrollView(.horizontal, showsIndicators: false) {
-                GlassEffectContainer(spacing: 10) {
-                    HStack(spacing: 10) {
+                GlassEffectContainer(spacing: 8) {
+                    HStack(spacing: 8) {
                         addTile
                         ForEach(store.items) { m in
                             thumb(m, used: placed.contains(m.id))
@@ -35,13 +35,13 @@ struct MediaPanel: View {
             Button { store.openAdd() } label: { Label("Photo Library", systemImage: "photo.on.rectangle") }
             Button { store.openFiles() } label: { Label("Files", systemImage: "folder") }
         } label: {
-            VStack(spacing: 4) {
-                Image(systemName: "plus").font(.title2.weight(.semibold))
-                Text("Add").font(.caption.weight(.medium))
+            VStack(spacing: 2) {
+                Image(systemName: "plus").font(.title3.weight(.semibold))
+                Text("Add").font(.caption2.weight(.medium))
             }
-            .frame(width: 72, height: 72)
-            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .glassEffect(.regular.tint(Color.brand.opacity(0.55)).interactive(), in: .rect(cornerRadius: 18))
+            .frame(width: 58, height: 58)
+            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .glassEffect(.regular.tint(Color.brand.opacity(0.55)).interactive(), in: .rect(cornerRadius: 14))
         }
         .buttonStyle(.plain)
         .disabled(store.importing || store.items.count >= maxCells)
@@ -56,10 +56,10 @@ struct MediaPanel: View {
                 Image(uiImage: m.thumbnail)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 72, height: 72)
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .frame(width: 58, height: 58)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .overlay {
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
                             .strokeBorder(used ? Color.brand : .white.opacity(0.15), lineWidth: used ? 2.5 : 1)
                     }
                 HStack(spacing: 3) {
@@ -70,11 +70,11 @@ struct MediaPanel: View {
                         Text("Not used").font(.system(size: 9, weight: .semibold))
                     }
                 }
-                .padding(.horizontal, 6)
-                .padding(.vertical, 3)
+                .padding(.horizontal, 5)
+                .padding(.vertical, 2)
                 .background(.black.opacity(0.55), in: Capsule())
                 .opacity(m.kind == .video || !used ? 1 : 0)
-                .padding(5)
+                .padding(4)
             }
         }
         .buttonStyle(.plain)
@@ -93,7 +93,7 @@ struct LayoutThumb: View {
     let isOn: Bool
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 2) {
             GeometryReader { geo in
                 ZStack(alignment: .topLeading) {
                     ForEach(Array(layout.rects.enumerated()), id: \.offset) { _, r in
@@ -104,17 +104,17 @@ struct LayoutThumb: View {
                     }
                 }
             }
-            .frame(width: 38, height: 58)
+            .frame(width: 28, height: 44)
             Text(layout.name)
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 9, weight: .medium))
                 .lineLimit(1)
-                .frame(width: 62)
+                .frame(width: 52)
                 .foregroundStyle(isOn ? .primary : .secondary)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
-        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .glassEffect(isOn ? .regular.tint(Color.brand.opacity(0.7)).interactive() : .regular.interactive(), in: .rect(cornerRadius: 16))
+        .padding(.horizontal, 6)
+        .padding(.vertical, 4)
+        .contentShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
+        .glassEffect(isOn ? .regular.tint(Color.brand.opacity(0.7)).interactive() : .regular.interactive(), in: .rect(cornerRadius: 13))
     }
 }
 
@@ -123,9 +123,9 @@ struct LayoutPanel: View {
 
     var body: some View {
         let options = layouts(for: store.project.cellCount)
-        VStack(spacing: 10) {
-            HStack(spacing: 8) {
-                Text("Cells").font(.footnote.weight(.medium)).foregroundStyle(.secondary)
+        VStack(spacing: 6) {
+            HStack(spacing: 6) {
+                Text("Cells").font(.caption.weight(.medium)).foregroundStyle(.secondary)
                 ScrollView(.horizontal, showsIndicators: false) {
                     GlassEffectContainer(spacing: 6) {
                         HStack(spacing: 6) {
@@ -133,8 +133,8 @@ struct LayoutPanel: View {
                                 let on = store.project.cellCount == n
                                 Button { withAnimation(.smooth) { store.setCellCount(n) } } label: {
                                     Text("\(n)")
-                                        .font(.subheadline.weight(.semibold).monospacedDigit())
-                                        .frame(width: 34, height: 34)
+                                        .font(.footnote.weight(.semibold).monospacedDigit())
+                                        .frame(width: 28, height: 28)
                                         .glassEffect(on ? .regular.tint(Color.brand.opacity(0.8)).interactive() : .regular.interactive(), in: .circle)
                                 }
                                 .buttonStyle(.plain)
@@ -144,7 +144,7 @@ struct LayoutPanel: View {
                         }
                     }
                 }
-                GlassIconButton(symbol: "shuffle", label: "Try another layout", size: 36) {
+                GlassIconButton(symbol: "shuffle", label: "Try another layout", size: 30) {
                     withAnimation(.smooth) { store.shuffleLayout() }
                 }
             }
@@ -175,29 +175,29 @@ struct StylePanel: View {
 
     var body: some View {
         @Bindable var store = store
-        VStack(spacing: 10) {
+        VStack(spacing: 6) {
             Picker("Format", selection: $store.project.format) {
                 ForEach(FormatId.allCases) { f in Text(f.label).tag(f) }
             }
             .pickerStyle(.segmented)
 
-            HStack(spacing: 18) {
+            HStack(spacing: 14) {
                 compactSlider("Gap", value: $store.project.gap, range: 0...48)
                 compactSlider("Corners", value: $store.project.radius, range: 0...80)
             }
 
             HStack(spacing: 10) {
                 Text("Colour")
-                    .font(.subheadline)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
-                    .frame(width: 70, alignment: .leading)
+                    .frame(width: 50, alignment: .leading)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(backgroundSwatches, id: \.self) { c in
                             let on = store.project.bg.lowercased() == c
                             Button { store.project.bg = c } label: {
                                 Circle().fill(Color(hex: c))
-                                    .frame(width: 28, height: 28)
+                                    .frame(width: 24, height: 24)
                                     .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
                                     .overlay(Circle().strokeBorder(Color.brand, lineWidth: on ? 3 : 0).padding(-4))
                             }
@@ -206,7 +206,7 @@ struct StylePanel: View {
                             .accessibilityAddTraits(on ? .isSelected : [])
                         }
                     }
-                    .padding(6)
+                    .padding(5)
                 }
                 ColorPicker("Custom colour", selection: Binding(
                     get: { Color(hex: store.project.bg) },
@@ -218,7 +218,7 @@ struct StylePanel: View {
             if store.project.format == .story {
                 Toggle(isOn: $store.project.safeZone) {
                     Label("Show the area Instagram covers", systemImage: store.project.safeZone ? "eye.slash" : "eye")
-                        .font(.subheadline)
+                        .font(.footnote)
                 }
             }
         }
@@ -229,9 +229,9 @@ extension StylePanel {
     func compactSlider(_ title: String, value: Binding<Double>, range: ClosedRange<Double>) -> some View {
         VStack(spacing: 0) {
             HStack {
-                Text(title).font(.subheadline).foregroundStyle(.secondary)
+                Text(title).font(.footnote).foregroundStyle(.secondary)
                 Spacer()
-                Text("\(Int(value.wrappedValue.rounded()))").font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
+                Text("\(Int(value.wrappedValue.rounded()))").font(.footnote.monospacedDigit()).foregroundStyle(.secondary)
             }
             Slider(value: value, in: range)
                 .accessibilityLabel(title)
@@ -246,13 +246,9 @@ struct AudioPanel: View {
 
     var body: some View {
         let lanes = placedLanes(store.project)
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 6) {
             if lanes.isEmpty {
-                ContentUnavailableView {
-                    Label("No video yet", systemImage: "waveform.slash")
-                } description: {
-                    Text("Add a video to control its sound and to add background music.")
-                }
+                HintRow(symbol: "waveform.slash", text: "Add a video to control its sound and add background music.")
             } else {
                 ForEach(Array(lanes.enumerated()), id: \.element.mediaId) { i, lane in
                     laneRow(i, lane)
@@ -265,10 +261,10 @@ struct AudioPanel: View {
     private func laneRow(_ i: Int, _ lane: Lane) -> some View {
         let item = store.item(lane.mediaId)
         let name = i == 0 ? "A" : "B"
-        return HStack(spacing: 10) {
+        return HStack(spacing: 8) {
             Text(name)
-                .font(.footnote.weight(.bold))
-                .frame(width: 26, height: 26)
+                .font(.caption.weight(.bold))
+                .frame(width: 22, height: 22)
                 .background(i == 0 ? Color.laneA : Color.laneB, in: Circle())
                 .foregroundStyle(.black.opacity(0.8))
             if item?.hasAudio == true {
@@ -281,7 +277,7 @@ struct AudioPanel: View {
                 ), in: 0...1)
                 .accessibilityLabel("Volume of video \(name)")
             } else {
-                Text("No sound in this video").font(.subheadline).foregroundStyle(.secondary)
+                Text("No sound in this video").font(.footnote).foregroundStyle(.secondary)
                 Spacer()
             }
             ChipButton(title: "Loop", symbol: "repeat", isOn: lane.loop) {
@@ -294,16 +290,16 @@ struct AudioPanel: View {
     private var musicSection: some View {
         @Bindable var store = store
         if let music = store.project.music {
-            HStack(spacing: 10) {
-                Image(systemName: "music.note").foregroundStyle(Color.musicGreen).frame(width: 26)
-                Text(music.name).font(.subheadline.weight(.medium)).lineLimit(1)
+            HStack(spacing: 8) {
+                Image(systemName: "music.note").foregroundStyle(Color.musicGreen).frame(width: 22)
+                Text(music.name).font(.footnote.weight(.medium)).lineLimit(1)
                 Spacer()
-                Button(role: .destructive) { store.removeMusic() } label: { Image(systemName: "trash") }
-                    .buttonStyle(.glass).buttonBorderShape(.circle)
+                Button(role: .destructive) { store.removeMusic() } label: { Image(systemName: "trash").font(.footnote) }
+                    .buttonStyle(.glass).buttonBorderShape(.circle).controlSize(.small)
                     .accessibilityLabel("Remove music")
             }
-            HStack(spacing: 10) {
-                Text("Volume").font(.subheadline).foregroundStyle(.secondary).frame(width: 70, alignment: .leading)
+            HStack(spacing: 8) {
+                Text("Volume").font(.footnote).foregroundStyle(.secondary).frame(width: 50, alignment: .leading)
                 Slider(value: Binding(
                     get: { music.volume },
                     set: { v in store.project.music?.volume = v }
@@ -314,7 +310,7 @@ struct AudioPanel: View {
                 get: { music.fadeOut },
                 set: { v in store.project.music?.fadeOut = v }
             ))
-            .font(.subheadline)
+            .font(.footnote)
         } else {
             ChipButton(title: "Add background music", symbol: "music.note.list") { store.openMusicImporter() }
         }
@@ -332,63 +328,58 @@ struct PicturePanel: View {
             let filled = cell.mediaId != nil
             if store.swapFrom != nil {
                 HStack {
-                    Label("Tap another cell in the preview to swap with it.", systemImage: "arrow.left.arrow.right")
-                        .font(.subheadline)
+                    Label("Tap another cell in the preview to swap.", systemImage: "arrow.left.arrow.right")
+                        .font(.footnote)
                     Spacer()
                     ChipButton(title: "Cancel", symbol: "xmark") { withAnimation { store.swapFrom = nil } }
                 }
+            } else if !filled {
+                HStack(spacing: 8) {
+                    ChipButton(title: "Add photo or video", symbol: "photo.badge.plus") { store.openAdd(cell: sel) }
+                    Spacer(minLength: 0)
+                    doneButton
+                }
             } else {
-                VStack(spacing: 10) {
-                    GlassEffectContainer(spacing: 8) {
-                        HStack(spacing: 8) {
-                            ChipButton(title: filled ? "Replace" : "Add photo or video", symbol: "photo.badge.plus") {
-                                store.openAdd(cell: sel)
+                VStack(spacing: 8) {
+                    GlassEffectContainer(spacing: 6) {
+                        HStack(spacing: 6) {
+                            CompactTool(title: "Change", symbol: "photo.badge.plus") { store.openAdd(cell: sel) }
+                            CompactTool(title: "Swap", symbol: "arrow.left.arrow.right") { withAnimation { store.swapFrom = sel } }
+                            CompactTool(title: "Rotate", symbol: "rotate.right") { withAnimation(.smooth) { store.rotateCell(sel) } }
+                            CompactTool(title: "Flip", symbol: "arrow.left.and.right.righttriangle.left.righttriangle.right", isOn: cell.flip) {
+                                withAnimation(.smooth) { store.flipCell(sel) }
                             }
-                            if filled {
-                                ChipButton(title: "Swap", symbol: "arrow.left.arrow.right") {
-                                    withAnimation { store.swapFrom = sel }
-                                }
-                                ChipButton(title: "Remove", symbol: "xmark", role: .destructive) { store.clearCell(sel) }
-                            }
-                            Spacer(minLength: 0)
+                            CompactTool(title: "Crop", symbol: "crop") { store.cropCell = sel }
+                            CompactTool(title: "Delete", symbol: "xmark", role: .destructive) { store.clearCell(sel) }
                         }
                     }
-                    if filled {
-                        GlassEffectContainer(spacing: 8) {
-                            HStack(spacing: 8) {
-                                ChipButton(title: "Rotate", symbol: "rotate.right") { withAnimation(.smooth) { store.rotateCell(sel) } }
-                                ChipButton(title: "Flip", symbol: "arrow.left.and.right.righttriangle.left.righttriangle.right", isOn: cell.flip) {
-                                    withAnimation(.smooth) { store.flipCell(sel) }
-                                }
-                                ChipButton(title: "Crop", symbol: "crop") { store.cropCell = sel }
-                                Spacer(minLength: 0)
-                            }
+                    HStack(spacing: 8) {
+                        Image(systemName: "minus.magnifyingglass").font(.footnote).foregroundStyle(.secondary)
+                        Slider(value: Binding(
+                            get: { cell.zoom },
+                            set: { v in store.setCellView(sel) { $0.zoom = v } }
+                        ), in: 1...4)
+                        .accessibilityLabel("Zoom")
+                        Image(systemName: "plus.magnifyingglass").font(.footnote).foregroundStyle(.secondary)
+                        GlassIconButton(symbol: "arrow.counterclockwise", label: "Reset zoom, position, rotation and flip", size: 30) {
+                            withAnimation(.smooth) { store.resetCell(sel) }
                         }
-                        HStack(spacing: 10) {
-                            Image(systemName: "minus.magnifyingglass").foregroundStyle(.secondary)
-                            Slider(value: Binding(
-                                get: { cell.zoom },
-                                set: { v in store.setCellView(sel) { $0.zoom = v } }
-                            ), in: 1...4)
-                            .accessibilityLabel("Zoom")
-                            Image(systemName: "plus.magnifyingglass").foregroundStyle(.secondary)
-                            GlassIconButton(symbol: "arrow.counterclockwise", label: "Reset zoom, position, rotation and flip", size: 34) {
-                                withAnimation(.smooth) { store.resetCell(sel) }
-                            }
-                        }
+                        doneButton
                     }
-                    Button { store.selectCell(nil) } label: {
-                        Label("Done", systemImage: "checkmark").frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.glassProminent)
                 }
             }
         } else {
-            ContentUnavailableView {
-                Label("Pick a picture", systemImage: "hand.tap")
-            } description: {
-                Text("Tap a picture in the preview to replace, swap, rotate, flip, crop and zoom it.")
-            }
+            HintRow(symbol: "hand.tap", text: "Tap a picture in the preview to replace, swap, rotate, flip, crop and zoom it.")
         }
+    }
+
+    private var doneButton: some View {
+        Button { store.selectCell(nil) } label: {
+            Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).frame(width: 30, height: 30)
+        }
+        .buttonStyle(.glassProminent)
+        .buttonBorderShape(.circle)
+        .controlSize(.small)
+        .accessibilityLabel("Done")
     }
 }

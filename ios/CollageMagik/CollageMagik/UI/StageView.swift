@@ -81,6 +81,8 @@ struct StageGestureLayer: UIViewRepresentable {
 /// The live collage. Pictures and playing videos sit in their cells with rounded corners; gestures edit them.
 struct StageView: View {
     @Environment(CollageStore.self) private var store
+    /// False for the full-screen preview: no selection rings, "+" marks or gestures, just the collage.
+    var interactive = true
 
     private struct Lift: Equatable {
         var from: Int
@@ -123,6 +125,7 @@ struct StageView: View {
                 cell(i, r, radius: radius)
             }
 
+            if interactive {
             // selection and swap marks
             if let s = store.selectedCell, px.indices.contains(s) {
                 ring(px[s], color: .brand, radius: radius)
@@ -149,9 +152,10 @@ struct StageView: View {
                 onLiftMove: { liftMove($0, size) },
                 onLiftEnd: { liftEnd($0, size, completed: $1) }
             )
+            }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-        .shadow(color: .black.opacity(0.45), radius: 22, y: 10)
+        .clipShape(RoundedRectangle(cornerRadius: interactive ? 6 : 0, style: .continuous))
+        .shadow(color: .black.opacity(interactive ? 0.45 : 0), radius: 22, y: 10)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Collage preview. Tap a picture for options, drag to move it, pinch to zoom, press and hold then drag to swap.")
     }
@@ -168,6 +172,8 @@ struct StageView: View {
                     view: state.view,
                     player: item.kind == .video ? store.playback.player(for: item) : nil
                 )
+            } else if !interactive {
+                Color.white.opacity(0.06)
             } else {
                 Color.white.opacity(0.08)
                 Image(systemName: "plus")

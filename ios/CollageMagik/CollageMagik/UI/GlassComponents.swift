@@ -38,13 +38,53 @@ struct ChipButton: View {
     var body: some View {
         Button(role: role, action: action) {
             Label(title, systemImage: symbol)
-                .font(.subheadline.weight(.medium))
+                .font(.footnote.weight(.medium))
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
         }
         .buttonStyle(.glass)
         .tint(isOn ? Color.brand : nil)
-        .controlSize(.regular)
+        .controlSize(.small)
+    }
+}
+
+/// A compact glass tile: icon over a tiny caption. Several fit in one row.
+struct CompactTool: View {
+    let title: String
+    let symbol: String
+    var isOn = false
+    var role: ButtonRole? = nil
+    let action: () -> Void
+
+    var body: some View {
+        Button(role: role, action: action) {
+            VStack(spacing: 2) {
+                Image(systemName: symbol).font(.system(size: 15, weight: .medium)).frame(height: 18)
+                Text(title).font(.system(size: 10, weight: .medium)).lineLimit(1).minimumScaleFactor(0.8)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 42)
+            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.glass)
+        .buttonBorderShape(.roundedRectangle(radius: 14))
+        .controlSize(.small)
+        .tint(isOn ? Color.brand : (role == .destructive ? Color.red : nil))
+        .accessibilityLabel(title)
+    }
+}
+
+/// A one-line hint that replaces the big "unavailable" placeholders, so empty panels stay short.
+struct HintRow: View {
+    let symbol: String
+    let text: String
+
+    var body: some View {
+        Label(text, systemImage: symbol)
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -53,7 +93,7 @@ struct GlassIconButton: View {
     let symbol: String
     let label: String
     var isOn = false
-    var size: CGFloat = 40
+    var size: CGFloat = 32
     let action: () -> Void
 
     var body: some View {
@@ -64,6 +104,7 @@ struct GlassIconButton: View {
         }
         .buttonStyle(.glass)
         .buttonBorderShape(.circle)
+        .controlSize(.small)
         .tint(isOn ? Color.brand : nil)
         .accessibilityLabel(label)
     }

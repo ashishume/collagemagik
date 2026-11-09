@@ -11,6 +11,11 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		92F0C48330A23F97001E46B7 /* New Folder */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "New Folder";
+			sourceTree = "<group>";
+		};
 		A10000002 /* CollageMagik */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = CollageMagik;
@@ -34,6 +39,7 @@
 			children = (
 				A10000002 /* CollageMagik */,
 				A10000005 /* Products */,
+				92F0C48330A23F97001E46B7 /* New Folder */,
 			);
 			sourceTree = "<group>";
 		};
@@ -61,6 +67,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				92F0C48330A23F97001E46B7 /* New Folder */,
 				A10000002 /* CollageMagik */,
 			);
 			name = CollageMagik;

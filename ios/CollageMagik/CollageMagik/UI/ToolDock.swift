@@ -13,19 +13,19 @@ struct ToolDock: View {
                     Button {
                         withAnimation(.bouncy(duration: 0.45)) { store.tab = tab }
                     } label: {
-                        VStack(spacing: 3) {
+                        VStack(spacing: 1) {
                             Image(systemName: tab.symbol)
-                                .font(.system(size: 19, weight: .medium))
+                                .font(.system(size: 16, weight: .medium))
                                 .symbolVariant(selected ? .fill : .none)
-                                .frame(height: 22)
+                                .frame(height: 19)
                             Text(tab.label)
-                                .font(.system(size: 10.5, weight: .medium))
+                                .font(.system(size: 9.5, weight: .medium))
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)
                         }
                         .foregroundStyle(selected ? Color.white : Color.white.opacity(0.7))
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
+                        .padding(.vertical, 5)
                         .contentShape(Capsule())
                         .background {
                             if selected {
@@ -41,7 +41,7 @@ struct ToolDock: View {
                     .accessibilityAddTraits(selected ? .isSelected : [])
                 }
             }
-            .padding(4)
+            .padding(3)
             .glassEffect(.regular, in: .capsule)
         }
         .sensoryFeedback(.selection, trigger: store.tab)

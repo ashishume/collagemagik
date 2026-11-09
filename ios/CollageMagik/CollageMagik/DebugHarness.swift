@@ -16,6 +16,10 @@ enum DebugHarness {
                 NSLog("CM_DEBUG import %@ -> %@", u.lastPathComponent, store.items.count > before ? "OK" : "REJECTED (toast: \(store.toast?.text ?? "none"))")
             }
         }
+        if let list = env["CM_BATCH"] {
+            await store.addFiles(list.split(separator: ",").map { URL(fileURLWithPath: String($0)) })
+            NSLog("CM_DEBUG batch -> cells=%d items=%d tab=%@", store.project.cellCount, store.items.count, store.tab.rawValue)
+        }
         if let l = env["CM_LAYOUT"] { store.setCellCount(Int(l) ?? 4) }
         if let t = env["CM_TAB"], let tab = Tab(rawValue: t) { store.tab = tab }
         if let s = env["CM_SELECT"], let i = Int(s) { store.selectCell(i); store.openPicture() }
@@ -44,6 +48,7 @@ enum DebugHarness {
                 NSLog("CM_DEBUG export FAILED: %@", error.localizedDescription)
             }
         }
+        if env["CM_PREVIEW"] == "1" { store.previewOpen = true }
         if env["CM_PLAY"] == "1" { store.playback.play() }
         if let seek = env["CM_SEEK"], let t = Double(seek) { store.playback.seek(to: t) }
     }

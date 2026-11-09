@@ -41,6 +41,7 @@ final class CollageStore {
     var toast: Toast?
     var exportOpen = false
     var helpOpen = false
+    var previewOpen = false
     var cropCell: Int?
 
     // Pickers
@@ -134,7 +135,9 @@ final class CollageStore {
         importing = true
         defer { importing = false }
         let fresh = items.isEmpty
+        let replacing = pickTarget.map { project.cells.indices.contains($0) && project.cells[$0].mediaId != nil } ?? false
         var target = pickTarget
+        var added = 0
         pickTarget = nil
         for url in urls {
             let name = url.deletingPathExtension().lastPathComponent
@@ -164,8 +167,27 @@ final class CollageStore {
             }
             placeMedia(item.id, cell: target)
             target = nil
+            added += 1
         }
-        if fresh, !items.isEmpty { setCellCount(items.count) }
+        // The collage follows the selection: pick N photos / videos and you get an N-cell collage, with the
+        // formats for N cells ready to choose from. (A single add to a collage already in progress leaves it alone.)
+        if !replacing, added > 0, fresh || added >= 2 {
+            let lastFilled = project.cells.lastIndex { $0.mediaId != nil } ?? 0
+            setCellCount(lastFilled + 1)
+            if added >= 2 {
+                selectedCell = nil
+                swapFrom = nil
+            }
+        }
+        // When the selection is done, land on the tool that matters most: the timeline if there is a video to cut,
+        // otherwise the layouts for the new cell count.
+        if !replacing, added > 0 {
+            if hasPlacedVideo {
+                withAnimation(.smooth) { tab = .timeline }
+            } else if added >= 2 {
+                withAnimation(.smooth) { tab = .layout }
+            }
+        }
         playback.projectChanged()
     }
 

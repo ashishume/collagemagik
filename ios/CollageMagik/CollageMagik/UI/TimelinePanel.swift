@@ -6,11 +6,11 @@ struct TransportBar: View {
 
     var body: some View {
         let pb = store.playback
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             Button { pb.togglePlay() } label: {
                 Image(systemName: pb.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.system(size: 16, weight: .semibold))
-                    .frame(width: 36, height: 36)
+                    .font(.system(size: 13, weight: .semibold))
+                    .frame(width: 28, height: 28)
                     .contentTransition(.symbolEffect(.replace))
             }
             .buttonStyle(.glass)
@@ -24,11 +24,11 @@ struct TransportBar: View {
             .accessibilityLabel("Playhead")
 
             Text("\(formatTime(pb.playhead)) / \(formatTime(store.totalDuration))")
-                .font(.footnote.monospacedDigit())
+                .font(.caption.monospacedDigit())
                 .foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 4)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 2)
         .glassEffect(.regular, in: .capsule)
     }
 }
@@ -39,13 +39,9 @@ struct TimelinePanel: View {
     var body: some View {
         let lanes = placedLanes(store.project)
         if lanes.isEmpty {
-            ContentUnavailableView {
-                Label("Nothing to cut yet", systemImage: "film")
-            } description: {
-                Text("Add a video to cut it here. Photos stay on screen for the whole video.")
-            }
+            HintRow(symbol: "film", text: "Add a video to cut it here. Photos stay on screen for the whole video.")
         } else {
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 controls
                 TimelineArea(lanes: lanes)
             }
@@ -57,8 +53,8 @@ struct TimelinePanel: View {
         return HStack(spacing: 8) {
             Button { pb.togglePlay() } label: {
                 Image(systemName: pb.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.system(size: 15, weight: .semibold))
-                    .frame(width: 34, height: 34)
+                    .font(.system(size: 13, weight: .semibold))
+                    .frame(width: 28, height: 28)
                     .contentTransition(.symbolEffect(.replace))
             }
             .buttonStyle(.glass)
@@ -66,17 +62,29 @@ struct TimelinePanel: View {
             .accessibilityLabel(pb.isPlaying ? "Pause" : "Play")
 
             Text("\(formatTime(pb.playhead)) / \(formatTime(store.totalDuration))")
-                .font(.subheadline.monospacedDigit())
+                .font(.caption.monospacedDigit())
                 .foregroundStyle(.secondary)
             Spacer(minLength: 0)
-            GlassEffectContainer(spacing: 8) {
-                HStack(spacing: 8) {
+            GlassEffectContainer(spacing: 6) {
+                HStack(spacing: 6) {
                     ChipButton(title: "Split", symbol: "scissors") { store.splitAtPlayhead() }
                     ChipButton(title: "Delete", symbol: "trash", role: .destructive) { store.deleteSelectedClip() }
                 }
             }
         }
     }
+}
+
+/// Height of the timeline panel's content for a given number of video lanes (used to size the panel card).
+func timelineContentHeight(lanes: Int) -> CGFloat {
+    TimelineMetrics.controlsHeight + 6 + TimelineMetrics.rulerHeight + CGFloat(lanes + 1) * (TimelineMetrics.laneHeight + TimelineMetrics.rowGap)
+}
+
+enum TimelineMetrics {
+    static let laneHeight: CGFloat = 28
+    static let rulerHeight: CGFloat = 14
+    static let rowGap: CGFloat = 3
+    static let controlsHeight: CGFloat = 30
 }
 
 private struct TimelineArea: View {
@@ -89,20 +97,34 @@ private struct TimelineArea: View {
         var mediaId: String
         var origin: Clip
         var pxPerSec: Double
+        var sourceLength: Double
+    }
+    private struct Target {
+        var kind: Kind
+        var mediaId: String
+        var clip: Clip
+        var sourceLength: Double
     }
 
-    private let laneHeight: CGFloat = 32
-    private let rulerHeight: CGFloat = 16
-    private let labelWidth: CGFloat = 62
+    private let laneHeight = TimelineMetrics.laneHeight
+    private let rulerHeight = TimelineMetrics.rulerHeight
+    private let rowGap = TimelineMetrics.rowGap
+    private let labelWidth: CGFloat = 54
     private let musicLane = "__music__"
+    /// Clips narrower than this still get a finger-sized touch area, so a tiny clip can be grabbed instead of scrubbing past it.
+    private let minHitWidth: CGFloat = 52
+    private let maxEdgeZone: CGFloat = 22
 
     @State private var drag: DragCtx?
     @State private var frozenView: Double?
     @State private var scrubbing = false
+    @GestureState private var touching = false
 
     private func viewSeconds(_ dur: Double) -> Double {
         frozenView ?? clamp((dur * 1.4 / 5).rounded(.up) * 5, 10, 60)
     }
+
+    private func rowY(_ i: Int) -> CGFloat { rulerHeight + CGFloat(i) * (laneHeight + rowGap) }
 
     var body: some View {
         let dur = store.totalDuration
@@ -112,7 +134,7 @@ private struct TimelineArea: View {
             GeometryReader { geo in
                 track(width: geo.size.width, dur: dur)
             }
-            .frame(height: rulerHeight + CGFloat(rows) * (laneHeight + 4))
+            .frame(height: rowY(rows) - rowGap)
             .coordinateSpace(name: "track")
         }
     }
@@ -120,14 +142,14 @@ private struct TimelineArea: View {
     // MARK: Labels
 
     private func labels(rows: Int) -> some View {
-        VStack(spacing: 4) {
+        VStack(spacing: rowGap) {
             Color.clear.frame(height: rulerHeight)
             ForEach(Array(lanes.enumerated()), id: \.element.mediaId) { i, lane in
                 let name = i == 0 ? "A" : "B"
-                HStack(spacing: 3) {
+                HStack(spacing: 2) {
                     Text(name)
-                        .font(.system(size: 11, weight: .bold))
-                        .frame(width: 20, height: 20)
+                        .font(.system(size: 10, weight: .bold))
+                        .frame(width: 18, height: 18)
                         .background(i == 0 ? Color.laneA : Color.laneB, in: Circle())
                         .foregroundStyle(.black.opacity(0.8))
                     miniButton(lane.volume == 0 ? "speaker.slash.fill" : "speaker.wave.2.fill", on: lane.volume == 0, label: lane.volume == 0 ? "Unmute video \(name)" : "Mute video \(name)") {
@@ -139,10 +161,10 @@ private struct TimelineArea: View {
                 }
                 .frame(width: labelWidth, height: laneHeight)
             }
-            HStack(spacing: 3) {
+            HStack(spacing: 2) {
                 Image(systemName: "music.note")
-                    .font(.system(size: 11, weight: .bold))
-                    .frame(width: 20, height: 20)
+                    .font(.system(size: 10, weight: .bold))
+                    .frame(width: 18, height: 18)
                     .background(Color.musicGreen, in: Circle())
                     .foregroundStyle(.black.opacity(0.8))
                 if let m = store.project.music {
@@ -162,9 +184,10 @@ private struct TimelineArea: View {
     private func miniButton(_ symbol: String, on: Bool, label: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: 11, weight: .semibold))
-                .frame(width: 18, height: 24)
+                .font(.system(size: 10, weight: .semibold))
+                .frame(width: 17, height: laneHeight)
                 .foregroundStyle(on ? Color.brand : Color.secondary)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
@@ -177,33 +200,118 @@ private struct TimelineArea: View {
         let view = viewSeconds(dur)
         let pxPerSec = Double(width) / view
         ZStack(alignment: .topLeading) {
-            // Background: tap or drag anywhere to move the playhead.
             Color.clear
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(minimumDistance: 0, coordinateSpace: .named("track"))
-                        .onChanged { v in
-                            if !scrubbing {
-                                scrubbing = true
-                                store.selectedClip = nil
-                            }
-                            store.playback.seek(to: clamp(Double(v.location.x) / pxPerSec, 0, dur))
-                        }
-                        .onEnded { _ in scrubbing = false }
-                )
 
             ruler(view: view, pxPerSec: pxPerSec)
 
             ForEach(Array(lanes.enumerated()), id: \.element.mediaId) { i, lane in
                 laneRow(index: i, lane: lane, pxPerSec: pxPerSec, width: width)
-                    .offset(y: rulerHeight + CGFloat(i) * (laneHeight + 4))
+                    .offset(y: rowY(i))
             }
             musicRow(pxPerSec: pxPerSec, width: width, dur: dur)
-                .offset(y: rulerHeight + CGFloat(lanes.count) * (laneHeight + 4))
+                .offset(y: rowY(lanes.count))
 
-            Playhead(pxPerSec: pxPerSec, height: rulerHeight + CGFloat(lanes.count + 1) * (laneHeight + 4))
+            Playhead(pxPerSec: pxPerSec, height: rowY(lanes.count + 1) - rowGap)
                 .allowsHitTesting(false)
         }
+        .contentShape(Rectangle())
+        // One gesture owns the whole track. It decides on touch-down what the finger grabbed (a trim handle, a clip, or empty
+        // space = playhead), using touch areas that stay finger-sized even for tiny clips, so a small clip is never lost to scrubbing.
+        .gesture(trackGesture(pxPerSec: pxPerSec, dur: dur))
+        .onChange(of: touching) { _, now in
+            if !now { endGesture() }
+        }
+    }
+
+    private func endGesture() {
+        drag = nil
+        scrubbing = false
+        frozenView = nil
+    }
+
+    private func trackGesture(pxPerSec: Double, dur: Double) -> some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: .named("track"))
+            .updating($touching) { _, state, _ in state = true }
+            .onChanged { v in
+                if drag == nil && !scrubbing {
+                    if let t = hitTarget(v.startLocation, pxPerSec: pxPerSec) {
+                        drag = DragCtx(kind: t.kind, mediaId: t.mediaId, origin: t.clip, pxPerSec: pxPerSec, sourceLength: t.sourceLength)
+                        frozenView = viewSeconds(dur)
+                        store.selectedClip = t.clip.id
+                        store.playback.pause()
+                    } else {
+                        scrubbing = true
+                        store.selectedClip = nil
+                    }
+                }
+                if let d = drag {
+                    applyEdit(d, translation: Double(v.translation.width))
+                } else if scrubbing {
+                    store.playback.seek(to: clamp(Double(v.location.x) / pxPerSec, 0, dur))
+                }
+            }
+            .onEnded { _ in endGesture() }
+    }
+
+    /// What is under the finger at `p` (nil = empty space or the ruler).
+    private func hitTarget(_ p: CGPoint, pxPerSec: Double) -> Target? {
+        guard p.y >= rulerHeight else { return nil }
+        let row = Int((p.y - rulerHeight) / (laneHeight + rowGap))
+        let mediaId: String
+        let clips: [Clip]
+        let sourceLength: (Clip) -> Double
+        if row < lanes.count {
+            let lane = lanes[row]
+            mediaId = lane.mediaId
+            clips = lane.clips
+            let dur = store.item(lane.mediaId)?.duration
+            sourceLength = { dur ?? $0.outPoint }
+        } else if row == lanes.count, let m = store.project.music {
+            mediaId = musicLane
+            clips = [m.asClip]
+            sourceLength = { _ in m.duration }
+        } else {
+            return nil
+        }
+
+        var best: (clip: Clip, kind: Kind, dist: CGFloat)?
+        for clip in clips {
+            var x0 = CGFloat(clip.start * pxPerSec)
+            var x1 = CGFloat(clip.end * pxPerSec)
+            let mid = (x0 + x1) / 2
+            if x1 - x0 < minHitWidth {
+                x0 = mid - minHitWidth / 2
+                x1 = mid + minHitWidth / 2
+            }
+            // a few points of slack just outside the clip make the trim handles easy to catch
+            guard p.x >= x0 - 8, p.x <= x1 + 8 else { continue }
+            let edge = min(maxEdgeZone, (x1 - x0) * 0.3)
+            let kind: Kind = p.x < x0 + edge ? .left : (p.x > x1 - edge ? .right : .move)
+            let dist = abs(p.x - mid)
+            if best == nil || dist < best!.dist { best = (clip, kind, dist) }
+        }
+        guard let best else { return nil }
+        return Target(kind: best.kind, mediaId: mediaId, clip: best.clip, sourceLength: sourceLength(best.clip))
+    }
+
+    private func applyEdit(_ d: DragCtx, translation: Double) {
+        let dt = translation / d.pxPerSec
+        let next: Clip
+        switch d.kind {
+        case .left: next = trimLeft(d.origin, dt)
+        case .right: next = trimRight(d.origin, dt, mediaDuration: d.sourceLength)
+        case .move: next = moveClip(d.origin, dt)
+        }
+        if d.mediaId == musicLane {
+            store.project.music?.start = next.start
+            store.project.music?.inPoint = next.inPoint
+            store.project.music?.outPoint = next.outPoint
+            return
+        }
+        store.updateClip(mediaId: d.mediaId, clipId: d.origin.id) { _ in next }
+        // keep the picture on the clip being edited
+        if d.kind == .left { store.playback.seek(to: next.start) }
+        else if d.kind == .right { store.playback.seek(to: max(next.start, next.end - 0.05)) }
     }
 
     private func ruler(view: Double, pxPerSec: Double) -> some View {
@@ -211,7 +319,7 @@ private struct TimelineArea: View {
         return ZStack(alignment: .topLeading) {
             ForEach(Array(stride(from: 0.0, through: view, by: step)), id: \.self) { t in
                 Text("\(Int(t))s")
-                    .font(.system(size: 9, weight: .medium).monospacedDigit())
+                    .font(.system(size: 8.5, weight: .medium).monospacedDigit())
                     .foregroundStyle(.secondary)
                     .offset(x: t * pxPerSec + 2)
             }
@@ -224,25 +332,21 @@ private struct TimelineArea: View {
         let color: Color = index == 0 ? .laneA : .laneB
         let item = store.item(lane.mediaId)
         return ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
                 .fill(.white.opacity(0.06))
                 .frame(width: width, height: laneHeight)
-                .allowsHitTesting(false)
             ForEach(lane.clips) { clip in
-                clipView(
-                    clip: clip, color: color, mediaId: lane.mediaId, pxPerSec: pxPerSec,
-                    thumbnail: item?.thumbnail, label: formatTime(clip.length),
-                    sourceLength: item?.duration ?? clip.outPoint
-                )
+                clipView(clip: clip, color: color, pxPerSec: pxPerSec, thumbnail: item?.thumbnail, label: formatTime(clip.length))
             }
         }
         .frame(width: width, height: laneHeight, alignment: .topLeading)
+        .allowsHitTesting(false)
     }
 
     @ViewBuilder
     private func musicRow(pxPerSec: Double, width: CGFloat, dur: Double) -> some View {
         ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
                 .fill(.white.opacity(0.06))
                 .frame(width: width, height: laneHeight)
                 .allowsHitTesting(false)
@@ -250,109 +354,67 @@ private struct TimelineArea: View {
                 let ownEnd = m.start + m.clipLength
                 let end = m.end(total: dur)
                 if m.loop && end > ownEnd {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
                         .fill(Color.musicGreen.opacity(0.18))
-                        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.musicGreen.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
+                        .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(Color.musicGreen.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
                         .frame(width: (end - ownEnd) * pxPerSec, height: laneHeight - 6)
                         .offset(x: ownEnd * pxPerSec, y: 3)
                         .allowsHitTesting(false)
                 }
-                clipView(
-                    clip: m.asClip, color: .musicGreen, mediaId: musicLane, pxPerSec: pxPerSec,
-                    thumbnail: nil, label: m.name, sourceLength: m.duration
-                )
+                clipView(clip: m.asClip, color: .musicGreen, pxPerSec: pxPerSec, thumbnail: nil, label: m.name)
+                    .allowsHitTesting(false)
             } else {
                 Button { store.openMusicImporter() } label: {
-                    Label("Add music", systemImage: "plus").font(.footnote.weight(.semibold))
-                        .padding(.horizontal, 12).frame(height: laneHeight - 4)
+                    Label("Add music", systemImage: "plus").font(.caption.weight(.semibold))
+                        .padding(.horizontal, 12).frame(height: laneHeight - 6)
+                        .contentShape(Capsule())
+                        .glassEffect(.regular.interactive(), in: .capsule)
                 }
-                .buttonStyle(.glass)
-                .buttonBorderShape(.capsule)
-                .offset(x: 2, y: 2)
+                .buttonStyle(.plain)
+                .offset(x: 3, y: 3)
             }
         }
         .frame(width: width, height: laneHeight, alignment: .topLeading)
     }
 
-    private func clipView(clip: Clip, color: Color, mediaId: String, pxPerSec: Double, thumbnail: UIImage?, label: String, sourceLength: Double) -> some View {
+    /// Drawing only. Touches are handled by the track gesture.
+    private func clipView(clip: Clip, color: Color, pxPerSec: Double, thumbnail: UIImage?, label: String) -> some View {
         let w = max(8, clip.length * pxPerSec)
         let selected = store.selectedClip == clip.id
+        let shape = RoundedRectangle(cornerRadius: 8, style: .continuous)
         return ZStack {
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
-                .fill(color.opacity(0.55))
+            shape.fill(color.opacity(0.55))
             if let thumbnail {
                 Image(uiImage: thumbnail)
                     .resizable()
                     .scaledToFill()
                     .frame(width: w, height: laneHeight)
                     .opacity(0.35)
-                    .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                    .clipShape(shape)
             }
-            Text(label)
-                .font(.system(size: 10.5, weight: .semibold))
-                .lineLimit(1)
-                .foregroundStyle(.white)
-                .shadow(radius: 2)
-                .padding(.horizontal, 26)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
-                .strokeBorder(selected ? Color.white : color, lineWidth: selected ? 2.5 : 1)
-            HStack {
-                handle(.left, mediaId: mediaId, clip: clip, pxPerSec: pxPerSec, sourceLength: sourceLength)
-                Spacer(minLength: 0)
-                handle(.right, mediaId: mediaId, clip: clip, pxPerSec: pxPerSec, sourceLength: sourceLength)
+            if w >= 64 {
+                Text(label)
+                    .font(.system(size: 10, weight: .semibold))
+                    .lineLimit(1)
+                    .foregroundStyle(.white)
+                    .shadow(radius: 2)
+                    .padding(.horizontal, 14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            shape.strokeBorder(selected ? Color.white : color, lineWidth: selected ? 2 : 1)
+            if w >= 28 {
+                HStack {
+                    Capsule().fill(.white.opacity(0.9)).frame(width: 3, height: 12)
+                    Spacer(minLength: 0)
+                    Capsule().fill(.white.opacity(0.9)).frame(width: 3, height: 12)
+                }
+                .padding(.horizontal, 4)
             }
         }
         .frame(width: w, height: laneHeight - 2)
-        .contentShape(Rectangle())
-        .gesture(dragGesture(.move, mediaId: mediaId, clip: clip, pxPerSec: pxPerSec, sourceLength: sourceLength))
         .offset(x: clip.start * pxPerSec, y: 1)
-        .accessibilityLabel(mediaId == musicLane ? "Music \(label)" : "Clip \(label)")
+        .accessibilityLabel(clip.id == musicClipId ? "Music \(label)" : "Clip \(label)")
         .accessibilityAddTraits(selected ? .isSelected : [])
-    }
-
-    private func handle(_ kind: Kind, mediaId: String, clip: Clip, pxPerSec: Double, sourceLength: Double) -> some View {
-        Capsule()
-            .fill(.white.opacity(0.9))
-            .frame(width: 4, height: 16)
-            .frame(width: 22, height: laneHeight)
-            .contentShape(Rectangle())
-            .gesture(dragGesture(kind, mediaId: mediaId, clip: clip, pxPerSec: pxPerSec, sourceLength: sourceLength))
-            .accessibilityLabel(kind == .left ? "Trim start" : "Trim end")
-    }
-
-    private func dragGesture(_ kind: Kind, mediaId: String, clip: Clip, pxPerSec: Double, sourceLength: Double) -> some Gesture {
-        DragGesture(minimumDistance: 0, coordinateSpace: .named("track"))
-            .onChanged { v in
-                if drag == nil {
-                    drag = DragCtx(kind: kind, mediaId: mediaId, origin: clip, pxPerSec: pxPerSec)
-                    frozenView = viewSeconds(store.totalDuration)
-                    store.selectedClip = clip.id
-                    store.playback.pause()
-                }
-                guard let d = drag else { return }
-                let dt = Double(v.translation.width) / d.pxPerSec
-                let next: Clip
-                switch d.kind {
-                case .left: next = trimLeft(d.origin, dt)
-                case .right: next = trimRight(d.origin, dt, mediaDuration: sourceLength)
-                case .move: next = moveClip(d.origin, dt)
-                }
-                if d.mediaId == musicLane {
-                    store.project.music?.start = next.start
-                    store.project.music?.inPoint = next.inPoint
-                    store.project.music?.outPoint = next.outPoint
-                    return
-                }
-                store.updateClip(mediaId: d.mediaId, clipId: d.origin.id) { _ in next }
-                // keep the picture on the clip being edited
-                if d.kind == .left { store.playback.seek(to: next.start) }
-                else if d.kind == .right { store.playback.seek(to: max(next.start, next.end - 0.05)) }
-            }
-            .onEnded { _ in
-                drag = nil
-                frozenView = nil
-            }
     }
 }
 
@@ -365,7 +427,7 @@ private struct Playhead: View {
         let x = store.playback.playhead * pxPerSec
         ZStack(alignment: .top) {
             Capsule().fill(.white).frame(width: 2, height: height)
-            Circle().fill(.white).frame(width: 9, height: 9).shadow(radius: 2)
+            Circle().fill(.white).frame(width: 8, height: 8).shadow(radius: 2)
         }
         .offset(x: x - 1)
     }
