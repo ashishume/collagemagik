@@ -48,7 +48,7 @@ export class CollageRenderer {
       const item = items.find((m) => m.id === cell?.mediaId)
       if (!item) continue
       if (item.kind === 'photo') {
-        const need = neededPhotoSize(item.width, item.height, px[i], cell.zoom)
+        const need = neededPhotoSize(item.width, item.height, px[i], cell.zoom, cell.rotation, cell.angle)
         this.photos.set(item.id, await decodePhoto(item.file, need.scale >= 1 ? undefined : { w: need.w, h: need.h }))
       } else {
         const frames = new VideoFrames(item)

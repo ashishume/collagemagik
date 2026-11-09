@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { LAYOUTS, MAX_CELLS, layoutsFor } from './layouts'
-import { cellPixelRects, coverRect, neededPhotoSize, panAfterDrag } from './geometry'
+import { RAD, cellPixelRects, coverRect, coverScale, neededPhotoSize, panAfterDrag, placeMedia } from './geometry'
 import {
   MAX_DURATION,
   musicAt,
@@ -242,5 +242,64 @@ describe('HEIC detection', () => {
     const { looksLikeHeic } = await import('./media/photo')
     expect(await looksLikeHeic(new File([new Uint8Array(16)], 'a.jpg', { type: 'image/jpeg' }))).toBe(false)
     expect(await looksLikeHeic(heic('clip', '', 'qt  '))).toBe(false)
+  })
+})
+
+describe('rotate, flip and straighten', () => {
+  const cell = { x: 100, y: 200, w: 300, h: 400 }
+  const view = { zoom: 1, panX: 0, panY: 0, rotation: 0, flip: false, angle: 0 }
+
+  it('is identical to the plain cover when nothing is rotated', () => {
+    const a = coverRect(1600, 900, cell, 1, 0.5, -0.25)
+    const p = placeMedia(1600, 900, cell, { ...view, panX: 0.5, panY: -0.25 })
+    expect(p.scale).toBeCloseTo(a.dw / 1600)
+    expect(p.cx - (1600 * p.scale) / 2).toBeCloseTo(a.dx)
+    expect(p.cy - (900 * p.scale) / 2).toBeCloseTo(a.dy)
+  })
+
+  it('swaps width and height for quarter turns', () => {
+    // a 4:3 landscape picture turned 90 degrees fills a portrait cell much better (smaller scale needed)
+    expect(coverScale(400, 300, cell, 90, 0)).toBeCloseTo(Math.max(300 / 300, 400 / 400))
+    expect(coverScale(400, 300, cell, 0, 0)).toBeCloseTo(400 / 300)
+    expect(coverScale(400, 300, cell, 180, 0)).toBeCloseTo(coverScale(400, 300, cell, 0, 0))
+  })
+
+  it('zooms in just enough that a straightened picture still covers every corner', () => {
+    const src = { w: 1200, h: 800 }
+    for (const angle of [-45, -17, 3, 10, 30, 45]) {
+      for (const [panX, panY] of [
+        [0, 0],
+        [1, 1],
+        [-1, 1],
+        [1, -1],
+        [-1, -1],
+        [0.5, -1],
+      ]) {
+        const v = { ...view, angle, panX, panY, zoom: 1.3 }
+        const p = placeMedia(src.w, src.h, cell, v)
+        const t = angle * RAD
+        for (const [sx, sy] of [
+          [-1, -1],
+          [1, -1],
+          [-1, 1],
+          [1, 1],
+        ]) {
+          // corner of the cell relative to the picture centre, in the picture's own (tilted) frame
+          const vx = cell.x + cell.w / 2 + (sx * cell.w) / 2 - p.cx
+          const vy = cell.y + cell.h / 2 + (sy * cell.h) / 2 - p.cy
+          const ux = Math.cos(t) * vx + Math.sin(t) * vy
+          const uy = -Math.sin(t) * vx + Math.cos(t) * vy
+          expect(Math.abs(ux)).toBeLessThanOrEqual((src.w * p.scale) / 2 + 1e-6)
+          expect(Math.abs(uy)).toBeLessThanOrEqual((src.h * p.scale) / 2 + 1e-6)
+        }
+      }
+    }
+  })
+
+  it('decodes a photo at the size a rotated, straightened cell needs', () => {
+    const upright = neededPhotoSize(4000, 3000, cell, 1, 0, 0)
+    const tilted = neededPhotoSize(4000, 3000, cell, 1, 0, 20)
+    expect(tilted.scale).toBeGreaterThan(upright.scale)
+    expect(neededPhotoSize(100, 100, cell, 1, 90, 30).scale).toBe(1)
   })
 })

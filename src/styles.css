@@ -444,8 +444,8 @@ p {
 }
 
 .panel {
-  min-height: 132px;
-  max-height: 188px;
+  /* fixed height so the preview does not jump when switching tabs */
+  height: 186px;
   overflow: auto;
 }
 .panel-body {
@@ -668,7 +668,7 @@ input[type='range'] {
 
 .tabbar {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   border-top: 1px solid var(--border);
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -800,7 +800,9 @@ input[type='range'] {
 
 @media (min-width: 900px) {
   .app {
-    grid-template-columns: minmax(0, 1fr) 400px;
+    max-width: none;
+    margin: 0;
+    grid-template-columns: minmax(0, 1fr) clamp(380px, 30vw, 580px);
     grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-areas: 'top top' 'stage side' 'tl side';
   }
@@ -810,10 +812,37 @@ input[type='range'] {
   }
   .panel {
     flex: 1;
-    max-height: none;
+    height: auto;
   }
   .strip {
     flex-wrap: wrap;
+    gap: 14px;
+  }
+  .panel-body {
+    padding: 16px 18px 18px;
+  }
+  .thumb {
+    width: 104px;
+    height: 104px;
+  }
+  .mini {
+    width: 56px;
+    height: 100px;
+  }
+  .lay {
+    padding: 8px 8px 6px;
+  }
+  .lay-name {
+    font-size: 11px;
+    max-width: 90px;
+  }
+  .num {
+    max-width: 48px;
+    height: 42px;
+  }
+  .tabbar button {
+    min-height: 64px;
+    font-size: 12px;
   }
   .modal-back {
     align-items: center;
@@ -825,8 +854,7 @@ input[type='range'] {
 
 @media (max-height: 700px) and (max-width: 899px) {
   .panel {
-    min-height: 112px;
-    max-height: 140px;
+    height: 146px;
   }
   .tabbar button {
     min-height: 48px;
@@ -905,4 +933,79 @@ input[type='range'] {
 
 .modal .note.warn {
   color: #ffb84a;
+}
+
+/* ---------- Picture tab (options for the selected picture) ---------- */
+.stage-wrap {
+  position: relative;
+}
+.picture {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pic-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pic-row .chip-btn {
+  flex: 1;
+  justify-content: center;
+  min-height: 40px;
+}
+.pic-row .zoom {
+  flex: 3;
+}
+.pic-row .zoom + .chip-btn {
+  flex: 0 0 44px;
+}
+.swap-hint {
+  flex: 2;
+  font-size: 13px;
+  color: #ffb84a;
+  line-height: 1.35;
+}
+@media (max-width: 899px) {
+  /* phones: tap another tab or an empty area to leave the picture; saves room in the panel */
+  .chip-btn.done {
+    display: none;
+  }
+}
+
+/* ---------- crop screen ---------- */
+.crop-modal {
+  max-width: 520px;
+}
+.crop-canvas {
+  width: 100%;
+  height: min(48dvh, 520px);
+  background: #0a0a0e;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+}
+.crop-tools {
+  display: flex;
+  gap: 6px;
+}
+.crop-tools .chip-btn {
+  flex: 1;
+  justify-content: center;
+  min-height: 42px;
+}
+.crop-modal .row {
+  color: var(--muted);
+}
+.crop-modal .row .val {
+  width: 48px !important;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.crop-actions {
+  display: flex;
+  gap: 10px;
+}
+.crop-actions .btn {
+  flex: 1;
 }

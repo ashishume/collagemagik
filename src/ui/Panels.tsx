@@ -1,7 +1,10 @@
 import {
   ArrowLeftRight,
+  Check,
+  Crop,
   Eye,
   EyeOff,
+  FlipHorizontal2,
   Film,
   ImagePlus,
   LayoutGrid,
@@ -10,7 +13,9 @@ import {
   Plus,
   Repeat,
   RotateCcw,
+  RotateCw,
   Shuffle,
+  SlidersHorizontal,
   Trash2,
   Volume2,
   VolumeX,
@@ -27,6 +32,7 @@ export const TABS: { id: Tab; label: string; icon: typeof ImagePlus }[] = [
   { id: 'layout', label: 'Layout', icon: LayoutGrid },
   { id: 'style', label: 'Style', icon: Palette },
   { id: 'audio', label: 'Audio', icon: Volume2 },
+  { id: 'picture', label: 'Picture', icon: SlidersHorizontal },
 ]
 
 export function TabBar() {
@@ -41,62 +47,6 @@ export function TabBar() {
         </button>
       ))}
     </nav>
-  )
-}
-
-/** Selected-cell controls: zoom, replace, swap, remove, reset. */
-export function CellBar({ onReplace }: { onReplace: (cell: number) => void }) {
-  const selected = useStore((s) => s.selectedCell)
-  const cell = useStore((s) => (s.selectedCell !== null ? s.project.cells[s.selectedCell] : null))
-  const swapFrom = useStore((s) => s.swapFrom)
-  const st = useStore.getState
-  if (selected === null || !cell) return null
-  const filled = !!cell.mediaId
-
-  if (swapFrom !== null) {
-    return (
-      <div className="cellbar">
-        <span className="hint">Tap the cell to swap with</span>
-        <button className="chip-btn" onClick={() => st().setSwapFrom(null)}>
-          <X size={16} /> Cancel
-        </button>
-      </div>
-    )
-  }
-
-  return (
-    <div className="cellbar">
-      {filled && (
-        <label className="zoom">
-          <span>Zoom</span>
-          <input
-            type="range"
-            min={1}
-            max={4}
-            step={0.01}
-            value={cell.zoom}
-            onChange={(e) => st().setCellView(selected, { zoom: +e.target.value })}
-            aria-label="Zoom"
-          />
-        </label>
-      )}
-      <button className="chip-btn" onClick={() => onReplace(selected)}>
-        <ImagePlus size={16} /> {filled ? 'Replace' : 'Add'}
-      </button>
-      {filled && (
-        <>
-          <button className="chip-btn" onClick={() => st().setSwapFrom(selected)}>
-            <ArrowLeftRight size={16} /> Swap
-          </button>
-          <button className="chip-btn" onClick={() => st().resetCell(selected)} aria-label="Reset zoom and position">
-            <RotateCcw size={16} />
-          </button>
-          <button className="chip-btn" onClick={() => st().clearCell(selected)} aria-label="Remove from collage">
-            <X size={16} />
-          </button>
-        </>
-      )}
-    </div>
   )
 }
 
@@ -321,7 +271,96 @@ function AudioPanel() {
   )
 }
 
-export function Panel({ onAdd }: { onAdd: () => void }) {
+/** Options for the picture or video selected in the preview: replace, swap, remove, rotate, flip, crop, zoom. */
+function PicturePanel({ onPick }: { onPick: (cell: number) => void }) {
+  const selected = useStore((s) => s.selectedCell)
+  const swapFrom = useStore((s) => s.swapFrom)
+  const cell = useStore((s) => (s.selectedCell !== null ? s.project.cells[s.selectedCell] : null))
+  const st = useStore.getState
+
+  if (selected === null || !cell) {
+    return (
+      <div className="panel-body">
+        <p className="cap">Tap a picture in the preview to change it here: replace, swap, rotate, flip, crop and zoom.</p>
+      </div>
+    )
+  }
+  const filled = !!cell.mediaId
+
+  if (swapFrom !== null) {
+    return (
+      <div className="panel-body picture">
+        <div className="pic-row">
+          <span className="swap-hint">Tap another cell in the preview to swap with it.</span>
+          <button className="chip-btn" onClick={() => st().setSwapFrom(null)}>
+            <X size={16} /> Cancel
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="panel-body picture">
+      <div className="pic-row">
+        <button className="chip-btn" onClick={() => onPick(selected)}>
+          <ImagePlus size={16} /> {filled ? 'Replace' : 'Add photo or video'}
+        </button>
+        {filled && (
+          <>
+            <button className="chip-btn" onClick={() => st().setSwapFrom(selected)}>
+              <ArrowLeftRight size={16} /> Swap
+            </button>
+            <button className="chip-btn" onClick={() => st().clearCell(selected)}>
+              <X size={16} /> Remove
+            </button>
+          </>
+        )}
+      </div>
+      {filled && (
+        <>
+          <div className="pic-row">
+            <button className="chip-btn" onClick={() => st().rotateCell(selected)} aria-label="Rotate a quarter turn">
+              <RotateCw size={16} /> Rotate
+            </button>
+            <button className="chip-btn" onClick={() => st().flipCell(selected)} aria-pressed={cell.flip}>
+              <FlipHorizontal2 size={16} /> Flip
+            </button>
+            <button className="chip-btn" onClick={() => st().setCropCell(selected)}>
+              <Crop size={16} /> Crop
+            </button>
+          </div>
+          <div className="pic-row">
+            <label className="zoom">
+              <span>Zoom</span>
+              <input
+                type="range"
+                min={1}
+                max={4}
+                step={0.01}
+                value={cell.zoom}
+                onChange={(e) => st().setCellView(selected, { zoom: +e.target.value })}
+                aria-label="Zoom"
+              />
+            </label>
+            <button
+              className="chip-btn"
+              onClick={() => st().resetCell(selected)}
+              aria-label="Reset zoom, position, rotation and flip"
+            >
+              <RotateCcw size={16} />
+            </button>
+          </div>
+        </>
+      )}
+      <button className="chip-btn wide done" onClick={() => st().selectCell(null)}>
+        <Check size={16} /> Done
+      </button>
+    </div>
+  )
+}
+
+export function Panel({ onAdd, onPickCell }: { onAdd: () => void; onPickCell: (cell: number) => void }) {
   const tab = useStore((s) => s.tab)
   return (
     <section className="panel" aria-label="Editor panel">
@@ -329,6 +368,7 @@ export function Panel({ onAdd }: { onAdd: () => void }) {
       {tab === 'layout' && <LayoutPanel />}
       {tab === 'style' && <StylePanel />}
       {tab === 'audio' && <AudioPanel />}
+      {tab === 'picture' && <PicturePanel onPick={onPickCell} />}
     </section>
   )
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { FORMATS, clamp, coverRect, hitCell, panAfterDrag, type PxRect } from '../geometry'
+import { FORMATS, clamp, hitCell, panAfterDrag, placeMedia, type PxRect } from '../geometry'
 import { layoutById } from '../layouts'
 import { drawCollage, type Source } from '../render'
 import { syncMusic, syncVideos } from '../media/sync'
@@ -7,7 +7,11 @@ import { photos, videos } from '../media/registry'
 import { useStore } from '../store'
 import { totalDuration } from '../timeline'
 
-const MAX_PREVIEW_W = 720
+const MAX_PREVIEW_W_PHONE = 720
+const MAX_PREVIEW_W_DESKTOP = 1080
+/** Hold a picture this long (without moving) to pick it up and drag it onto another cell. */
+const HOLD_MS = 380
+const MOVE_SLOP = 6
 
 function sourceFor(mediaId: string): Source | null {
   const p = photos.get(mediaId)
@@ -18,7 +22,7 @@ function sourceFor(mediaId: string): Source | null {
 }
 
 interface Gesture {
-  kind: 'pan' | 'pinch'
+  kind: 'pan' | 'pinch' | 'lift'
   cell: number
   moved: boolean
   lastX: number
@@ -29,13 +33,28 @@ interface Gesture {
   startZoom: number
 }
 
+interface Lift {
+  from: number
+  x: number
+  y: number
+  over: number
+}
+
 export function Stage({ onPickForCell }: { onPickForCell: (cell: number) => void }) {
+  const wrapRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rectsRef = useRef<PxRect[]>([])
   const pointers = useRef(new Map<number, { x: number; y: number }>())
   const gesture = useRef<Gesture | null>(null)
+  const lift = useRef<Lift | null>(null)
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const format = useStore((s) => s.project.format)
   const f = FORMATS[format]
+
+  const clearHold = () => {
+    if (holdTimer.current) clearTimeout(holdTimer.current)
+    holdTimer.current = null
+  }
 
   // Draw loop: advances the clock, keeps videos in sync, repaints when something changed.
   useEffect(() => {
@@ -67,12 +86,14 @@ export function Stage({ onPickForCell }: { onPickForCell: (cell: number) => void
 
       const dpr = Math.min(window.devicePixelRatio || 1, 2)
       const cssW = canvas.clientWidth
-      const w = Math.max(2, Math.min(MAX_PREVIEW_W, Math.round(cssW * dpr)))
+      const maxW = window.innerWidth >= 900 ? MAX_PREVIEW_W_DESKTOP : MAX_PREVIEW_W_PHONE
+      const w = Math.max(2, Math.min(maxW, Math.round(cssW * dpr)))
       const h = Math.round((w * FORMATS[s.project.format].h) / FORMATS[s.project.format].w)
       let vkey = ''
       for (const v of videos.values()) vkey += `${v.currentTime.toFixed(2)}${v.readyState}${v.seeking ? 's' : ''}`
-      const key = [w, h, s.selectedCell, s.swapFrom, t.toFixed(3), vkey].map(String).join('|')
-      const idle = !useStore.getState().playing
+      const L = lift.current
+      const key = [w, h, s.selectedCell, s.swapFrom, t.toFixed(3), vkey, L ? `${L.x | 0},${L.y | 0},${L.over}` : ''].map(String).join('|')
+      const idle = !isPlaying
       if (!(idle && key === lastKey && s.project === lastProject)) {
         lastKey = key
         lastProject = s.project
@@ -88,9 +109,15 @@ export function Stage({ onPickForCell }: { onPickForCell: (cell: number) => void
           radius: s.project.radius,
           bg: s.project.bg,
           getSource: sourceFor,
-          overlay: { selected: s.selectedCell, swapFrom: s.swapFrom, safeZone: s.project.safeZone && s.project.format === 'story' },
+          overlay: {
+            selected: s.selectedCell,
+            swapFrom: s.swapFrom,
+            safeZone: s.project.safeZone && s.project.format === 'story',
+            lift: L,
+          },
         })
       }
+
       raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)
@@ -105,7 +132,11 @@ export function Stage({ onPickForCell }: { onPickForCell: (cell: number) => void
 
   const onDown = (e: React.PointerEvent) => {
     const c = canvasRef.current!
-    c.setPointerCapture(e.pointerId)
+    try {
+      c.setPointerCapture(e.pointerId)
+    } catch {
+      // some synthetic or stale pointers cannot be captured; the gesture still works while the pointer is over the canvas
+    }
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     const s = useStore.getState()
     if (pointers.current.size === 1) {
@@ -124,8 +155,26 @@ export function Stage({ onPickForCell }: { onPickForCell: (cell: number) => void
       }
       if (cell >= 0 && s.swapFrom === null && cell !== s.selectedCell && s.project.cells[cell]?.mediaId) {
         s.selectCell(cell)
+        s.openPicture()
+      }
+      // Press and hold on a picture to pick it up, then drop it on another cell to swap.
+      clearHold()
+      if (cell >= 0 && s.swapFrom === null && s.project.cells[cell]?.mediaId) {
+        holdTimer.current = setTimeout(() => {
+          const g = gesture.current
+          if (!g || g.kind !== 'pan' || g.moved || pointers.current.size !== 1) return
+          g.kind = 'lift'
+          g.moved = true
+          const now = useStore.getState()
+          now.selectCell(cell)
+          now.openPicture()
+          const pt = toCanvas({ clientX: g.lastX, clientY: g.lastY })
+          lift.current = { from: cell, x: pt.x, y: pt.y, over: -1 }
+          navigator.vibrate?.(15)
+        }, HOLD_MS)
       }
     } else if (pointers.current.size === 2) {
+      clearHold()
       const [a, b] = [...pointers.current.values()]
       const cell = s.selectedCell ?? gesture.current?.cell ?? -1
       gesture.current = {
@@ -148,6 +197,16 @@ export function Stage({ onPickForCell }: { onPickForCell: (cell: number) => void
     const g = gesture.current
     if (!g) return
     const s = useStore.getState()
+
+    if (g.kind === 'lift' && lift.current) {
+      const p = toCanvas(e)
+      const over = hitCell(rectsRef.current, p.x, p.y)
+      lift.current = { ...lift.current, x: p.x, y: p.y, over }
+      g.lastX = e.clientX
+      g.lastY = e.clientY
+      return
+    }
+
     if (g.kind === 'pinch' && pointers.current.size >= 2) {
       const [a, b] = [...pointers.current.values()]
       const dist = Math.hypot(a.x - b.x, a.y - b.y)
@@ -156,8 +215,16 @@ export function Stage({ onPickForCell }: { onPickForCell: (cell: number) => void
       }
       return
     }
+
     if (g.kind === 'pan') {
-      if (!g.moved && Math.hypot(e.clientX - g.startX, e.clientY - g.startY) > 6) g.moved = true
+      const dx = e.clientX - g.lastX
+      const dy = e.clientY - g.lastY
+      g.lastX = e.clientX
+      g.lastY = e.clientY
+      if (!g.moved && Math.hypot(e.clientX - g.startX, e.clientY - g.startY) > MOVE_SLOP) {
+        g.moved = true
+        clearHold()
+      }
       if (!g.moved) return
       const cellIdx = g.cell
       const cell = s.project.cells[cellIdx]
@@ -166,23 +233,36 @@ export function Stage({ onPickForCell }: { onPickForCell: (cell: number) => void
       if (cell && rect && src && s.swapFrom === null) {
         const c = canvasRef.current!
         const k = c.width / c.getBoundingClientRect().width
-        const d = coverRect(src.w, src.h, rect, cell.zoom, cell.panX, cell.panY)
-        s.setCellView(cellIdx, {
-          panX: panAfterDrag(cell.panX, (e.clientX - g.lastX) * k, d.overflowX),
-          panY: panAfterDrag(cell.panY, (e.clientY - g.lastY) * k, d.overflowY),
-        })
+        const d = placeMedia(src.w, src.h, rect, cell)
+        const panX = panAfterDrag(cell.panX, dx * k, d.overflowX)
+        const panY = panAfterDrag(cell.panY, dy * k, d.overflowY)
+        // a tilted picture can't move as far: pull the stored position back so dragging never has a dead zone
+        const fit = placeMedia(src.w, src.h, rect, { ...cell, panX, panY }).fit
+        s.setCellView(cellIdx, { panX: panX * fit, panY: panY * fit })
       }
-      g.lastX = e.clientX
-      g.lastY = e.clientY
     }
   }
 
   const onUp = (e: React.PointerEvent) => {
+    clearHold()
     pointers.current.delete(e.pointerId)
     const g = gesture.current
     if (pointers.current.size === 0) gesture.current = null
-    if (!g || g.kind !== 'pan' || g.moved) return
+    if (!g) return
     const s = useStore.getState()
+
+    if (g.kind === 'lift') {
+      const L = lift.current
+      lift.current = null
+      if (L && L.over >= 0 && L.over !== L.from) {
+        s.swapCells(L.from, L.over)
+        navigator.vibrate?.(10)
+      }
+      return
+    }
+    if (g.kind !== 'pan' || g.moved) return
+
+    // a tap
     const cell = g.cell
     if (s.swapFrom !== null) {
       if (cell >= 0 && cell !== s.swapFrom) s.swapCells(s.swapFrom, cell)
@@ -192,8 +272,19 @@ export function Stage({ onPickForCell }: { onPickForCell: (cell: number) => void
     if (cell < 0) s.selectCell(null)
     else if (!s.project.cells[cell]?.mediaId) {
       s.selectCell(cell)
+      s.openPicture()
       onPickForCell(cell)
-    } else s.selectCell(cell)
+    } else {
+      s.selectCell(cell)
+      s.openPicture()
+    }
+  }
+
+  const onCancel = (e: React.PointerEvent) => {
+    clearHold()
+    lift.current = null
+    pointers.current.delete(e.pointerId)
+    if (pointers.current.size === 0) gesture.current = null
   }
 
   // Mouse wheel / trackpad pinch zooms the selected cell on desktop.
@@ -211,7 +302,7 @@ export function Stage({ onPickForCell }: { onPickForCell: (cell: number) => void
   }, [])
 
   return (
-    <div className="stage-wrap">
+    <div className="stage-wrap" ref={wrapRef}>
       <canvas
         ref={canvasRef}
         className="stage"
@@ -219,8 +310,9 @@ export function Stage({ onPickForCell }: { onPickForCell: (cell: number) => void
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
-        onPointerCancel={onUp}
-        aria-label="Collage preview. Tap a cell to select it, drag to move the picture, pinch to zoom."
+        onPointerCancel={onCancel}
+        onContextMenu={(e) => e.preventDefault()}
+        aria-label="Collage preview. Tap a picture for options, drag to move it, pinch to zoom, press and hold then drag to swap."
       />
     </div>
   )

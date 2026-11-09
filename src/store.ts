@@ -6,11 +6,11 @@ import { MAX_DURATION, MUSIC_CLIP_ID, clipEnd, newLane, splitClip, totalDuration
 import { ImportError, kindOf, loadMedia, loadMusic } from './media/import'
 import { disposeMedia, disposeMusic } from './media/registry'
 
-export type Tab = 'media' | 'layout' | 'style' | 'audio'
+export type Tab = 'media' | 'layout' | 'style' | 'audio' | 'picture'
 
 export const BACKGROUNDS = ['#101016', '#ffffff', '#f4e9d8', '#ffd6e7', '#c9e4ff', '#d4f5dc', '#ff5fa2', '#6c4dff']
 
-const emptyCell = (): CellState => ({ mediaId: null, zoom: 1, panX: 0, panY: 0 })
+const emptyCell = (): CellState => ({ mediaId: null, zoom: 1, panX: 0, panY: 0, rotation: 0, flip: false, angle: 0 })
 
 const initialProject = (): Project => ({
   format: 'story',
@@ -34,6 +34,8 @@ interface State {
   playhead: number
   playing: boolean
   tab: Tab
+  /** The tab to go back to when the Picture tab is closed. */
+  returnTab: Tab
   importing: boolean
   toast: { id: number; text: string } | null
   exportOpen: boolean
@@ -44,7 +46,12 @@ interface State {
   removeMedia: (mediaId: string) => void
   clearCell: (cell: number) => void
   swapCells: (a: number, b: number) => void
-  setCellView: (cell: number, patch: Partial<Pick<CellState, 'zoom' | 'panX' | 'panY'>>) => void
+  setCellView: (cell: number, patch: Partial<Pick<CellState, 'zoom' | 'panX' | 'panY' | 'rotation' | 'flip' | 'angle'>>) => void
+  /** Turn a picture a quarter turn clockwise (or counter-clockwise with dir -1). Resets its position. */
+  rotateCell: (cell: number, dir?: 1 | -1) => void
+  flipCell: (cell: number) => void
+  cropCell: number | null
+  setCropCell: (cell: number | null) => void
   resetCell: (cell: number) => void
   setCellCount: (n: number) => void
   setLayout: (id: string) => void
@@ -52,6 +59,8 @@ interface State {
   setStyle: (patch: Partial<Pick<Project, 'gap' | 'radius' | 'bg' | 'safeZone'>>) => void
   setFormat: (f: FormatId) => void
   selectCell: (i: number | null) => void
+  /** Show the Picture tab (options for the selected picture). */
+  openPicture: () => void
   setSwapFrom: (i: number | null) => void
   selectClip: (id: string | null) => void
   setTab: (t: Tab) => void
@@ -79,6 +88,7 @@ export const useStore = create<State>((set, get) => ({
   playhead: 0,
   playing: false,
   tab: 'media',
+  returnTab: 'media',
   importing: false,
   toast: null,
   exportOpen: false,
@@ -158,7 +168,7 @@ export const useStore = create<State>((set, get) => ({
       cells = [...cells, emptyCell()]
       idx = count - 1
     }
-    cells[idx] = { mediaId, zoom: 1, panX: 0, panY: 0 }
+    cells[idx] = { ...emptyCell(), mediaId }
     const layoutId = count === project.cellCount ? project.layoutId : defaultLayoutFor(count).id
     set({ project: { ...project, cells, cellCount: count, layoutId }, selectedCell: idx })
   },
@@ -185,6 +195,7 @@ export const useStore = create<State>((set, get) => ({
     set((s) => {
       const cells = [...s.project.cells]
       ;[cells[a], cells[b]] = [cells[b], cells[a]]
+      // one swap, then back to normal
       return { project: { ...s.project, cells }, selectedCell: b, swapFrom: null }
     }),
 
@@ -200,13 +211,30 @@ export const useStore = create<State>((set, get) => ({
                 zoom: clamp(patch.zoom ?? c.zoom, 1, 4),
                 panX: clamp(patch.panX ?? c.panX, -1, 1),
                 panY: clamp(patch.panY ?? c.panY, -1, 1),
+                rotation: (((Math.round((patch.rotation ?? c.rotation) / 90) * 90) % 360) + 360) % 360,
+                flip: patch.flip ?? c.flip,
+                angle: clamp(patch.angle ?? c.angle, -45, 45),
               }
             : c,
         ),
       },
     })),
 
-  resetCell: (cell) => get().setCellView(cell, { zoom: 1, panX: 0, panY: 0 }),
+  resetCell: (cell) =>
+    get().setCellView(cell, { zoom: 1, panX: 0, panY: 0, rotation: 0, flip: false, angle: 0 }),
+
+  rotateCell: (cell, dir = 1) => {
+    const c = get().project.cells[cell]
+    if (c) get().setCellView(cell, { rotation: c.rotation + 90 * dir, panX: 0, panY: 0 })
+  },
+
+  flipCell: (cell) => {
+    const c = get().project.cells[cell]
+    if (c) get().setCellView(cell, { flip: !c.flip, panX: -c.panX })
+  },
+
+  cropCell: null,
+  setCropCell: (cropCell) => set({ cropCell, playing: cropCell !== null ? false : get().playing }),
 
   setCellCount: (n) => {
     const count = clamp(Math.round(n), 1, MAX_CELLS)
@@ -236,7 +264,13 @@ export const useStore = create<State>((set, get) => ({
 
   setStyle: (patch) => set((s) => ({ project: { ...s.project, ...patch } })),
   setFormat: (format) => set((s) => ({ project: { ...s.project, format } })),
-  selectCell: (i) => set({ selectedCell: i }),
+  selectCell: (i) =>
+    set((s) => ({
+      selectedCell: i,
+      // nothing selected any more: leave the Picture tab and go back to where the person was
+      ...(i === null && s.tab === 'picture' ? { tab: s.returnTab, swapFrom: null } : {}),
+    })),
+  openPicture: () => set((s) => ({ tab: 'picture', returnTab: s.tab === 'picture' ? s.returnTab : s.tab })),
   setSwapFrom: (i) => set({ swapFrom: i }),
   selectClip: (id) => set({ selectedClip: id }),
   setTab: (tab) => set({ tab }),

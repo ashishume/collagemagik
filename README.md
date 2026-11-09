@@ -3,8 +3,8 @@
 Make Instagram Story collages that mix photos and **videos that play inside the collage**. Runs entirely in the
 browser: there is no backend, nothing is uploaded, and nothing is saved. A refresh clears the project.
 
-Built mobile-first (phone layout, installable as a home-screen app, share sheet on export). The same page works on
-desktop with a side panel.
+Built mobile-first (phone layout, installable as a home-screen app, share sheet on export). On desktop and laptop
+screens it uses the full window: preview and timeline on the left, a wider side panel on the right.
 
 ## Run it
 
@@ -29,7 +29,13 @@ allow the share sheet, wake lock and install prompt on secure origins. No specia
 
 - Up to **9 cells**: any mix of photos plus at most **2 videos**.
 - **35 basic layouts** for 1 to 9 cells, plus gap, corner radius, background colour and Story / Post (4:5) / Square.
-- Tap a cell to select it; drag to move the picture, pinch (or scroll wheel) to zoom; Replace, Swap, Remove, Reset.
+- Tap a picture and its options open in the **Picture** tab of the side panel (nothing floats over the preview): **Replace**, **Swap**, **Remove**, **Rotate** (quarter turns),
+  **Flip**, **Crop**, a zoom slider and reset. **Crop** opens a screen showing the whole picture with the cell's frame
+  over it (what's cut off is dimmed): drag, pinch or slide to zoom, rotate left or right, flip, and **Straighten**
+  from -45° to +45°. The picture always stays zoomed enough that no empty corner shows. Works the same on videos. **Swap**
+  swaps once: tap Swap, then tap the other cell. Or press and hold a picture, then drag it onto another cell to swap
+  (no button needed). Drag to move a picture inside its cell; pinch or
+  scroll wheel to zoom.
 - **Timeline** with one lane per video: drag the ends to trim, drag a clip to delay its start, Split at the playhead,
   Delete, Loop, mute. The collage lasts as long as the longest clip, up to 60 s (Instagram's Story limit).
 - **Background music** on its own ribbon under the videos on the timeline: tap *Add music*, pick your own audio file

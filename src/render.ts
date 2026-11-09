@@ -1,4 +1,4 @@
-import { SAFE_BOTTOM, SAFE_TOP, cellPixelRects, coverRect, type PxRect } from './geometry'
+import { SAFE_BOTTOM, SAFE_TOP, cellPixelRects, placeMedia, type MediaView, type PxRect } from './geometry'
 import type { CellState, Rect } from './types'
 
 export interface Source {
@@ -19,7 +19,27 @@ export interface DrawOptions {
     selected: number | null
     swapFrom: number | null
     safeZone: boolean
+    /** A picture picked up with press-and-hold, being dragged to another cell. x, y are canvas pixels. */
+    lift?: { from: number; x: number; y: number; over: number } | null
   }
+}
+
+/** Draws a source into a cell with its zoom, pan, rotation, flip and straighten. Used for preview, export and the crop screen. */
+export function drawMedia(ctx: CanvasRenderingContext2D, src: Source, rect: PxRect, view: MediaView) {
+  const p = placeMedia(src.w, src.h, rect, view)
+  const w = src.w * p.scale
+  const h = src.h * p.scale
+  ctx.save()
+  ctx.translate(p.cx, p.cy)
+  ctx.rotate(p.angleRad)
+  if (p.flip) ctx.scale(-1, 1)
+  ctx.rotate(p.rotationRad)
+  try {
+    ctx.drawImage(src.img, -w / 2, -h / 2, w, h)
+  } catch {
+    // frame not ready yet
+  }
+  ctx.restore()
 }
 
 export function roundRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -52,12 +72,7 @@ export function drawCollage(ctx: CanvasRenderingContext2D, W: number, H: number,
     roundRectPath(ctx, r.x, r.y, r.w, r.h, radius)
     ctx.clip()
     if (src && src.w > 0 && src.h > 0) {
-      const d = coverRect(src.w, src.h, r, cell.zoom, cell.panX, cell.panY)
-      try {
-        ctx.drawImage(src.img, d.dx, d.dy, d.dw, d.dh)
-      } catch {
-        // frame not ready yet
-      }
+      drawMedia(ctx, src, r, cell)
     } else if (o.overlay) {
       ctx.fillStyle = 'rgba(255,255,255,0.08)'
       ctx.fillRect(r.x, r.y, r.w, r.h)
@@ -99,6 +114,41 @@ export function drawCollage(ctx: CanvasRenderingContext2D, W: number, H: number,
     }
     mark(ov.swapFrom, '#ffb84a')
     mark(ov.selected, '#8b6cff')
+    if (ov.lift) {
+      const L = ov.lift
+      const from = px[L.from]
+      if (from) {
+        ctx.save()
+        ctx.fillStyle = 'rgba(0,0,0,0.5)'
+        roundRectPath(ctx, from.x, from.y, from.w, from.h, radius)
+        ctx.fill()
+        ctx.restore()
+        if (L.over >= 0 && L.over !== L.from) mark(L.over, '#ff5fa2')
+        const media = o.cells[L.from]?.mediaId
+        const src = media ? o.getSource(media) : null
+        const gw = Math.min(W, H) * 0.3
+        const gh = Math.min(H * 0.3, gw * (from.h / from.w))
+        const g = { x: L.x - gw / 2, y: L.y - gh / 2, w: gw, h: gh }
+        ctx.save()
+        ctx.globalAlpha = 0.92
+        roundRectPath(ctx, g.x, g.y, g.w, g.h, Math.min(radius, 24 * scale))
+        ctx.clip()
+        if (src) {
+          const c0 = o.cells[L.from]
+          drawMedia(ctx, src, g, { zoom: 1, panX: 0, panY: 0, rotation: c0.rotation, flip: c0.flip, angle: c0.angle })
+        } else {
+          ctx.fillStyle = '#8b6cff'
+          ctx.fillRect(g.x, g.y, g.w, g.h)
+        }
+        ctx.restore()
+        ctx.save()
+        ctx.strokeStyle = '#fff'
+        ctx.lineWidth = Math.max(2, 4 * scale)
+        roundRectPath(ctx, g.x, g.y, g.w, g.h, Math.min(radius, 24 * scale))
+        ctx.stroke()
+        ctx.restore()
+      }
+    }
     if (ov.safeZone) {
       ctx.save()
       ctx.fillStyle = 'rgba(255,80,80,0.14)'

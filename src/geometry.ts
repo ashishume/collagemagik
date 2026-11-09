@@ -87,14 +87,124 @@ export function panAfterDrag(pan: number, deltaPx: number, overflowPx: number): 
   return clamp(pan + deltaPx / (overflowPx / 2), -1, 1)
 }
 
+export const RAD = Math.PI / 180
+
+/** Width and height of a source after quarter turns. */
+export function quarterDims(w: number, h: number, rotation: number) {
+  const odd = (((Math.round(rotation / 90) % 2) + 2) % 2) === 1
+  return odd ? { w: h, h: w } : { w, h }
+}
+
+export interface MediaView {
+  zoom: number
+  panX: number
+  panY: number
+  rotation: number
+  flip: boolean
+  angle: number
+}
+
+/** Scale at which a (rotated, straightened) source just covers the cell. With no rotation this is the usual "cover". */
+export function coverScale(srcW: number, srcH: number, cell: { w: number; h: number }, rotation = 0, angle = 0): number {
+  const q = quarterDims(srcW, srcH, rotation)
+  const t = angle * RAD
+  const c = Math.abs(Math.cos(t))
+  const s = Math.abs(Math.sin(t))
+  return Math.max((cell.w * c + cell.h * s) / q.w, (cell.w * s + cell.h * c) / q.h)
+}
+
+/**
+ * How far (0..1) a requested shift (ox, oy) of a tilted picture can go before an empty corner would show.
+ * The picture is a dw×dh rectangle tilted by `angle`; the cell must stay inside it.
+ */
+function maxShiftFraction(dw: number, dh: number, cell: { w: number; h: number }, angle: number, ox: number, oy: number) {
+  const t = angle * RAD
+  const c = Math.cos(t)
+  const s = Math.sin(t)
+  let hi = 1
+  for (const [sx, sy] of [
+    [-1, -1],
+    [1, -1],
+    [-1, 1],
+    [1, 1],
+  ]) {
+    const qx = (sx * cell.w) / 2
+    const qy = (sy * cell.h) / 2
+    const ax = c * qx + s * qy
+    const ay = -s * qx + c * qy
+    const bx = c * ox + s * oy
+    const by = -s * ox + c * oy
+    for (const [a, b, half] of [
+      [ax, bx, dw / 2],
+      [ay, by, dh / 2],
+    ]) {
+      if (Math.abs(b) < 1e-9) continue
+      hi = Math.min(hi, Math.max((a - half) / b, (a + half) / b))
+    }
+  }
+  return Math.max(0, hi)
+}
+
+export interface Placement {
+  /** Centre of the picture in pixels. */
+  cx: number
+  cy: number
+  /** Source pixels to canvas pixels. */
+  scale: number
+  rotationRad: number
+  angleRad: number
+  flip: boolean
+  /** Room to move the picture on each axis, as used for panning (px, >= 0). */
+  overflowX: number
+  overflowY: number
+  /** 1 unless a tilted picture had to be pulled back so no empty corner shows. */
+  fit: number
+}
+
+/** Where and how to draw a source in a cell: covers the cell, then zoom, rotation, flip, straighten and pan. */
+export function placeMedia(srcW: number, srcH: number, cell: PxRect, v: MediaView): Placement {
+  const scale = coverScale(srcW, srcH, cell, v.rotation, v.angle) * Math.max(1, v.zoom)
+  const q = quarterDims(srcW, srcH, v.rotation)
+  const dw = q.w * scale
+  const dh = q.h * scale
+  const t = v.angle * RAD
+  const c = Math.abs(Math.cos(t))
+  const s = Math.abs(Math.sin(t))
+  const bw = dw * c + dh * s
+  const bh = dw * s + dh * c
+  const overflowX = Math.max(0, bw - cell.w)
+  const overflowY = Math.max(0, bh - cell.h)
+  let ox = (clamp(v.panX, -1, 1) * overflowX) / 2
+  let oy = (clamp(v.panY, -1, 1) * overflowY) / 2
+  let fit = 1
+  if (v.angle !== 0 && (ox !== 0 || oy !== 0)) {
+    fit = Math.min(1, maxShiftFraction(dw, dh, cell, v.angle, ox, oy))
+    ox *= fit
+    oy *= fit
+  }
+  return {
+    cx: cell.x + cell.w / 2 + ox,
+    cy: cell.y + cell.h / 2 + oy,
+    scale,
+    rotationRad: v.rotation * RAD,
+    angleRad: v.angle * RAD,
+    flip: v.flip,
+    overflowX,
+    overflowY,
+    fit,
+  }
+}
+
 /** Size to decode a photo at so a cell shows it at full sharpness without ever upscaling. */
 export function neededPhotoSize(
   srcW: number,
   srcH: number,
   cell: PxRect,
   zoom: number,
+  rotation = 0,
+  angle = 0,
 ): { w: number; h: number; scale: number } {
-  const scale = Math.min(1, Math.max(cell.w / srcW, cell.h / srcH) * Math.max(1, zoom))
+  const scale = Math.min(1, coverScale(srcW, srcH, cell, rotation, angle) * Math.max(1, zoom))
   return { w: Math.max(1, Math.round(srcW * scale)), h: Math.max(1, Math.round(srcH * scale)), scale }
 }
 

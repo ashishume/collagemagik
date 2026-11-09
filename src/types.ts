@@ -36,6 +36,12 @@ export interface CellState {
   /** -1..1, 0 = centred. Only matters when the media overflows the cell. */
   panX: number
   panY: number
+  /** Quarter turns clockwise, in degrees: 0, 90, 180 or 270. */
+  rotation: number
+  /** Mirror left to right (after rotating). */
+  flip: boolean
+  /** Straighten: extra tilt in degrees, -45..45 (positive = clockwise). */
+  angle: number
 }
 
 /** A piece of a video placed on the timeline. All values are seconds. */

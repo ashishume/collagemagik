@@ -4,8 +4,9 @@ import { FORMATS } from './geometry'
 import { useStore } from './store'
 import { Stage } from './ui/Stage'
 import { Timeline } from './ui/Timeline'
-import { CellBar, Panel, TabBar } from './ui/Panels'
+import { Panel, TabBar } from './ui/Panels'
 import { ExportDialog } from './ui/ExportDialog'
+import { CropEditor } from './ui/CropEditor'
 
 /** Safari picks HEIC photos for "image/*" itself, and listing .heic there can make it re-encode. Other browsers need it listed. */
 const isAppleBrowser = /iPhone|iPad|iPod/.test(navigator.userAgent) || /^((?!chrome|chromium|android|edg|firefox).)*safari/i.test(navigator.userAgent)
@@ -21,6 +22,7 @@ export default function App() {
   const toast = useStore((s) => s.toast)
   const importing = useStore((s) => s.importing)
   const exportOpen = useStore((s) => s.exportOpen)
+  const cropOpen = useStore((s) => s.cropCell !== null)
 
   const pick = useCallback((cell?: number) => {
     targetCell.current = cell
@@ -91,8 +93,7 @@ export default function App() {
       <Timeline />
 
       <div className="side">
-        <CellBar onReplace={(c) => pick(c)} />
-        <Panel onAdd={() => pick()} />
+        <Panel onAdd={() => pick()} onPickCell={(c) => pick(c)} />
         <TabBar />
       </div>
 
@@ -115,6 +116,7 @@ export default function App() {
         </div>
       )}
       {exportOpen && <ExportDialog />}
+      {cropOpen && <CropEditor />}
     </div>
   )
 }
