@@ -11,7 +11,7 @@ Swift files are picked up automatically). To run on a device set your Team under
 
 ## What it does
 
-Everything the web app does: up to 9 cells (photos + at most 2 videos), 35 layouts, Story / Post / Square, gap,
+Everything the web app does: up to 9 cells (photos + at most 2 videos) in the collage (10 photos in a carousel), picked from a **media tray** that holds up to 15 pictures and videos (extras wait in the tray as "In tray" and can be swapped in). When the tray is full, adding shows an alert that says to press and hold a tray picture and tap Remove, 35 layouts, Story / Post / Square, gap,
 corners, background colour (swatches + colour picker), Instagram safe-area overlay, tap / drag / pinch /
 press-and-hold-to-swap, rotate / flip / crop / straighten, a timeline (trim, move, split, delete, loop, mute), your
 own background music (volume, trim, repeat, fade out), and export to MP4 (H.264 + AAC, 30 fps, 1080 wide or 2x) or PNG,
@@ -31,11 +31,11 @@ open by themselves while a picture is selected.
 
 ## My Library and privacy
 
-There is no account, server or network code. Every export is also copied into the app's own `Documents/MyLibrary/`
+There is no account and no server of ours. The only network code is the Meta Audience Network ad SDK (see `Ads/` and APP_STORE.md section 11). Every export is also copied into the app's own `Documents/MyLibrary/`
 folder (`Model/LibraryStore.swift`: the MP4 or PNG, a JPEG thumbnail and a `library.json` index) and shows up in
 **More ••• → My Library** (`UI/LibrarySheet.swift`): play, share, save to Photos, delete. **More ••• → About & Privacy**
 (`UI/AboutSheet.swift`) has the legal links and **Delete all my data**. Temporary working copies are cleared at launch.
-`CollageMagik/PrivacyInfo.xcprivacy` declares no tracking and no collected data. The legal pages are on the Axpo Creation
+`CollageMagik/PrivacyInfo.xcprivacy` declares tracking and the data types Meta Audience Network collects (Device ID, Advertising Data, crash and diagnostic data); photos, videos, music and collages are never collected. The legal pages are on the Axpo Creation
 site (`axpo-creations-apps/landing-page`, routes under `/collagemagik`). Submission steps and listing text: [APP_STORE.md](APP_STORE.md).
 
 ## Apple components used

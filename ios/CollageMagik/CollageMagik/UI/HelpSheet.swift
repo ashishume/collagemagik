@@ -13,7 +13,7 @@ struct HelpSheet: View {
                     Label("Export gives you one image per slide. Upload them to Instagram in order.", systemImage: "square.and.arrow.up")
                 }
                 Section("Build a collage") {
-                    Label("Add up to 9 photos and 2 videos from your library or Files.", systemImage: "photo.on.rectangle.angled")
+                    Label("Keep up to 15 photos and videos in your tray (2 can be videos), and use up to 9 in the collage. Press and hold a tray picture to remove it.", systemImage: "photo.on.rectangle.angled")
                     Label("Pick a layout for the number of cells, then set the gap, corners and colour.", systemImage: "square.grid.2x2")
                     Label("Story, Post (4:5) and Square formats.", systemImage: "rectangle.portrait")
                 }

@@ -9,11 +9,11 @@ struct MediaPanel: View {
         let placed = Set(store.project.cells.compactMap(\.mediaId))
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(store.isCarousel
-                     ? "\(store.items.count) of \(store.cellLimit) photos"
-                     : "\(store.items.count) of \(maxCells)  ·  \(store.videoCount) of \(maxVideos) videos")
+                Text(trayCaption(placed: placed.count))
                     .font(.caption.weight(.medium))
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                 Spacer()
                 if store.importing { ProgressView().controlSize(.small) }
             }
@@ -24,8 +24,8 @@ struct MediaPanel: View {
                         ForEach(store.items) { m in
                             thumb(m, used: placed.contains(m.id))
                         }
-                        // Faint empty slots up to the limit: the strip shows how much room is left.
-                        ForEach(0..<max(0, store.cellLimit - store.items.count), id: \.self) { _ in
+                        // A few faint empty slots: the strip shows there is room left (the tray holds up to \(maxTrayItems)).
+                        ForEach(0..<min(4, max(0, maxTrayItems - store.items.count)), id: \.self) { _ in
                             emptySlot
                         }
                     }
@@ -34,6 +34,13 @@ struct MediaPanel: View {
             }
             .scrollClipDisabled()
         }
+    }
+
+    /// "5 of 15 in tray · 5 of 9 in collage · 1 of 2 videos": the tray holds more than the collage can show.
+    private func trayCaption(placed: Int) -> String {
+        var text = "\(store.items.count) of \(maxTrayItems) in tray  ·  \(placed) of \(store.cellLimit) in \(store.isCarousel ? "carousel" : "collage")"
+        if !store.isCarousel { text += "  ·  \(store.videoCount) of \(maxVideos) videos" }
+        return text
     }
 
     private var addTile: some View {
@@ -50,7 +57,8 @@ struct MediaPanel: View {
             .glassEffect(.regular.tint(Color.brand.opacity(0.55)).interactive(), in: .rect(cornerRadius: 14))
         }
         .buttonStyle(.plain)
-        .disabled(store.importing || store.items.count >= store.cellLimit)
+        // Not disabled when the tray is full: tapping explains how to make room.
+        .disabled(store.importing)
         .accessibilityLabel("Add photos or videos")
     }
 
@@ -86,7 +94,7 @@ struct MediaPanel: View {
                         Image(systemName: "film").font(.system(size: 9, weight: .bold))
                         Text(formatTime(m.duration)).font(.system(size: 10, weight: .semibold).monospacedDigit())
                     } else if !used {
-                        Text("Not used").font(.system(size: 9, weight: .semibold))
+                        Text("In tray").font(.system(size: 9, weight: .semibold))
                     }
                 }
                 .padding(.horizontal, 5)
@@ -101,7 +109,7 @@ struct MediaPanel: View {
             Button { store.placeMedia(m.id, cell: store.selectedCell) } label: { Label("Use in selected cell", systemImage: "square.and.arrow.down") }
             Button(role: .destructive) { withAnimation(.smooth) { store.removeMedia(m.id) } } label: { Label("Remove", systemImage: "trash") }
         }
-        .accessibilityLabel("\(m.kind == .video ? "Video" : "Photo") \(m.name). \(used ? "In the collage" : "Tap to add to the selected cell")")
+        .accessibilityLabel("\(m.kind == .video ? "Video" : "Photo") \(m.name). \(used ? "In the collage" : "In the tray. Tap to put it in the selected cell")")
     }
 }
 

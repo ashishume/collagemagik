@@ -127,6 +127,15 @@ struct ExportSheet: View {
         .presentationDetents([.fraction(0.62), .large], selection: $detent)
         .presentationDragIndicator(.visible)
         .interactiveDismissDisabled(job.isRunning)
+        .onDisappear {
+            // An ad (if one is due) comes only after a finished export, once this sheet is gone.
+            let finished: Bool
+            switch job.state {
+            case .done, .doneSlides: finished = true
+            default: finished = false
+            }
+            AdManager.shared.exportSheetClosed(finished: finished)
+        }
         .task {
             ultraAvailable = CollageExporter.canEncode(format: project.format, quality: .ultra)
             if !project.lanes.isEmpty == false { kind = .video }

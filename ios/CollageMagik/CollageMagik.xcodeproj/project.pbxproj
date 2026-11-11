@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A10000101 /* FBAudienceNetwork in Frameworks */ = {isa = PBXBuildFile; productRef = A10000102 /* FBAudienceNetwork */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		A10000001 /* CollageMagik.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CollageMagik.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -28,6 +32,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000101 /* FBAudienceNetwork in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -72,6 +77,7 @@
 			);
 			name = CollageMagik;
 			packageProductDependencies = (
+				A10000102 /* FBAudienceNetwork */,
 			);
 			productName = CollageMagik;
 			productReference = A10000001 /* CollageMagik.app */;
@@ -102,6 +108,9 @@
 			mainGroup = A10000004;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
+			packageReferences = (
+				A10000103 /* XCRemoteSwiftPackageReference "FBAudienceNetwork" */,
+			);
 			productRefGroup = A10000005 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -185,9 +194,11 @@
 				DEVELOPMENT_TEAM = 83FYPW267R;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AdInfo.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = CollageMagik;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "CollageMagik is free because it shows ads. If you allow tracking, Meta can show ads that are more relevant to you. Your photos, videos and music are never shared.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "CollageMagik needs permission to add your finished collages to your photo library. It cannot see or change the photos already there.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -217,9 +228,11 @@
 				DEVELOPMENT_TEAM = 83FYPW267R;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AdInfo.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = CollageMagik;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "CollageMagik is free because it shows ads. If you allow tracking, Meta can show ads that are more relevant to you. Your photos, videos and music are never shared.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "CollageMagik needs permission to add your finished collages to your photo library. It cannot see or change the photos already there.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -261,6 +274,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A10000103 /* XCRemoteSwiftPackageReference "FBAudienceNetwork" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/meta/FBAudienceNetwork";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.22.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A10000102 /* FBAudienceNetwork */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000103 /* XCRemoteSwiftPackageReference "FBAudienceNetwork" */;
+			productName = FBAudienceNetwork;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A10000009 /* Project object */;
 }

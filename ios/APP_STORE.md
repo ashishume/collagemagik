@@ -1,7 +1,7 @@
 # CollageMagik: App Store submission pack
 
 Everything App Store Connect asks for, with the answers that match what the app does. Bundle ID `com.axpo.collagemagik`,
-version 1.0 (build 1), iPhone only, iOS 26+, free, no account, no in-app purchases.
+version 1.0 (build 1), iPhone only, iOS 26+, free with ads (Meta Audience Network), no account, no in-app purchases.
 
 ## 1. URLs (the pages live in `axpo-creations-apps/landing-page`)
 
@@ -70,21 +70,32 @@ Requires iOS 26 or later.
 
 ## 3. App Privacy ("nutrition label")
 
-- **Do you or your third-party partners collect data from this app?** → **No**. The app shows as **Data Not Collected**.
-- **Tracking**: No (for version 1.0). There are no third-party SDKs, analytics or network calls. This changes when you add ads: see section 11.
-- The app bundles a privacy manifest (`CollageMagik/PrivacyInfo.xcprivacy`): no tracking, no collected data types, no
-  required-reason API use. Re-check it if you ever add a Swift package or a new system API.
-- Privacy Policy URL: see section 1.
+The app shows Meta Audience Network ads, so the answer is **Yes, data is collected** and the app **tracks**. These match the SDK's own
+privacy manifest (`FBAudienceNetwork.framework/PrivacyInfo.xcprivacy`, SDK 6.22.1) and the app's `PrivacyInfo.xcprivacy`:
+
+| Data type | Linked to the user | Used for tracking | Purposes |
+|---|---|---|---|
+| Device ID | Yes | Yes | Third-party advertising |
+| Advertising Data | Yes | Yes | Third-party advertising, Analytics |
+| Crash Data | No | No | Analytics |
+| Other Diagnostic Data | No | No | Analytics |
+
+- Everything else: **not collected** (no photos/videos/audio, no contact info, no location, no identifiers of your own).
+- Tracking domains declared in the manifest: `ep1.facebook.com`, `ep6.facebook.com`.
+- Privacy Policy URL: see section 1 (it describes the ads, the data and the choices).
 
 ## 4. Age rating questionnaire
 
-Answer **None / No** to every question (no violence, mature themes, gambling, user-generated content shared in the app,
-messaging or web access). Result: **4+**. (Version 1.0 has no ads; revisit this once ads ship.)
+Answer **None / No** to every content question. Under *Capabilities*, answer **Advertising = Yes** (the app shows ads); everything
+else No (no web access, no user-generated content, no messaging). The calculated rating stays **4+**.
 
 ## 5. Export compliance
 
 Already set in the project: `ITSAppUsesNonExemptEncryption = NO` (the app uses no encryption beyond Apple's). You will not be
 asked on each upload.
+
+**Tracking (ATT):** `NSUserTrackingUsageDescription` is set and `AppTrackingTransparency` is requested once, after the first finished export
+(see `Ads/AdManager.swift`). In App Store Connect, App Privacy must say the app tracks (section 3).
 
 ## 6. App Review information
 
@@ -98,6 +109,9 @@ the Export button (top right) → Export video or Export picture. The result is 
 To test a carousel: tap "Carousel" at the top, add 4-6 photos, swipe the preview or tap the slide numbers under it, then Export (one image per slide).
 "Save to Photos" asks for add-only photo permission. Music is optional: Audio tab → Add background music (needs a video in the collage).
 Privacy, Terms, Support and "Delete all my data" are in ••• → About & Privacy.
+ADS: the app is free and shows one full-screen Meta Audience Network ad after an export (never while editing, and not after the first export). After your
+first finished export and closing the export sheet, an "Ads keep CollageMagik free" notice appears, then Apple's tracking prompt. Choices can be changed in
+••• → About & Privacy → Ads. In the EU/UK/Switzerland the notice asks to Allow ads or choose No ads. If no ad is available (no fill), nothing is shown.
 ```
 - The review device needs a few photos/videos in Photos. Apple's reviewers have them; if you test on a simulator, add some with
   `xcrun simctl addmedia booted <files>`.
@@ -156,20 +170,27 @@ The debug build can pre-load files for you: `SIMCTL_CHILD_CM_BATCH=/path/a.jpg,/
 - **The web version** (`collagemagik-web`, the PWA) is unchanged and still saves nothing: refresh clears the project. My
   Library exists only in the iPhone app.
 
-## 11. When you add ads later
+## 11. Ads (Meta Audience Network): what is built and what you must do
 
-The listing, policy and in-app text no longer say "no ads", and the privacy policy has an "Advertising" section that promises
-an update before ads arrive. When you ship an ad SDK, in the same release:
+Built in (see `CollageMagik/Ads/`, `UI/AdNoticeSheet.swift`, the Ads section in `UI/AboutSheet.swift`):
 
-1. **App Privacy label**: change "Data Not Collected" to what the SDK collects (typically Device ID / Advertising Data / Usage
-   Data / Diagnostics, "used for Third-Party Advertising", and "Tracking" if it is used to track).
-2. **Tracking prompt**: add `NSUserTrackingUsageDescription` (Info.plist key `INFOPLIST_KEY_NSUserTrackingUsageDescription`) and call
-   `ATTrackingManager.requestTrackingAuthorization` once, at a calm moment (not in the middle of editing), before the SDK reads the
-   advertising identifier. Apple rejects apps that track without it.
-3. **EU / UK consent**: Google's AdMob needs its UMP consent form (GDPR/ePrivacy).
-4. **Privacy manifest**: update `PrivacyInfo.xcprivacy` (tracking domains, collected data types) and use an SDK version that ships its own manifest.
-5. **Privacy policy and Terms** (`landing-page/src/pages/collagemagik/`): update the "Advertising" section with the provider's name and
-   what it collects; bump `EFFECTIVE_DATE`.
-6. **Age rating**: redo the questionnaire (ads can affect it); keep ads out of the export flow's first-run and never show ads that
-   use the photos, videos or music the person added.
-7. The "Delete all my data" screen should also link to the ad provider's opt-out controls.
+- Meta Audience Network SDK 6.22.1 via Swift Package Manager (`https://github.com/meta/FBAudienceNetwork`), iOS 15+ (this app is iOS 26+).
+- One **interstitial** after a finished export, once the export sheet is closed. Not after the 1st export, then every 2nd export, never within
+  3 minutes of the previous ad (`AdConfig.showEveryNthExport`, `minimumSecondsBetweenAds`).
+- The SDK is **not started** until the person has seen the ads notice (EU/UK/Switzerland: they must tap **Allow ads**; **No ads** keeps it off).
+  Then Apple's tracking prompt is shown. Declining tracking still shows (less personal) ads.
+- `AdInfo.plist` adds Meta's `SKAdNetworkItems` (`v9wttpbfk9.skadnetwork`, `n38lu8286q.skadnetwork`); the project sets `NSUserTrackingUsageDescription`;
+  `PrivacyInfo.xcprivacy` declares tracking, the two tracking domains, the data types in section 3 and the UserDefaults reason.
+- "Delete all my data" also resets ad choices.
+
+**You must do (cannot be done from code):**
+
+1. In **Meta Monetization Manager** (business.facebook.com/monetization_manager) add the iOS app (bundle ID `com.axpo.collagemagik`, App Store link once live) and create an
+   **Interstitial placement**.
+2. Paste its ID into `AdConfig.interstitialPlacementID` (`CollageMagik/Ads/AdConfig.swift`). **While it is empty the app shows no ads, no notice and no tracking prompt.**
+3. Test on a real iPhone with a test device (Debug builds register the device for Meta test ads automatically), then archive in Release and upload.
+4. In App Store Connect: App Privacy (section 3), age rating *Advertising = Yes* (section 4), and the review notes (section 6).
+5. If you ever change ad provider or format, update the policy page (`landing-page/src/pages/collagemagik/`), bump `EFFECTIVE_DATE`, and redo sections 3 and 4.
+
+Known to watch: Meta's header marks `FBInterstitialAd.load()` deprecated in favour of a server-side bid payload. It is what Meta's current docs use for a
+client-side integration; if a future SDK removes it, switch to `loadAd(withBidPayload:)`.

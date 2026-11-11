@@ -91,6 +91,8 @@ let minSlides = 2
 let maxSlides = 10
 let initialCarouselCells = 5
 let maxVideos = 2
+/// The media tray (the strip at the bottom) holds more than a collage can show: pick from up to 15 and swap the best into the cells.
+let maxTrayItems = 15
 
 func layouts(for count: Int) -> [CollageLayout] { allLayouts.filter { $0.count == count } }
 func layout(byId id: String) -> CollageLayout { allLayouts.first { $0.id == id } ?? allLayouts[0] }

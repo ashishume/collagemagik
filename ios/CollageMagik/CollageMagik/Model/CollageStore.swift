@@ -48,6 +48,9 @@ final class CollageStore {
     var helpOpen = false
     var previewOpen = false
     var cropCell: Int?
+    /// The media tray is full: shows an alert that says how to make room. `trayFullSkipped` = how many picked items were not added.
+    var showTrayFull = false
+    var trayFullSkipped = 0
 
     // Pickers
     var showPhotoPicker = false
@@ -74,6 +77,14 @@ final class CollageStore {
     func item(_ id: String) -> MediaItem? { items.first { $0.id == id } }
     var videoCount: Int { items.filter { $0.kind == .video }.count }
     var hasPlacedVideo: Bool { !placedLanes(project).isEmpty }
+    var trayIsFull: Bool { items.count >= maxTrayItems }
+    /// What the "tray is full" alert says, including where to remove pictures from.
+    var trayFullMessage: String {
+        let skipped = trayFullSkipped > 0
+            ? "\(trayFullSkipped) \(trayFullSkipped == 1 ? "item wasn't" : "items weren't") added. "
+            : ""
+        return skipped + "Your media tray holds up to \(maxTrayItems) pictures and videos, and it's full. To add more, remove some first: press and hold a picture in the tray at the bottom, then tap Remove."
+    }
     var placedMediaCount: Int { project.cells.prefix(project.cellCount).compactMap(\.mediaId).count }
 
     // MARK: Messages
@@ -91,12 +102,23 @@ final class CollageStore {
 
     // MARK: Importing
 
+    /// Nothing can be added while the tray is full: say so (and where to remove from) instead of opening a picker.
+    private func refuseIfTrayFull() -> Bool {
+        guard trayIsFull else { return false }
+        trayFullSkipped = 0
+        showTrayFull = true
+        UINotificationFeedbackGenerator().notificationOccurred(.warning)
+        return true
+    }
+
     func openAdd(cell: Int? = nil) {
+        guard !refuseIfTrayFull() else { return }
         pickTarget = cell
         showPhotoPicker = true
     }
 
     func openFiles(cell: Int? = nil) {
+        guard !refuseIfTrayFull() else { return }
         pickTarget = cell
         importerIsMusic = false
         showFileImporter = true
@@ -147,8 +169,10 @@ final class CollageStore {
         let replacing = pickTarget.map { project.cells.indices.contains($0) && project.cells[$0].mediaId != nil } ?? false
         var target = pickTarget
         var added = 0
+        var leftInTray = 0
+        var skippedForTray = 0
         pickTarget = nil
-        for url in urls {
+        for (index, url) in urls.enumerated() {
             let name = url.deletingPathExtension().lastPathComponent
             let kind = MediaLoader.kind(of: url)
             if kind == nil {
@@ -159,8 +183,8 @@ final class CollageStore {
                 notify("Carousels use photos only. Switch to Collage to add videos.")
                 continue
             }
-            if items.count >= cellLimit {
-                notify(isCarousel ? "A carousel holds up to \(cellLimit) photos." : "A collage holds up to \(cellLimit) photos and videos.")
+            if items.count >= maxTrayItems {
+                skippedForTray = urls.count - index
                 break
             }
             if kind == .video && videoCount >= maxVideos {
@@ -178,9 +202,17 @@ final class CollageStore {
             if item.kind == .video {
                 project.lanes.append(newLane(mediaId: item.id, duration: item.duration, volume: project.lanes.isEmpty ? 1 : 0))
             }
-            placeMedia(item.id, cell: target)
+            // The collage only has room for `cellLimit` pictures. The rest wait in the tray to be swapped in.
+            if !placeMedia(item.id, cell: target, quiet: true) { leftInTray += 1 }
             target = nil
             added += 1
+        }
+        if skippedForTray > 0 {
+            trayFullSkipped = skippedForTray
+            showTrayFull = true
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+        } else if leftInTray > 0 {
+            notify("The \(isCarousel ? "carousel" : "collage") is full (\(cellLimit)). \(leftInTray == 1 ? "1 picture is" : "\(leftInTray) pictures are") in your tray: tap a cell, then a tray picture, to swap it in.")
         }
         // The collage follows the selection: pick N photos / videos and you get an N-cell collage, with the
         // formats for N cells ready to choose from. (A single add to a collage already in progress leaves it alone.)
@@ -236,14 +268,15 @@ final class CollageStore {
 
     // MARK: Cells
 
-    func placeMedia(_ mediaId: String, cell: Int? = nil) {
+    @discardableResult
+    func placeMedia(_ mediaId: String, cell: Int? = nil, quiet: Bool = false) -> Bool {
         var cells = project.cells.map { $0.mediaId == mediaId ? CellState() : $0 }
         var count = project.cellCount
         var idx = cell ?? cells.firstIndex { $0.mediaId == nil } ?? -1
         if idx == -1 {
             if count >= cellLimit {
-                notify("All cells are full. Tap a cell to replace its media.")
-                return
+                if !quiet { notify("The \(isCarousel ? "carousel" : "collage") is full (\(cellLimit)). Tap a cell first, then tap a tray picture to swap it in.") }
+                return false
             }
             count += 1
             cells.append(CellState())
@@ -258,6 +291,7 @@ final class CollageStore {
         project.cellCount = count
         clampCarouselOffset()
         selectedCell = idx
+        return true
     }
 
     func removeMedia(_ mediaId: String) {
@@ -368,12 +402,11 @@ final class CollageStore {
         if mode == .carousel {
             for v in items where v.kind == .video { removeMedia(v.id) }
             if project.format == .story { project.format = .post }
-        } else if items.count > maxCells {
-            for extra in items.suffix(items.count - maxCells) { removeMedia(extra.id) }
         }
         project.mode = mode
         let ids = items.map(\.id)
-        let n = ids.isEmpty ? (mode == .carousel ? initialCarouselCells : initialCellCount) : ids.count
+        // The cells take the first pictures that fit; any others stay in the tray, not deleted.
+        let n = ids.isEmpty ? (mode == .carousel ? initialCarouselCells : initialCellCount) : min(ids.count, cellLimit)
         project.cellCount = n
         project.cells = (0..<n).map { CellState(mediaId: ids.indices.contains($0) ? ids[$0] : nil) }
         project.layoutId = defaultLayoutId(for: project)

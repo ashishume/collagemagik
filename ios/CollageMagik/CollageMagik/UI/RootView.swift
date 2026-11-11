@@ -10,11 +10,13 @@ struct RootView: View {
     @State private var libraryOpen = false
     /// Carousel needs photos only: asks before the videos are dropped.
     @State private var confirmCarousel = false
+    /// The one-time ads notice, shown after the first finished export.
+    @Bindable private var ads = AdManager.shared
 
     /// Replacing a picture takes one item; adding to the collage (or filling an empty cell) takes as many as there is room for.
     private var pickLimit: Int {
         if let t = store.pickTarget, store.project.cells.indices.contains(t), store.project.cells[t].mediaId != nil { return 1 }
-        return max(1, store.cellLimit - store.items.count)
+        return max(1, maxTrayItems - store.items.count)
     }
 
     var body: some View {
@@ -80,10 +82,18 @@ struct RootView: View {
                 if store.importerIsMusic, let u = urls.first { await store.importMusic(u) } else { await store.importFiles(urls) }
             }
         }
+        .alert("Your media tray is full", isPresented: $store.showTrayFull) {
+            Button("Show my tray") { withAnimation(.smooth) { store.tab = .media } }
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(store.trayFullMessage)
+        }
         .sheet(isPresented: $store.exportOpen) { ExportSheet() }
         .sheet(isPresented: $store.helpOpen) { HelpSheet() }
         .sheet(isPresented: $libraryOpen) { LibrarySheet() }
         .sheet(isPresented: $store.aboutOpen) { AboutSheet() }
+        .sheet(isPresented: $ads.showNotice) { AdNoticeSheet() }
+        .onAppear { AdManager.shared.appDidLaunch() }
         .fullScreenCover(isPresented: $store.previewOpen) { FullScreenPreview() }
         .fullScreenCover(item: Binding(
             get: { store.cropCell.map(CropTarget.init) },

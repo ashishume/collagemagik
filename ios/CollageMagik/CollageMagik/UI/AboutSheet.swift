@@ -14,6 +14,25 @@ struct AboutSheet: View {
     @Environment(LibraryStore.self) private var library
     @Environment(\.dismiss) private var dismiss
     @State private var confirmDelete = false
+    @State private var showAdChoices = false
+    private let ads = AdManager.shared
+
+    private var adStatus: String {
+        switch ads.choice {
+        case .allowed: "Allowed"
+        case .declined: "Off"
+        case nil: "Not asked yet"
+        }
+    }
+
+    private var trackingStatus: String {
+        switch ads.trackingStatus {
+        case .authorized: "Allowed"
+        case .denied, .restricted: "Not allowed"
+        case .notDetermined: "Not asked yet"
+        @unknown default: "Not asked yet"
+        }
+    }
 
     private var version: String {
         let info = Bundle.main.infoDictionary
@@ -27,11 +46,12 @@ struct AboutSheet: View {
             List {
                 Section {
                     HStack(spacing: 14) {
-                        Image(systemName: "sparkles")
-                            .font(.title2)
-                            .foregroundStyle(.white)
-                            .frame(width: 48, height: 48)
-                            .background(Color.brand.gradient, in: .rect(cornerRadius: 12, style: .continuous))
+                        Image("Logo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 52, height: 52)
+                            .clipShape(.rect(cornerRadius: 12, style: .continuous))
+                            .accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 2) {
                             Text("CollageMagik").font(.headline)
                             Text("Version \(version)").font(.footnote).foregroundStyle(.secondary)
@@ -43,6 +63,26 @@ struct AboutSheet: View {
                 Section("Your privacy") {
                     Label("No account or sign-in. Your photos, videos and music are processed on this iPhone and never uploaded.", systemImage: "lock.shield")
                     Label("Collages you export are kept in My Library on this iPhone, and only there.", systemImage: "internaldrive")
+                    if ads.isEnabled {
+                        Label("Ads come from Meta Audience Network. They never get your photos, videos, music or collages.", systemImage: "megaphone")
+                    }
+                }
+
+                if ads.isEnabled {
+                    Section {
+                        LabeledContent("Show ads", value: adStatus)
+                        LabeledContent("Tracking (Apple)", value: trackingStatus)
+                        Button { showAdChoices = true } label: { Label("Review ad choices", systemImage: "slider.horizontal.3") }
+                        if ads.trackingStatus == .denied || ads.trackingStatus == .authorized {
+                            Link(destination: URL(string: UIApplication.openSettingsURLString)!) {
+                                Label("Change tracking in Settings", systemImage: "gearshape")
+                            }
+                        }
+                    } header: {
+                        Text("Ads")
+                    } footer: {
+                        Text("One full-screen ad may appear after you export. It never appears while you edit.")
+                    }
                 }
 
                 Section("Legal & help") {
@@ -77,6 +117,7 @@ struct AboutSheet: View {
                         store.newCollage()
                         library.removeAll()
                         MediaLoader.purgeTemporaryFiles()
+                        ads.resetChoices()
                     }
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
                 }
@@ -84,6 +125,7 @@ struct AboutSheet: View {
                 Text("All collages in My Library and your current collage will be permanently deleted. This can't be undone.")
             }
         }
+        .sheet(isPresented: $showAdChoices) { AdNoticeSheet() }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
     }
