@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Download, Sparkles, Upload } from 'lucide-react'
+import { Download, Upload } from 'lucide-react'
 import { FORMATS } from './geometry'
 import { useStore } from './store'
 import { Stage } from './ui/Stage'
@@ -66,7 +66,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <Sparkles size={20} className="logo" aria-hidden />
+        <img src="/icon-192.png" alt="" width={26} height={26} className="logo" />
         <h1>CollageMagik</h1>
         <span className="fmt">{FORMATS[format].short}</span>
         <button className="btn primary small" onClick={() => useStore.getState().setExportOpen(true)}>

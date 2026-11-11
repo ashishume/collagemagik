@@ -1,5 +1,5 @@
 // Minimal offline cache: the app has no backend, so everything it needs is a static file.
-const CACHE = 'collagemagik-v1'
+const CACHE = 'collagemagik-v2' // bumped for the new logo, so installed copies drop the old icon
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/manifest.webmanifest', '/icon-192.png'])))

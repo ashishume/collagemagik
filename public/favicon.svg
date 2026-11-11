@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6A3DF2"/>
+      <stop offset="0.52" stop-color="#B83FD0"/>
+      <stop offset="1" stop-color="#FF5C9A"/>
+    </linearGradient>
+    <radialGradient id="bgGlowTL" cx="0.12" cy="0.06" r="0.7">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bgGlowBR" cx="0.95" cy="1" r="0.6">
+      <stop offset="0" stop-color="#FFB36B" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#FFB36B" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="tileWhite" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F3EAFF"/>
+    </linearGradient>
+    <linearGradient id="tileSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE9F3"/>
+      <stop offset="0.55" stop-color="#FFF6E8"/>
+      <stop offset="1" stop-color="#FFE3EE"/>
+    </linearGradient>
+    <radialGradient id="sunGlow"><stop offset="0" stop-color="#FFC266" stop-opacity="0.55"/><stop offset="1" stop-color="#FFC266" stop-opacity="0"/></radialGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFD36B"/><stop offset="1" stop-color="#FF9A4D"/></linearGradient>
+    <linearGradient id="hillBack" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C38BFF"/><stop offset="1" stop-color="#8A5CF6"/></linearGradient>
+    <linearGradient id="hillFront" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A4BF0"/><stop offset="1" stop-color="#5A2FD0"/></linearGradient>
+    <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7B4DF6"/><stop offset="1" stop-color="#E24A98"/></linearGradient>
+  </defs><rect width="1024" height="1024" rx="232" fill="url(#bg)"/><rect width="1024" height="1024" rx="232" fill="url(#bgGlowBR)"/><rect width="1024" height="1024" rx="232" fill="url(#bgGlowTL)"/>
+  <g id="tiles">
+    <rect x="150" y="180" width="368" height="724" rx="94" fill="#2a0d6b" opacity="0.035"/><rect x="156" y="182" width="356" height="712" rx="88" fill="#2a0d6b" opacity="0.04"/><rect x="162" y="184" width="344" height="700" rx="82" fill="#2a0d6b" opacity="0.05"/><rect x="167" y="185" width="334" height="690" rx="77" fill="#2a0d6b" opacity="0.06"/><rect x="171" y="185" width="326" height="682" rx="73" fill="#2a0d6b" opacity="0.07"/><rect x="174" y="184" width="320" height="676" rx="70" fill="#2a0d6b" opacity="0.08"/><rect x="506" y="180" width="368" height="352" rx="94" fill="#2a0d6b" opacity="0.035"/><rect x="512" y="182" width="356" height="340" rx="88" fill="#2a0d6b" opacity="0.04"/><rect x="518" y="184" width="344" height="328" rx="82" fill="#2a0d6b" opacity="0.05"/><rect x="523" y="185" width="334" height="318" rx="77" fill="#2a0d6b" opacity="0.06"/><rect x="527" y="185" width="326" height="310" rx="73" fill="#2a0d6b" opacity="0.07"/><rect x="530" y="184" width="320" height="304" rx="70" fill="#2a0d6b" opacity="0.08"/><rect x="506" y="520" width="368" height="384" rx="94" fill="#2a0d6b" opacity="0.035"/><rect x="512" y="522" width="356" height="372" rx="88" fill="#2a0d6b" opacity="0.04"/><rect x="518" y="524" width="344" height="360" rx="82" fill="#2a0d6b" opacity="0.05"/><rect x="523" y="525" width="334" height="350" rx="77" fill="#2a0d6b" opacity="0.06"/><rect x="527" y="525" width="326" height="342" rx="73" fill="#2a0d6b" opacity="0.07"/><rect x="530" y="524" width="320" height="336" rx="70" fill="#2a0d6b" opacity="0.08"/>
+    <!-- photo tile -->
+    <clipPath id="clipPhoto"><rect x="176" y="176" width="316" height="672" rx="68"/></clipPath>
+    <rect x="176" y="176" width="316" height="672" rx="68" fill="url(#tileSky)"/>
+    <g clip-path="url(#clipPhoto)">
+      <circle cx="378.24" cy="377.6" r="94.8" fill="url(#sunGlow)"/>
+      <circle cx="378.24" cy="377.6" r="42.660000000000004" fill="url(#sun)"/>
+      <path d="M176,713.6 C255.0,565.76 349.8,579.2 492,686.72 L492,848 L176,848Z" fill="url(#hillBack)"/>
+      <path d="M176,780.8000000000001 C270.8,646.4 397.2,753.92 492,713.6 L492,848 L176,848Z" fill="url(#hillFront)"/>
+    </g>
+    <!-- magic tile -->
+    <rect x="532" y="176" width="316" height="300" rx="68" fill="url(#tileWhite)"/>
+    <path d="M690.0,228.0 Q705.68,310.32 788.0,326.0 Q705.68,341.68 690.0,424.0 Q674.32,341.68 592.0,326.0 Q674.32,310.32 690.0,228.0Z" fill="url(#ink)"/>
+    <path d="M778.48,223.0 Q785.28,250.2 812.48,257.0 Q785.28,263.8 778.48,291.0 Q771.6800000000001,263.8 744.48,257.0 Q771.6800000000001,250.2 778.48,223.0Z" fill="url(#ink)"/>
+    <path d="M607.84,372.0 Q613.0400000000001,392.8 633.84,398.0 Q613.0400000000001,403.2 607.84,424.0 Q602.64,403.2 581.84,398.0 Q602.64,392.8 607.84,372.0Z" fill="url(#ink)" opacity="0.85"/>
+    <!-- video tile -->
+    <rect x="532" y="516" width="316" height="332" rx="68" fill="url(#tileWhite)"/>
+    <polygon points="646.72,608.0 646.72,756.0 777.7,682.0" fill="url(#ink)" stroke="url(#ink)" stroke-width="44" stroke-linejoin="round"/>
+  </g></svg>

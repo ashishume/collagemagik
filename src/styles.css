@@ -92,7 +92,10 @@ p {
   letter-spacing: 0.1px;
 }
 .topbar .logo {
-  color: var(--accent);
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  flex: none;
 }
 .topbar .fmt {
   margin-right: auto;
