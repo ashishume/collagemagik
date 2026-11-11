@@ -1,0 +1,138 @@
+{
+  "design_reference": "Figureout / Mindstrike App Store iPhone sets",
+  "method": "Local composition of simulator captures",
+  "screen_rect": {
+    "x": 180,
+    "y": 680,
+    "width": 960,
+    "height": 2086
+  },
+  "assets": [
+    {
+      "file": "png/01-photos-that-flow-1320x2868.png",
+      "source": "../raw/01-carousel.png",
+      "feature": "Carousel",
+      "title": "Photos that flow. Slide to slide.",
+      "subtitle": "Pictures cross the edge, so people keep swiping.",
+      "width": 1320,
+      "height": 2868,
+      "mode": "RGB",
+      "color_profile": "sRGB",
+      "source_sha256": "3f302c4fe11497b754afa1016b9f215ca388e0fec8fa707e2c631381e18fb260",
+      "sha256": "d32aded89862cdccae698bf96226c0f3030bf45b3b06d4b22414edefc93065f4",
+      "screen_opaque_pixels_match_resized_source": true,
+      "headline_font_sizes": [
+        120,
+        120
+      ]
+    },
+    {
+      "file": "png/02-swipe-for-the-rest-1320x2868.png",
+      "source": "../raw/02-carousel-next.png",
+      "feature": "Carousel, slide 2",
+      "title": "Swipe to see the rest.",
+      "subtitle": "Up to 10 slides, exported one image per slide.",
+      "width": 1320,
+      "height": 2868,
+      "mode": "RGB",
+      "color_profile": "sRGB",
+      "source_sha256": "17db252539c3d4adecdb8417f124e62706ff6ff37c09f6cc87a0c4461ab631ba",
+      "sha256": "9394688a8f378f9087f28f27a68c8b1a8712da146fe561089a03cd38a3ce6a0b",
+      "screen_opaque_pixels_match_resized_source": true,
+      "headline_font_sizes": [
+        120,
+        120
+      ]
+    },
+    {
+      "file": "png/03-35-layouts-1320x2868.png",
+      "source": "../raw/03-layout.png",
+      "feature": "Layouts",
+      "title": "35 layouts. Your way.",
+      "subtitle": "Up to 9 pictures. Story, Post or Square.",
+      "width": 1320,
+      "height": 2868,
+      "mode": "RGB",
+      "color_profile": "sRGB",
+      "source_sha256": "dc99b2de91ea502216246ebfb58230578fdc387241fbdb87b74345ed4b26582e",
+      "sha256": "5fe15800143da827c119565399df040b9d25c8d16b0198eb627800934d186f9d",
+      "screen_opaque_pixels_match_resized_source": true,
+      "headline_font_sizes": [
+        120,
+        120
+      ]
+    },
+    {
+      "file": "png/04-collages-that-move-1320x2868.png",
+      "source": "../raw/04-timeline.png",
+      "feature": "Video timeline",
+      "title": "Collages that really move.",
+      "subtitle": "Videos play inside their cells. Trim, split, sync.",
+      "width": 1320,
+      "height": 2868,
+      "mode": "RGB",
+      "color_profile": "sRGB",
+      "source_sha256": "cdb1ad8fc9febd77bad9d5eee098f1e1824bbaabf378bee7d0dd158fc48356cd",
+      "sha256": "281823273ed396a5f13b55b0b0c6c90d72ce4219d04e22092969e6dafd1c296b",
+      "screen_opaque_pixels_match_resized_source": true,
+      "headline_font_sizes": [
+        120,
+        120
+      ]
+    },
+    {
+      "file": "png/05-crop-and-straighten-1320x2868.png",
+      "source": "../raw/05-crop.png",
+      "feature": "Crop and rotate",
+      "title": "Crop, rotate, straighten.",
+      "subtitle": "Fine-tune any picture or video, to the degree.",
+      "width": 1320,
+      "height": 2868,
+      "mode": "RGB",
+      "color_profile": "sRGB",
+      "source_sha256": "32348584b5de1eca7b69589fa69695ad2b602add25f2efcc2703c39bf2a39286",
+      "sha256": "7fe14c5cbc2dabeb5e4ddd82948de259b72b48c50689a2f6007b2f0e4759c3cf",
+      "screen_opaque_pixels_match_resized_source": true,
+      "headline_font_sizes": [
+        120,
+        120
+      ]
+    },
+    {
+      "file": "png/06-export-in-high-quality-1320x2868.png",
+      "source": "../raw/06-export.png",
+      "feature": "Export",
+      "title": "Export in high quality.",
+      "subtitle": "MP4 up to 4K or a PNG. Share it or save to Photos.",
+      "width": 1320,
+      "height": 2868,
+      "mode": "RGB",
+      "color_profile": "sRGB",
+      "source_sha256": "2f0773decf91a6c2a4645d8e10874f16f78d0af506247dbe82631d2e3d8078c0",
+      "sha256": "fa6168e6a86fa294e9c9aa7c1db1ed20766473e484a14ee6a3009a95cadf1e78",
+      "screen_opaque_pixels_match_resized_source": true,
+      "headline_font_sizes": [
+        120,
+        120
+      ]
+    },
+    {
+      "file": "png/07-kept-private-1320x2868.png",
+      "source": "../raw/07-library.png",
+      "feature": "My Library",
+      "title": "Your work, kept private.",
+      "subtitle": "My Library lives on your iPhone. No account needed.",
+      "width": 1320,
+      "height": 2868,
+      "mode": "RGB",
+      "color_profile": "sRGB",
+      "source_sha256": "e6d1c9a966cd696a8ba647ffc208ab718a6d4efad0bb220c19dbe5b29178fe2a",
+      "sha256": "f0af4f02463637b9b20ec7cdef65b526ac27667bf5e8a183beeec7bb46ffdc47",
+      "screen_opaque_pixels_match_resized_source": true,
+      "headline_font_sizes": [
+        120,
+        120
+      ]
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+[
+  {
+    "id": "01-photos-that-flow",
+    "feature": "Carousel",
+    "source": "../raw/01-carousel.png",
+    "title": ["Photos that flow.", "Slide to slide."],
+    "subtitle": "Pictures cross the edge, so people keep swiping.",
+    "background": "F6F1FD",
+    "wash": "E3D8F6",
+    "accent": "6D4FD6"
+  },
+  {
+    "id": "02-swipe-for-the-rest",
+    "feature": "Carousel, slide 2",
+    "source": "../raw/02-carousel-next.png",
+    "title": ["Swipe to see", "the rest."],
+    "subtitle": "Up to 10 slides, exported one image per slide.",
+    "background": "FDF1F6",
+    "wash": "F5D7E5",
+    "accent": "B8386F"
+  },
+  {
+    "id": "03-35-layouts",
+    "feature": "Layouts",
+    "source": "../raw/03-layout.png",
+    "title": ["35 layouts.", "Your way."],
+    "subtitle": "Up to 9 pictures. Story, Post or Square.",
+    "background": "F0F5FD",
+    "wash": "D9E6F8",
+    "accent": "3F6DB5"
+  },
+  {
+    "id": "04-collages-that-move",
+    "feature": "Video timeline",
+    "source": "../raw/04-timeline.png",
+    "title": ["Collages that", "really move."],
+    "subtitle": "Videos play inside their cells. Trim, split, sync.",
+    "background": "EFF9F5",
+    "wash": "CDEBE1",
+    "accent": "177F70"
+  },
+  {
+    "id": "05-crop-and-straighten",
+    "feature": "Crop and rotate",
+    "source": "../raw/05-crop.png",
+    "title": ["Crop, rotate,", "straighten."],
+    "subtitle": "Fine-tune any picture or video, to the degree.",
+    "background": "FFF3EC",
+    "wash": "F8DBCC",
+    "accent": "B85D36"
+  },
+  {
+    "id": "06-export-in-high-quality",
+    "feature": "Export",
+    "source": "../raw/06-export.png",
+    "title": ["Export in", "high quality."],
+    "subtitle": "MP4 up to 4K or a PNG. Share it or save to Photos.",
+    "background": "FFFAED",
+    "wash": "F4E7BC",
+    "accent": "A2771F"
+  },
+  {
+    "id": "07-kept-private",
+    "feature": "My Library",
+    "source": "../raw/07-library.png",
+    "title": ["Your work,", "kept private."],
+    "subtitle": "My Library lives on your iPhone. No account needed.",
+    "background": "F3F9EE",
+    "wash": "DCECCD",
+    "accent": "5E8A33"
+  }
+]
