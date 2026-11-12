@@ -146,3 +146,42 @@ func musicAt(_ m: MusicTrack, _ t: Double, total: Double) -> (want: Double, audi
         m.fadeOut ? clamp((end - t) / fadeSeconds, 0, 1) : 1
     )
 }
+
+// MARK: - Choose part (slip)
+
+/// Slide which part of the video plays, keeping the clip's length and its place on the timeline (Instagram's "trim" window).
+func slipClip(_ clip: Clip, _ dt: Double, mediaDuration: Double) -> Clip {
+    let d = clamp(dt, -clip.inPoint, max(0, mediaDuration - clip.outPoint))
+    var c = clip
+    c.inPoint += d
+    c.outPoint += d
+    return c
+}
+
+/// Set the part of the video a clip plays, keeping where it starts on the timeline. Clamped to the file, a minimum length,
+/// and the 60-second collage limit.
+func choosePart(_ clip: Clip, inPoint: Double, outPoint: Double, mediaDuration: Double) -> Clip {
+    let maxLen = max(minClip, min(mediaDuration, maxDuration - clip.start))
+    var i = clamp(inPoint, 0, max(0, mediaDuration - minClip))
+    var o = clamp(outPoint, i + minClip, mediaDuration)
+    if o - i > maxLen { o = i + maxLen }
+    if o > mediaDuration { o = mediaDuration; i = max(0, o - maxLen) }
+    var c = clip
+    c.inPoint = i
+    c.outPoint = o
+    return c
+}
+
+/// A copy of a clip placed right after it (or as late as still fits in 60 seconds). nil when there is no room.
+func duplicateClip(_ clip: Clip) -> Clip? {
+    let start = min(clip.end, maxDuration - clip.length)
+    guard start >= clip.start + minClip else { return nil }
+    return Clip(id: newId(), start: start, inPoint: clip.inPoint, outPoint: clip.outPoint)
+}
+
+/// One clip of one video lane.
+struct ClipRef: Identifiable, Equatable {
+    let mediaId: String
+    let clipId: String
+    var id: String { clipId }
+}

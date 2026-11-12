@@ -21,7 +21,19 @@ enum DebugHarness {
             await store.addFiles(list.split(separator: ",").map { URL(fileURLWithPath: String($0)) })
             NSLog("CM_DEBUG batch -> cells=%d items=%d tab=%@", store.project.cellCount, store.items.count, store.tab.rawValue)
         }
-        if let l = env["CM_LAYOUT"] { store.setCellCount(Int(l) ?? 4) }
+        // CM_IMPORT=a,b,c: the Files import path with its loader; logs each "N of M" step until it hides.
+        if let list = env["CM_IMPORT"] {
+            store.startFileImport(list.split(separator: ",").map { URL(fileURLWithPath: String($0)) })
+            var last = ""
+            while let p = store.importProgress {
+                let line = "\(p.title) \(Int(p.fraction * 100))% \(p.detail)"
+                if line != last { NSLog("CM_DEBUG loader %@", line); last = line }
+                if env["CM_IMPORT_CANCEL_AT"].flatMap(Int.init) == p.current { store.cancelImport() }
+                try? await Task.sleep(for: .milliseconds(5))
+            }
+            NSLog("CM_DEBUG loader hidden; items=%d toast=%@", store.items.count, store.toast?.text ?? "none")
+        }
+        if let l = env["CM_LAYOUT"]{ store.setCellCount(Int(l) ?? 4) }
         if let t = env["CM_TAB"] {
             switch t {
             case "timeline": store.tab = .video; store.videoSection = .timeline
@@ -78,6 +90,8 @@ enum DebugHarness {
                 NSLog("CM_DEBUG export FAILED: %@", error.localizedDescription)
             }
         }
+        if env["CM_DUP"] == "1" { store.duplicateSelectedClip() }
+        if env["CM_PART"] == "1" { store.openChoosePart() }
         if env["CM_PREVIEW"] == "1" { store.previewOpen = true }
         if env["CM_PLAY"] == "1" { store.playback.play() }
         if let seek = env["CM_SEEK"], let t = Double(seek) { store.playback.seek(to: t) }

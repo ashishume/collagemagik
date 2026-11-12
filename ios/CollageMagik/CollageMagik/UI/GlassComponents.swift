@@ -177,3 +177,54 @@ struct SaveFailureNote: View {
         }
     }
 }
+
+/// The loader shown while picked photos and videos are added: "Adding 2 of 5", a progress bar, and Cancel.
+/// It sits over a dimmed screen, so nothing else can change the collage halfway through an import.
+struct ImportProgressOverlay: View {
+    let progress: ImportProgress
+    let cancel: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.35)
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture {}
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 10) {
+                    ProgressView().controlSize(.small).tint(.white)
+                    Text(progress.title)
+                        .font(.headline)
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                    Spacer(minLength: 8)
+                    Text("\(Int((progress.fraction * 100).rounded()))%")
+                        .font(.subheadline.weight(.semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                        .contentTransition(.numericText())
+                }
+                ProgressView(value: progress.fraction)
+                    .tint(Color.brand)
+                    .animation(.smooth(duration: 0.25), value: progress.fraction)
+                HStack {
+                    Text(progress.detail)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                    Spacer(minLength: 8)
+                    Button("Cancel", role: .cancel, action: cancel)
+                        .buttonStyle(.glass)
+                        .controlSize(.small)
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: 340)
+            .glassEffect(.regular, in: .rect(cornerRadius: 24))
+            .padding(.horizontal, 24)
+            .animation(.smooth, value: progress.current)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("\(progress.title), \(Int((progress.fraction * 100).rounded())) percent")
+        }
+    }
+}

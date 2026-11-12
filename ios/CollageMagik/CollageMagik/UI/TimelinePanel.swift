@@ -64,11 +64,31 @@ struct TimelinePanel: View {
             Text("\(formatTime(pb.playhead)) / \(formatTime(store.totalDuration))")
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
             Spacer(minLength: 0)
             GlassEffectContainer(spacing: 6) {
                 HStack(spacing: 6) {
                     ChipButton(title: "Split", symbol: "scissors") { store.splitAtPlayhead() }
-                    ChipButton(title: "Delete", symbol: "trash", role: .destructive) { store.deleteSelectedClip() }
+                        .fixedSize()
+                    ChipButton(title: "Part", symbol: "film.stack") { store.openChoosePart() }
+                        .fixedSize()
+                        .accessibilityLabel("Choose part of the clip")
+                    Menu {
+                        Button { store.openChoosePart() } label: { Label("Choose part…", systemImage: "film.stack") }
+                        Button { store.duplicateSelectedClip() } label: { Label("Duplicate", systemImage: "plus.square.on.square") }
+                        Button { store.resetSelectedClip() } label: { Label("Use whole video", systemImage: "arrow.left.and.right") }
+                        Divider()
+                        Button(role: .destructive) { store.deleteSelectedClip() } label: { Label("Delete clip", systemImage: "trash") }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .font(.footnote.weight(.semibold))
+                            .frame(width: 18, height: 18)
+                    }
+                    .buttonStyle(.glass)
+                    .buttonBorderShape(.circle)
+                    .controlSize(.small)
+                    .accessibilityLabel("More clip options")
                 }
             }
         }

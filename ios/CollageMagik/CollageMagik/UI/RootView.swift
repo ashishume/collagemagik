@@ -51,11 +51,17 @@ struct RootView: View {
                 // the caption keyboard opens over the editor; it must not squeeze the preview behind it
                 .ignoresSafeArea(.keyboard, edges: .bottom)
 
+                if let progress = store.importProgress {
+                    ImportProgressOverlay(progress: progress) { store.cancelImport() }
+                        .transition(.opacity)
+                        .zIndex(1)
+                }
+
                 if let toast = store.toast {
                     ToastView(text: toast.text)
                         .transition(.move(edge: .top).combined(with: .opacity))
                         .padding(.top, 52)
-                        .zIndex(1)
+                        .zIndex(2)
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
@@ -69,10 +75,8 @@ struct RootView: View {
         )
         .onChange(of: store.pickedItems) { _, picked in
             guard !picked.isEmpty else { return }
-            Task {
-                await store.importPicked(picked)
-                store.pickedItems = []
-            }
+            store.startPickedImport(picked)
+            store.pickedItems = []
         }
         .fileImporter(
             isPresented: $store.showFileImporter,
@@ -80,8 +84,10 @@ struct RootView: View {
             allowsMultipleSelection: !store.importerIsMusic
         ) { result in
             guard case .success(let urls) = result else { return }
-            Task {
-                if store.importerIsMusic, let u = urls.first { await store.importMusic(u) } else { await store.importFiles(urls) }
+            if store.importerIsMusic, let u = urls.first {
+                Task { await store.importMusic(u) }
+            } else {
+                store.startFileImport(urls)
             }
         }
         .alert("Your media tray is full", isPresented: $store.showTrayFull) {
@@ -102,6 +108,9 @@ struct RootView: View {
             set: { store.cropCell = $0?.id }
         )) { target in
             CropEditor(cellIndex: target.id)
+        }
+        .fullScreenCover(item: $store.partClip) { ref in
+            ChoosePartEditor(ref: ref)
         }
         .fullScreenCover(item: Binding(
             get: { store.editingCaption.map(CaptionTarget.init) },

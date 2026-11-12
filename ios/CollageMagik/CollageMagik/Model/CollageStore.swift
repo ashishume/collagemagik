@@ -47,11 +47,16 @@ final class CollageStore {
     var carouselOffset: Double = 0
     var viewportSlides: Double = 1.28
     var importing = false
+    /// What the import loader shows ("Adding 2 of 5", progress bar). nil when nothing is being added.
+    var importProgress: ImportProgress?
+    private var importTask: Task<Void, Never>?
     var toast: Toast?
     var exportOpen = false
     var helpOpen = false
     var previewOpen = false
     var cropCell: Int?
+    /// The video clip open in the "Choose part" editor.
+    var partClip: ClipRef?
     /// The media tray is full: shows an alert that says how to make room. `trayFullSkipped` = how many picked items were not added.
     var showTrayFull = false
     var trayFullSkipped = 0
@@ -133,75 +138,131 @@ final class CollageStore {
         showFileImporter = true
     }
 
-    /// Photos picked in the system photo picker.
-    func importPicked(_ picked: [PhotosPickerItem]) async {
+    /// Photos picked in the system photo picker. Starts right away (the loader shows at once) and can be cancelled.
+    func startPickedImport(_ picked: [PhotosPickerItem]) {
         guard !picked.isEmpty else { return }
-        var urls: [URL] = []
-        importing = true
-        for p in picked {
-            let isMovie = p.supportedContentTypes.contains { $0.conforms(to: .movie) }
-            do {
-                if isMovie, let m = try await p.loadTransferable(type: PickedMovie.self) {
-                    urls.append(m.url)
-                } else if let i = try await p.loadTransferable(type: PickedImage.self) {
-                    urls.append(i.url)
-                } else {
-                    notify("One of the items couldn't be read.")
-                }
-            } catch {
-                notify("One of the items couldn't be read: \(error.localizedDescription)")
-            }
-        }
-        importing = false
-        await addFiles(urls)
+        startImport(picked.map { .picker($0) })
     }
 
     /// Files chosen from the Files app.
-    func importFiles(_ urls: [URL]) async {
-        var local: [URL] = []
-        for u in urls {
-            do { local.append(try MediaLoader.copyIntoApp(u)) } catch { notify("\(u.lastPathComponent): couldn't be read.") }
-        }
-        await addFiles(local)
+    func startFileImport(_ urls: [URL]) {
+        guard !urls.isEmpty else { return }
+        startImport(urls.map { .external($0) })
     }
 
+    private func startImport(_ sources: [ImportSource]) {
+        importTask?.cancel()
+        // Show the loader before the first await, so the app never looks stuck after the picker closes.
+        importProgress = ImportProgress(total: sources.count)
+        importing = true
+        importTask = Task {
+            await addSources(sources)
+            importTask = nil
+        }
+    }
+
+    /// Stops adding: what is already in the tray stays.
+    func cancelImport() {
+        importTask?.cancel()
+    }
+
+    /// Files already in the app's own folder (also used by the debug harness).
     func addFiles(_ urls: [URL]) async {
         guard !urls.isEmpty else { return }
+        await addSources(urls.map { .local($0) })
+    }
+
+    /// Adds photos and videos one by one, updating `importProgress` ("Adding 2 of 5") as each item is fetched and read.
+    private func addSources(_ sources: [ImportSource]) async {
+        guard !sources.isEmpty else { return }
         importing = true
-        defer { importing = false }
+        if importProgress == nil { importProgress = ImportProgress(total: sources.count) }
+        defer {
+            importing = false
+            withAnimation(.smooth) { importProgress = nil }
+        }
         let fresh = items.isEmpty
         let replacing = pickTarget.map { project.cells.indices.contains($0) && project.cells[$0].mediaId != nil } ?? false
         var target = pickTarget
         var added = 0
         var leftInTray = 0
         var skippedForTray = 0
+        var problems: [String] = []
+        var cancelled = false
         pickTarget = nil
-        for (index, url) in urls.enumerated() {
-            let name = url.deletingPathExtension().lastPathComponent
-            let kind = MediaLoader.kind(of: url)
-            if kind == nil {
-                notify("\(url.lastPathComponent): only photos and videos can be added.")
+        func skip(_ text: String) {
+            problems.append(text)
+            notify(text)
+        }
+        for (index, source) in sources.enumerated() {
+            if Task.isCancelled { cancelled = true; break }
+            let kindHint = source.kindHint
+            let label = source.label
+            let noun = kindHint == .video ? "video" : "photo"
+            importProgress?.start(item: index + 1, detail: "\(source.fetchVerb) \(noun)…")
+            #if DEBUG
+            if let ms = ProcessInfo.processInfo.environment["CM_IMPORT_SLOW_MS"].flatMap(Int.init) { try? await Task.sleep(for: .milliseconds(ms)) }
+            #endif
+
+            // Rules that don't need the file: checked first, so nothing is downloaded only to be refused.
+            if kindHint == nil {
+                skip("\(label): only photos and videos can be added.")
                 continue
             }
-            if kind == .video && isCarousel {
-                notify("Carousels use photos only. Switch to Collage to add videos.")
+            if kindHint == .video && isCarousel {
+                skip("Carousels use photos only. Switch to Collage to add videos.")
                 continue
             }
             if items.count >= maxTrayItems {
-                skippedForTray = urls.count - index
+                skippedForTray = sources.count - index
                 break
             }
-            if kind == .video && videoCount >= maxVideos {
-                notify("Only \(maxVideos) videos per collage. Remove one to add another.")
+            if kindHint == .video && videoCount >= maxVideos {
+                skip("Only \(maxVideos) videos per collage. Remove one to add another.")
                 continue
             }
+
+            // 1. Get the file into the app's folder (from Photos / iCloud this can take a while for videos).
+            let url: URL
+            do {
+                url = try await source.resolve { [weak self] f in
+                    guard let self, self.importProgress?.current == index + 1 else { return }
+                    self.importProgress?.update(
+                        fraction: f * 0.85,
+                        detail: f < 1 ? "\(source.fetchVerb) \(noun)… \(Int((f * 100).rounded()))%" : "\(source.fetchVerb) \(noun)…"
+                    )
+                }
+            } catch {
+                if Task.isCancelled || (error as? CocoaError)?.code == .userCancelled { cancelled = true; break }
+                skip("\(label) couldn't be read: \(error.localizedDescription)")
+                continue
+            }
+            if Task.isCancelled { cancelled = true; break }
+
+            // 2. Check it plays here and make its thumbnails.
+            let kind = MediaLoader.kind(of: url)
+            importProgress?.update(fraction: 0.88, detail: kind == .video ? "Preparing video…" : "Preparing photo…")
+            if kind == nil {
+                skip("\(url.lastPathComponent): only photos and videos can be added.")
+                continue
+            }
+            if kind == .video && isCarousel {
+                skip("Carousels use photos only. Switch to Collage to add videos.")
+                continue
+            }
+            if kind == .video && videoCount >= maxVideos {
+                skip("Only \(maxVideos) videos per collage. Remove one to add another.")
+                continue
+            }
+            let name = source.name ?? url.deletingPathExtension().lastPathComponent
             let item: MediaItem
             do {
                 item = try await MediaLoader.load(url: url, name: name)
             } catch {
-                notify(error.localizedDescription)
+                skip(error.localizedDescription)
                 continue
             }
+            if Task.isCancelled { cancelled = true; break }
             items.append(item)
             if item.kind == .video {
                 project.lanes.append(newLane(mediaId: item.id, duration: item.duration, volume: project.lanes.isEmpty ? 1 : 0))
@@ -210,8 +271,17 @@ final class CollageStore {
             if !placeMedia(item.id, cell: target, quiet: true) { leftInTray += 1 }
             target = nil
             added += 1
+            importProgress?.finishItem(added: added)
         }
-        if skippedForTray > 0 {
+        if cancelled {
+            notify(added == 0 ? "Adding stopped. Nothing was added." : "Adding stopped. \(added) of \(sources.count) added.")
+        } else if !problems.isEmpty, skippedForTray == 0 {
+            let first = problems.count == 1 ? problems[0] : "\(problems.count) items couldn't be added. \(problems[0])"
+            notify("\(added) of \(sources.count) added. " + first)
+        }
+        if cancelled || !problems.isEmpty, skippedForTray == 0 {
+            // the summary above already said what happened
+        } else if skippedForTray > 0 {
             trayFullSkipped = skippedForTray
             showTrayFull = true
             UINotificationFeedbackGenerator().notificationOccurred(.warning)
@@ -589,6 +659,58 @@ final class CollageStore {
         }
         project.lanes[li].clips.removeAll { $0.id == sel }
         selectedClip = nil
+    }
+
+    /// The selected video clip, or the one under the playhead, or the only one there is.
+    func targetClip() -> ClipRef? {
+        let lanes = placedLanes(project)
+        if let sel = selectedClip, let lane = lanes.first(where: { $0.clips.contains { $0.id == sel } }) {
+            return ClipRef(mediaId: lane.mediaId, clipId: sel)
+        }
+        let t = playback.playhead
+        for lane in lanes { if let c = lane.clips.first(where: { t >= $0.start && t < $0.end }) { return ClipRef(mediaId: lane.mediaId, clipId: c.id) } }
+        let all = lanes.flatMap { l in l.clips.map { ClipRef(mediaId: l.mediaId, clipId: $0.id) } }
+        return all.count == 1 ? all[0] : nil
+    }
+
+    func clip(_ ref: ClipRef) -> Clip? {
+        project.lanes.first { $0.mediaId == ref.mediaId }?.clips.first { $0.id == ref.clipId }
+    }
+
+    /// Opens the editor that picks which part of the video a clip plays.
+    func openChoosePart() {
+        guard let ref = targetClip() else {
+            notify(selectedClip == musicClipId ? "Choose part works on video clips. Drag the music's ends to trim it." : "Tap a clip on the timeline first.")
+            return
+        }
+        playback.pause()
+        selectedClip = ref.clipId
+        partClip = ref
+    }
+
+    func duplicateSelectedClip() {
+        guard let ref = targetClip(), let c = clip(ref) else {
+            notify("Tap a clip on the timeline first.")
+            return
+        }
+        guard let copy = duplicateClip(c) else {
+            notify("There's no room left in the \(Int(maxDuration))-second collage for a copy.")
+            return
+        }
+        setLane(ref.mediaId) { $0.clips.append(copy) }
+        selectedClip = copy.id
+        playback.seek(to: copy.start)
+        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+    }
+
+    /// Plays the whole video again (or its first 60 seconds), from where the clip starts.
+    func resetSelectedClip() {
+        guard let ref = targetClip(), let item = item(ref.mediaId) else {
+            notify("Tap a clip on the timeline first.")
+            return
+        }
+        updateClip(mediaId: ref.mediaId, clipId: ref.clipId) { choosePart($0, inPoint: 0, outPoint: item.duration, mediaDuration: item.duration) }
+        selectedClip = ref.clipId
     }
 
     func removeMusic() {
