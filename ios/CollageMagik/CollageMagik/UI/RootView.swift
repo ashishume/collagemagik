@@ -153,7 +153,8 @@ struct PanelCard: View {
         let pad: CGFloat = 20
         switch store.tab {
         case .media: return 96 + pad
-        case .layout: return (store.isCarousel ? 100 : 106) + pad
+        // collages with borders to drag get a row with the hint and "Reset sizes"
+        case .layout: return (store.isCarousel ? 100 : store.project.resizableGrid?.dividers.isEmpty == false ? 138 : 106) + pad
         case .style: return (store.project.format == .story ? 156 : 124) + pad
         case .text: return (store.caption(store.selectedCaption) == nil ? 66 : 172) + pad
         case .video:

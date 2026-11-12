@@ -298,7 +298,11 @@ func layout(for project: Project) -> CollageLayout {
         let style = project.carouselStyleInUse
         return carouselLayout(style, count: project.cellCount, slides: project.slides, seed: carouselSeed(of: project.layoutId))
     }
-    return layout(byId: project.layoutId)
+    let base = layout(byId: project.layoutId)
+    if let sizes = project.cellSizes, let grid = base.grid, grid.sameShape(sizes) {
+        return CollageLayout(id: base.id, name: base.name, rects: sizes.rects, grid: sizes)
+    }
+    return base
 }
 
 /// Layouts to choose from for the project's current picture count. Each carousel style is shown with its own slide count.

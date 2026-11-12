@@ -3,7 +3,8 @@ import SwiftUI
 /// UIKit gesture layer for the preview: tap, drag, pinch, and press-and-hold-then-drag. UIKit lets these coexist cleanly.
 struct StageGestureLayer: UIViewRepresentable {
     var onTap: (CGPoint) -> Void
-    var onPanBegin: (CGPoint) -> Void
+    /// Where the drag started, and how far it had moved when it was recognised.
+    var onPanBegin: (CGPoint, CGSize) -> Void
     var onPan: (CGSize) -> Void
     var onPanEnd: (CGSize) -> Void = { _ in }
     var onPinchBegin: (CGPoint) -> Void
@@ -49,7 +50,9 @@ struct StageGestureLayer: UIViewRepresentable {
         @objc func pan(_ g: UIPanGestureRecognizer) {
             switch g.state {
             case .began:
-                parent.onPanBegin(g.location(in: g.view))
+                let p = g.location(in: g.view)
+                let t = g.translation(in: g.view)
+                parent.onPanBegin(CGPoint(x: p.x - t.x, y: p.y - t.y), CGSize(width: t.x, height: t.y))
             case .changed:
                 let t = g.translation(in: g.view)
                 g.setTranslation(.zero, in: g.view)
@@ -122,6 +125,17 @@ struct StageView: View {
         var viewportSlides: Double { viewport.width / slideW }
         var maxOffset: Double { max(0, Double(slides) - viewportSlides) }
     }
+
+    /// A border between cells being dragged: the sizes when it started, the layout's own sizes, and how far it has moved.
+    private struct DividerDrag {
+        var divider: LayoutDivider
+        var start: LayoutGrid
+        var base: LayoutGrid?
+        var moved = 0.0
+        var limited = false
+        var snapped = false
+    }
+    @State private var dividerDrag: DividerDrag?
 
     /// True while a drag that started outside the selected picture is swiping the carousel.
     @State private var swiping = false
@@ -257,6 +271,10 @@ struct StageView: View {
                     ring(px[s], color: .orange, radius: radius)
                 }
 
+                if project.mode == .collage && (store.tab == .layout || dividerDrag != nil) {
+                    dividerHandles(size)
+                }
+
                 if project.safeZone && project.format == .story && project.mode == .collage {
                     safeZone(size)
                 }
@@ -274,7 +292,10 @@ struct StageView: View {
         func at(_ p: CGPoint) -> CGPoint { CGPoint(x: p.x + shift.x, y: p.y + shift.y) }
         return StageGestureLayer(
             onTap: { tap(at($0), size) },
-            onPanBegin: { panBegin(at($0), size, carousel: frame != nil) },
+            onPanBegin: { start, moved in
+                let p = at(start)
+                panBegin(CGPoint(x: p.x + moved.width, y: p.y + moved.height), from: p, moved: moved, size, carousel: frame != nil)
+            },
             onPan: { pan($0, size, frame: frame) },
             onPanEnd: { panEnd($0, frame: frame) },
             onPinchBegin: { pinchBegin(at($0), size) },
@@ -358,6 +379,65 @@ struct StageView: View {
         store.project.captions.last { c in
             !c.text.isEmpty && CaptionRenderer.layout(c, project: store.project, W: size.width, H: size.height).contains(p, slack: 12)
         }
+    }
+
+    /// Grips on the borders between cells (shown on the Layout tab), and the border being dragged.
+    @ViewBuilder
+    private func dividerHandles(_ size: CGSize) -> some View {
+        let project = store.project
+        if let grid = project.resizableGrid {
+            let g = project.gap * size.width / project.canvasWidth
+            ZStack(alignment: .topLeading) {
+                Color.clear
+                ForEach(Array(grid.dividers.enumerated()), id: \.offset) { _, d in
+                    let l = grid.line(d)
+                    let ends = dividerPixelLine(l, W: size.width, H: size.height, gapPx: g)
+                    let active = dividerDrag?.divider == d
+                    let length = l.vertical ? ends.b.y - ends.a.y : ends.b.x - ends.a.x
+                    let grip = min(28, max(10, length * 0.35))
+                    if active {
+                        Path { p in
+                            p.move(to: ends.a)
+                            p.addLine(to: ends.b)
+                        }
+                        .stroke(Color.brand, style: StrokeStyle(lineWidth: max(2, min(g, 4)), lineCap: .round))
+                    }
+                    Capsule()
+                        .fill(active ? Color.brand : Color.white)
+                        .overlay(Capsule().strokeBorder(.black.opacity(0.25), lineWidth: 0.5))
+                        .frame(width: l.vertical ? 5 : grip, height: l.vertical ? grip : 5)
+                        .shadow(color: .black.opacity(0.45), radius: 2, y: 1)
+                        .position(x: (ends.a.x + ends.b.x) / 2, y: (ends.a.y + ends.b.y) / 2)
+                }
+            }
+            .frame(width: size.width, height: size.height, alignment: .topLeading)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+    }
+
+    /// The border between cells a drag starting at `p` should move. The touch has to be close to the border and moving
+    /// across it: a drag along a border is a picture being moved.
+    private func dividerAt(_ p: CGPoint, moving t: CGSize, _ size: CGSize) -> LayoutDivider? {
+        let project = store.project
+        guard store.swapFrom == nil, let grid = project.resizableGrid else { return nil }
+        let g = project.gap * size.width / project.canvasWidth
+        let slop = max(18, g / 2 + 10)
+        var best: (divider: LayoutDivider, distance: Double)?
+        for d in grid.dividers {
+            let l = grid.line(d)
+            let ends = dividerPixelLine(l, W: size.width, H: size.height, gapPx: g)
+            let across = l.vertical ? abs(p.x - ends.a.x) : abs(p.y - ends.a.y)
+            let along = l.vertical ? p.y : p.x
+            let lo = (l.vertical ? ends.a.y : ends.a.x) - g / 2
+            let hi = (l.vertical ? ends.b.y : ends.b.x) + g / 2
+            guard across <= slop, along >= lo, along <= hi else { continue }
+            let moveAcross = l.vertical ? abs(t.width) : abs(t.height)
+            let moveAlong = l.vertical ? abs(t.height) : abs(t.width)
+            guard moveAcross >= moveAlong * 0.6 else { continue }
+            if best == nil || across < best!.distance { best = (d, across) }
+        }
+        return best?.divider
     }
 
     private func ring(_ r: PxRect, color: Color, radius: Double) -> some View {
@@ -445,13 +525,21 @@ struct StageView: View {
         }
     }
 
-    private func panBegin(_ p: CGPoint, _ size: CGSize, carousel: Bool) {
+    private func panBegin(_ p: CGPoint, from start: CGPoint, moved: CGSize, _ size: CGSize, carousel: Bool) {
         captionDrag = nil
+        dividerDrag = nil
         if store.swapFrom == nil, let c = captionAt(p, size) {
             store.selectCaption(c.id)
             captionDrag = CaptionDrag(id: c.id, x: c.x, y: c.y)
             gestureCell = -1
             swiping = false
+            return
+        }
+        if !carousel, captionAt(start, size) == nil, let d = dividerAt(start, moving: moved, size), let grid = store.project.resizableGrid {
+            gestureCell = -1
+            swiping = false
+            dividerDrag = DividerDrag(divider: d, start: grid, base: layout(byId: store.project.layoutId).grid)
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
             return
         }
         let cell = hitCell(rects(size), x: p.x, y: p.y)
@@ -468,6 +556,10 @@ struct StageView: View {
     }
 
     private func panEnd(_ velocity: CGSize, frame: CarouselFrame?) {
+        if dividerDrag != nil {
+            dividerDrag = nil
+            return
+        }
         if captionDrag != nil {
             captionDrag = nil
             snapX = false
@@ -506,6 +598,10 @@ struct StageView: View {
             }
             return
         }
+        if dividerDrag != nil {
+            dragDivider(d, size)
+            return
+        }
         if swiping, let frame {
             store.carouselOffset = clamp(store.carouselOffset - d.width / frame.slideW, 0, frame.maxOffset)
             return
@@ -524,6 +620,30 @@ struct StageView: View {
         // a tilted picture can't move as far: pull the stored position back so dragging never has a dead zone
         let fit = placeMedia(srcW: item.width, srcH: item.height, cell: r, view: v).fit
         store.setCellView(ci) { $0.panX = panX * fit; $0.panY = panY * fit }
+    }
+
+    /// Moves the dragged border: the cells on both sides change size, down to a minimum. It clicks onto the layout's own
+    /// position and onto an even split.
+    private func dragDivider(_ d: CGSize, _ size: CGSize) {
+        guard var drag = dividerDrag else { return }
+        let project = store.project
+        let line = drag.start.line(drag.divider)
+        let g = project.gap * size.width / project.canvasWidth
+        let area = max(1, (line.vertical ? size.width : size.height) - g)
+        drag.moved += Double(line.vertical ? d.width : d.height) / area
+        let (a, b) = drag.start.sizes(at: drag.divider)
+        var first = a + drag.moved
+        var targets = [(a + b) / 2]
+        if let base = drag.base, base.sameShape(drag.start) { targets.append(a + base.line(drag.divider).at - line.at) }
+        let snap = targets.first { abs(first - $0) < 0.012 }
+        if let snap { first = snap }
+        let moved = drag.start.moving(drag.divider, first: first)
+        if snap != nil && !drag.snapped { UISelectionFeedbackGenerator().selectionChanged() }
+        if moved.limited && !drag.limited { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
+        drag.snapped = snap != nil
+        drag.limited = moved.limited
+        dividerDrag = drag
+        store.project.cellSizes = moved.grid
     }
 
     private func pinchBegin(_ p: CGPoint, _ size: CGSize) {

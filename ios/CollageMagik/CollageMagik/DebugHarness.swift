@@ -34,6 +34,13 @@ enum DebugHarness {
             NSLog("CM_DEBUG loader hidden; items=%d toast=%@", store.items.count, store.toast?.text ?? "none")
         }
         if let l = env["CM_LAYOUT"]{ store.setCellCount(Int(l) ?? 4) }
+        // CM_SIZES=0.7 or 0.7,0.3: moves the first band border, then the first border inside band 0, as if dragged.
+        if let list = env["CM_SIZES"], var grid = store.project.resizableGrid {
+            let v = list.split(separator: ",").compactMap { Double($0) }
+            if let f = v.first, grid.outer.count > 1 { grid = grid.moving(LayoutDivider(band: nil, index: 0), first: f).grid }
+            if v.count > 1, grid.inner[0].count > 1 { grid = grid.moving(LayoutDivider(band: 0, index: 0), first: v[1]).grid }
+            store.project.cellSizes = grid
+        }
         if let t = env["CM_TAB"] {
             switch t {
             case "timeline": store.tab = .video; store.videoSection = .timeline

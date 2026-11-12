@@ -220,6 +220,24 @@ struct LayoutPanel: View {
                 }
             }
             .scrollClipDisabled()
+            if !carousel && store.project.resizableGrid?.dividers.isEmpty == false {
+                HStack(spacing: 6) {
+                    Label("Drag the borders between pictures to resize them", systemImage: "arrow.left.and.right")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                    Spacer(minLength: 0)
+                    if store.project.hasCustomSizes {
+                        ChipButton(title: "Reset sizes", symbol: "arrow.uturn.backward") {
+                            withAnimation(.smooth) { store.project.cellSizes = nil }
+                        }
+                        .transition(.opacity)
+                        .accessibilityHint("Puts every cell back to the layout's own size")
+                    }
+                }
+                .frame(minHeight: 28)
+            }
         }
         .sensoryFeedback(.selection, trigger: store.project.layoutId)
     }

@@ -28,10 +28,27 @@ struct LayoutRect: Hashable {
     var h: Double
 }
 
+/// How a grid layout is split, as fractions that each add up to 1. `rows`: `outer` are band heights from top to
+/// bottom and `inner[i]` the cell widths in band i. Otherwise `outer` are column widths and `inner[i]` cell heights.
+struct LayoutGrid: Hashable {
+    var rows: Bool
+    var outer: [Double]
+    var inner: [[Double]]
+
+    var rects: [LayoutRect] { gridRects(rows: rows, outer: outer, inner: inner) }
+
+    /// True when `other` splits the same bands into the same number of cells (so its sizes can stand in for these).
+    func sameShape(_ other: LayoutGrid) -> Bool {
+        rows == other.rows && outer.count == other.outer.count && inner.map(\.count) == other.inner.map(\.count)
+    }
+}
+
 struct CollageLayout: Identifiable, Hashable {
     let id: String
     let name: String
     let rects: [LayoutRect]
+    /// The grid behind the layout, when it is one: its dividers can be dragged to resize the cells.
+    var grid: LayoutGrid? = nil
     var count: Int { rects.count }
 }
 
@@ -127,7 +144,12 @@ struct Project: Equatable {
     var mode: EditMode = .collage
     var format: FormatId = .story
     var cellCount: Int = initialCellCount
-    var layoutId: String = defaultLayout(for: initialCellCount).id
+    var layoutId: String = defaultLayout(for: initialCellCount).id {
+        // sizes dragged for one layout don't carry over to another
+        didSet { if layoutId != oldValue { cellSizes = nil } }
+    }
+    /// Collage cell sizes the person has dragged the dividers to, or nil for the layout's own sizes.
+    var cellSizes: LayoutGrid? = nil
     var cells: [CellState] = Array(repeating: CellState(), count: initialCellCount)
     /// Pixels at 1080 px wide; scaled for other sizes.
     var gap: Double = 12
