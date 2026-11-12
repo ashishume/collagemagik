@@ -26,7 +26,17 @@ guarantees every seam cuts through a picture. The preview (`StageView`) shows on
 unselected area swipes, a drag inside the selected picture moves it, and the numbered bar jumps between slides. Export draws
 the whole design once and cuts it into one JPEG per slide (`CollageExporter.exportSlides`); My Library keeps them as one entry.
 
-The bottom dock has Media, Layout, Style and (collage only) Video, which holds the Timeline and Sound tools. Picture tools
+## Captions
+
+The **Text** tab adds captions on top of the collage or carousel (up to 8): 10 lettering styles that ship with iOS (nothing
+bundled), any colour, four backings (Shadow, Label, Plate, Outline), alignment and size. In the preview a caption is
+dragged to move (it clicks onto the middle of a slide), pinched to resize and twisted to turn; tapping it again opens the
+typing screen (`UI/CaptionViews.swift`). `Model/Captions.swift` holds the model and `CaptionRenderer`, the one piece of
+drawing code used by the preview and by every export (PNG, carousel slides, and video, where the captions are drawn once
+as a layer and stamped on each frame). Captions always fit: long text wraps, letters shrink before a word would break,
+and the whole caption is kept inside the design.
+
+The bottom dock has Media, Layout, Style, Text and (collage only) Video, which holds the Timeline and Sound tools. Picture tools
 open by themselves while a picture is selected.
 
 ## My Library and privacy

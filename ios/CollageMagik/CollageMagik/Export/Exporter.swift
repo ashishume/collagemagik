@@ -201,6 +201,7 @@ final class CollageExporter: @unchecked Sendable {
 
         let photos = CollageRenderer.decodePhotos(snapshot: snapshot, W: Double(w), H: Double(h))
         let feeders = makeFeeders()
+        let captionLayer = CaptionRenderer.layer(project: snapshot.project, W: w, H: h)
         let frameCount = max(1, Int((total * Double(fps)).rounded(.up)))
 
         guard writer.startWriting() else { throw ExportFailure(writer.error?.localizedDescription ?? "Couldn't start the export.") }
@@ -231,7 +232,7 @@ final class CollageExporter: @unchecked Sendable {
                         width: w, height: h, data: CVPixelBufferGetBaseAddress(pb), bytesPerRow: CVPixelBufferGetBytesPerRow(pb)
                     ) {
                         let t = Double(frameIndex) / Double(fps)
-                        CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot) { id in
+                        CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot, captionLayer: captionLayer) { id in
                             photos[id] ?? feeders[id]?.frame(at: t)
                         }
                     }

@@ -107,10 +107,10 @@
 			);
 			mainGroup = A10000004;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			packageReferences = (
 				A10000103 /* XCRemoteSwiftPackageReference "FBAudienceNetwork" */,
 			);
+			preferredProjectObjectVersion = 77;
 			productRefGroup = A10000005 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -198,8 +198,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = CollageMagik;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
-				INFOPLIST_KEY_NSUserTrackingUsageDescription = "CollageMagik is free because it shows ads. If you allow tracking, Meta can show ads that are more relevant to you. Your photos, videos and music are never shared.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "CollageMagik needs permission to add your finished collages to your photo library. It cannot see or change the photos already there.";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "CollageMagik is free because it shows ads. If you allow tracking, Meta can show ads that are more relevant to you. Your photos, videos and music are never shared.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -232,8 +232,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = CollageMagik;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
-				INFOPLIST_KEY_NSUserTrackingUsageDescription = "CollageMagik is free because it shows ads. If you allow tracking, Meta can show ads that are more relevant to you. Your photos, videos and music are never shared.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "CollageMagik needs permission to add your finished collages to your photo library. It cannot see or change the photos already there.";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "CollageMagik is free because it shows ads. If you allow tracking, Meta can show ads that are more relevant to you. Your photos, videos and music are never shared.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

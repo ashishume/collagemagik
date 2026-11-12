@@ -48,6 +48,8 @@ struct RootView: View {
                 .padding(.horizontal, 12)
                 .padding(.top, 2)
                 .padding(.bottom, 4)
+                // the caption keyboard opens over the editor; it must not squeeze the preview behind it
+                .ignoresSafeArea(.keyboard, edges: .bottom)
 
                 if let toast = store.toast {
                     ToastView(text: toast.text)
@@ -101,7 +103,15 @@ struct RootView: View {
         )) { target in
             CropEditor(cellIndex: target.id)
         }
+        .fullScreenCover(item: Binding(
+            get: { store.editingCaption.map(CaptionTarget.init) },
+            set: { if $0 == nil { store.finishEditingCaption() } }
+        )) { target in
+            CaptionEditor(id: target.id)
+        }
         .onChange(of: store.project) { store.playback.projectChanged() }
+        // a caption stays selected only while its tools are showing
+        .onChange(of: store.tab) { _, tab in if tab != .text { store.selectedCaption = nil } }
         #if DEBUG
         .task { await DebugHarness.run(store) }
         #endif
@@ -136,6 +146,7 @@ struct PanelCard: View {
         case .media: return 96 + pad
         case .layout: return (store.isCarousel ? 100 : 106) + pad
         case .style: return (store.project.format == .story ? 156 : 124) + pad
+        case .text: return (store.caption(store.selectedCaption) == nil ? 66 : 172) + pad
         case .video:
             let n = placedLanes(store.project).count
             if n == 0 { return 44 + pad }
@@ -158,6 +169,7 @@ struct PanelCard: View {
                 case .media: MediaPanel()
                 case .layout: LayoutPanel()
                 case .style: StylePanel()
+                case .text: TextPanel()
                 case .video: VideoPanel()
                 case .picture: PicturePanel()
                 }
@@ -171,5 +183,6 @@ struct PanelCard: View {
         .frame(height: height)
         .glassEffect(.regular, in: .rect(cornerRadius: 24))
         .animation(.smooth(duration: 0.3), value: store.tab)
+        .animation(.smooth(duration: 0.3), value: store.selectedCaption == nil)
     }
 }

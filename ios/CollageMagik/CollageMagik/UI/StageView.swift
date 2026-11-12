@@ -8,6 +8,9 @@ struct StageGestureLayer: UIViewRepresentable {
     var onPanEnd: (CGSize) -> Void = { _ in }
     var onPinchBegin: (CGPoint) -> Void
     var onPinch: (CGFloat) -> Void
+    /// Two-finger twist, in radians (clockwise is positive). Turns the selected caption.
+    var onRotateBegin: () -> Void = {}
+    var onRotate: (CGFloat) -> Void = { _ in }
     var onLiftBegin: (CGPoint) -> Void
     var onLiftMove: (CGPoint) -> Void
     var onLiftEnd: (CGPoint, Bool) -> Void
@@ -25,7 +28,8 @@ struct StageGestureLayer: UIViewRepresentable {
         let long = UILongPressGestureRecognizer(target: c, action: #selector(Coordinator.long(_:)))
         long.minimumPressDuration = 0.38
         long.allowableMovement = 8
-        for g in [tap, pan, pinch, long] as [UIGestureRecognizer] {
+        let twist = UIRotationGestureRecognizer(target: c, action: #selector(Coordinator.twist(_:)))
+        for g in [tap, pan, pinch, twist, long] as [UIGestureRecognizer] {
             g.delegate = c
             v.addGestureRecognizer(g)
         }
@@ -65,6 +69,14 @@ struct StageGestureLayer: UIViewRepresentable {
             }
         }
 
+        @objc func twist(_ g: UIRotationGestureRecognizer) {
+            switch g.state {
+            case .began: parent.onRotateBegin()
+            case .changed: parent.onRotate(g.rotation)
+            default: break
+            }
+        }
+
         @objc func long(_ g: UILongPressGestureRecognizer) {
             let p = g.location(in: g.view)
             switch g.state {
@@ -77,7 +89,8 @@ struct StageGestureLayer: UIViewRepresentable {
         }
 
         func gestureRecognizer(_ a: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith b: UIGestureRecognizer) -> Bool {
-            (a is UIPinchGestureRecognizer && b is UIPanGestureRecognizer) || (a is UIPanGestureRecognizer && b is UIPinchGestureRecognizer)
+            func moves(_ g: UIGestureRecognizer) -> Bool { g is UIPinchGestureRecognizer || g is UIPanGestureRecognizer || g is UIRotationGestureRecognizer }
+            return moves(a) && moves(b)
         }
     }
 }
@@ -113,6 +126,21 @@ struct StageView: View {
     /// True while a drag that started outside the selected picture is swiping the carousel.
     @State private var swiping = false
 
+    /// A caption being dragged, with where the finger has taken it before any snapping.
+    private struct CaptionDrag {
+        var id: String
+        var x: Double
+        var y: Double
+    }
+
+    @Environment(\.displayScale) private var displayScale
+    @State private var captionDrag: CaptionDrag?
+    /// Guides shown while a dragged caption sits on the middle of a slide (across) or of the design (down).
+    @State private var snapX = false
+    @State private var snapY = false
+    @State private var captionPinch: (id: String, size: Double)?
+    @State private var captionTurn: (id: String, rotation: Double)?
+
     var body: some View {
         GeometryReader { geo in
             let p = store.project
@@ -143,7 +171,7 @@ struct StageView: View {
         .clipShape(RoundedRectangle(cornerRadius: interactive ? 6 : 0, style: .continuous))
         .shadow(color: .black.opacity(interactive ? 0.45 : 0), radius: 22, y: 10)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Collage preview. Tap a picture for options, drag to move it, pinch to zoom, press and hold then drag to swap.")
+        .accessibilityLabel("Collage preview. Tap a picture for options, drag to move it, pinch to zoom, press and hold then drag to swap. Tap a caption to style it, drag to move it.")
     }
 
     // MARK: Carousel
@@ -212,8 +240,15 @@ struct StageView: View {
                 cell(i, r, radius: radius)
             }
 
+            ForEach(project.captions) { c in
+                if !c.text.isEmpty { captionView(c, size) }
+            }
+
             if interactive {
                 if project.mode == .carousel { seamGuides(size) }
+                if let c = store.caption(store.selectedCaption), !c.text.isEmpty {
+                    captionFrame(c, size)
+                }
                 // selection and swap marks
                 if let s = store.selectedCell, px.indices.contains(s) {
                     ring(px[s], color: .brand, radius: radius)
@@ -244,6 +279,8 @@ struct StageView: View {
             onPanEnd: { panEnd($0, frame: frame) },
             onPinchBegin: { pinchBegin(at($0), size) },
             onPinch: { pinch($0) },
+            onRotateBegin: { turnBegin() },
+            onRotate: { turn($0) },
             onLiftBegin: { liftBegin(at($0), size) },
             onLiftMove: { liftMove(at($0), size) },
             onLiftEnd: { liftEnd(at($0), size, completed: $1) }
@@ -272,6 +309,55 @@ struct StageView: View {
         .clipShape(RoundedRectangle(cornerRadius: min(radius, r.w / 2, r.h / 2), style: .continuous))
         .offset(x: r.x, y: r.y)
         .allowsHitTesting(false)
+    }
+
+    /// A caption, drawn by the same code as the export and then turned and placed.
+    @ViewBuilder
+    private func captionView(_ c: Caption, _ size: CGSize) -> some View {
+        let l = CaptionRenderer.layout(c, project: store.project, W: size.width, H: size.height)
+        if let img = CaptionRenderer.image(l, scale: displayScale) {
+            Image(uiImage: img)
+                .rotationEffect(.radians(l.rotationRad))
+                .position(l.center)
+                .allowsHitTesting(false)
+                .accessibilityLabel("Caption: \(c.text)")
+        }
+    }
+
+    /// The frame around the selected caption, and the centre guides while it is dragged onto them.
+    @ViewBuilder
+    private func captionFrame(_ c: Caption, _ size: CGSize) -> some View {
+        let l = CaptionRenderer.layout(c, project: store.project, W: size.width, H: size.height)
+        if captionDrag != nil {
+            Path { p in
+                if snapX {
+                    p.move(to: CGPoint(x: l.center.x, y: 0))
+                    p.addLine(to: CGPoint(x: l.center.x, y: size.height))
+                }
+                if snapY {
+                    let slideW = size.width / Double(max(1, store.project.slides))
+                    let left = (l.center.x / slideW).rounded(.down) * slideW
+                    p.move(to: CGPoint(x: left, y: l.center.y))
+                    p.addLine(to: CGPoint(x: left + slideW, y: l.center.y))
+                }
+            }
+            .stroke(Color.yellow, lineWidth: 1)
+            .allowsHitTesting(false)
+        }
+        RoundedRectangle(cornerRadius: 8, style: .continuous)
+            .strokeBorder(.white, style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
+            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.brand, lineWidth: 1.5))
+            .frame(width: l.box.width + 10, height: l.box.height + 10)
+            .rotationEffect(.radians(l.rotationRad))
+            .position(l.center)
+            .allowsHitTesting(false)
+    }
+
+    /// The caption under a touch (the one on top wins). A little slack makes small captions easy to grab.
+    private func captionAt(_ p: CGPoint, _ size: CGSize) -> Caption? {
+        store.project.captions.last { c in
+            !c.text.isEmpty && CaptionRenderer.layout(c, project: store.project, W: size.width, H: size.height).contains(p, slack: 12)
+        }
     }
 
     private func ring(_ r: PxRect, color: Color, radius: Double) -> some View {
@@ -340,6 +426,15 @@ struct StageView: View {
             if cell >= 0 && cell != from { store.swapCells(from, cell) } else { withAnimation { store.swapFrom = nil } }
             return
         }
+        // Captions sit on top of the pictures: tap one to select it, tap it again to change the words.
+        if let c = captionAt(p, size) {
+            if store.selectedCaption == c.id { store.editingCaption = c.id } else { store.selectCaption(c.id) }
+            return
+        }
+        if store.selectedCaption != nil {
+            store.selectCaption(nil)
+            return
+        }
         if cell < 0 {
             store.selectCell(nil)
         } else if store.project.cells[cell].mediaId == nil {
@@ -351,6 +446,14 @@ struct StageView: View {
     }
 
     private func panBegin(_ p: CGPoint, _ size: CGSize, carousel: Bool) {
+        captionDrag = nil
+        if store.swapFrom == nil, let c = captionAt(p, size) {
+            store.selectCaption(c.id)
+            captionDrag = CaptionDrag(id: c.id, x: c.x, y: c.y)
+            gestureCell = -1
+            swiping = false
+            return
+        }
         let cell = hitCell(rects(size), x: p.x, y: p.y)
         gestureCell = cell
         if carousel {
@@ -365,12 +468,44 @@ struct StageView: View {
     }
 
     private func panEnd(_ velocity: CGSize, frame: CarouselFrame?) {
+        if captionDrag != nil {
+            captionDrag = nil
+            snapX = false
+            snapY = false
+            return
+        }
         guard swiping, let frame else { swiping = false; return }
         swiping = false
         store.settleCarousel(velocitySlidesPerSecond: -velocity.width / frame.slideW)
     }
 
     private func pan(_ d: CGSize, _ size: CGSize, frame: CarouselFrame?) {
+        if var drag = captionDrag {
+            let slides = Double(max(1, store.project.slides))
+            drag.x = clamp(drag.x + d.width / (size.width / slides), 0, slides)
+            drag.y = clamp(drag.y + d.height / size.height, 0, 1)
+            // a caption can't leave the design: follow the finger only as far as the caption still fits
+            if var probe = store.caption(drag.id) {
+                probe.x = drag.x
+                probe.y = drag.y
+                let c = CaptionRenderer.layout(probe, project: store.project, W: size.width, H: size.height).center
+                drag.x = c.x / (size.width / slides)
+                drag.y = c.y / size.height
+            }
+            captionDrag = drag
+            // the caption clicks onto the middle of a slide, and onto the middle of the design
+            let slide = min(drag.x.rounded(.down), slides - 1)
+            let onX = abs(drag.x - slide - 0.5) < 0.025
+            let onY = abs(drag.y - 0.5) < 0.014
+            if (onX && !snapX) || (onY && !snapY) { UISelectionFeedbackGenerator().selectionChanged() }
+            snapX = onX
+            snapY = onY
+            store.updateCaption(drag.id) {
+                $0.x = onX ? slide + 0.5 : drag.x
+                $0.y = onY ? 0.5 : drag.y
+            }
+            return
+        }
         if swiping, let frame {
             store.carouselOffset = clamp(store.carouselOffset - d.width / frame.slideW, 0, frame.maxOffset)
             return
@@ -392,16 +527,40 @@ struct StageView: View {
     }
 
     private func pinchBegin(_ p: CGPoint, _ size: CGSize) {
+        // while a caption is selected, a pinch anywhere resizes it (its letters are too small a target for two fingers)
+        captionPinch = store.caption(store.selectedCaption).map { ($0.id, $0.size) }
+        if captionPinch != nil {
+            pinchCell = -1
+            return
+        }
         pinchCell = store.selectedCell ?? hitCell(rects(size), x: p.x, y: p.y)
         pinchBase = store.project.cells.indices.contains(pinchCell) ? store.project.cells[pinchCell].zoom : 1
     }
 
+    private func turnBegin() {
+        captionTurn = store.caption(store.selectedCaption).map { ($0.id, $0.rotation) }
+    }
+
+    private func turn(_ radians: CGFloat) {
+        guard let t = captionTurn else { return }
+        var deg = t.rotation + Double(radians) / RAD
+        // straight and quarter turns hold on a little, so a level caption is easy to get back
+        let quarter = (deg / 90).rounded() * 90
+        if abs(deg - quarter) < 4 { deg = quarter }
+        store.updateCaption(t.id) { $0.rotation = deg }
+    }
+
     private func pinch(_ scale: CGFloat) {
+        if let c = captionPinch {
+            store.updateCaption(c.id) { $0.size = c.size * Double(scale) }
+            return
+        }
         guard store.project.cells.indices.contains(pinchCell), store.project.cells[pinchCell].mediaId != nil else { return }
         store.setCellView(pinchCell) { $0.zoom = clamp(pinchBase * Double(scale), 1, 4) }
     }
 
     private func liftBegin(_ p: CGPoint, _ size: CGSize) {
+        guard captionAt(p, size) == nil else { return }
         let cell = hitCell(rects(size), x: p.x, y: p.y)
         guard cell >= 0, store.swapFrom == nil, store.project.cells[cell].mediaId != nil else { return }
         selectAndOpen(cell)

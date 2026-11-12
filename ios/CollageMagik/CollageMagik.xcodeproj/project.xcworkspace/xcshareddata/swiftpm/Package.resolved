@@ -1,0 +1,15 @@
+{
+  "originHash" : "f36d955b9769059c478ace042513b1b0449a766f45d06523d46b8ef99d0af7a7",
+  "pins" : [
+    {
+      "identity" : "fbaudiencenetwork",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/meta/FBAudienceNetwork",
+      "state" : {
+        "revision" : "4a7051592f50bb276c7346d5751967cdbbd64ac6",
+        "version" : "6.22.1"
+      }
+    }
+  ],
+  "version" : 3
+}

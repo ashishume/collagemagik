@@ -35,6 +35,10 @@ final class CollageStore {
     var selectedCell: Int?
     var selectedClip: String?
     var swapFrom: Int?
+    /// The caption being styled or moved (shown with a frame in the preview).
+    var selectedCaption: String?
+    /// The caption whose words are being typed (opens the caption editor).
+    var editingCaption: String?
     var tab: Tab = .media
     var returnTab: Tab = .media
     var videoSection: VideoSection = .timeline
@@ -413,6 +417,9 @@ final class CollageStore {
         selectedCell = nil
         selectedClip = nil
         swapFrom = nil
+        selectedCaption = nil
+        // captions stay; any that were further right than the design now reaches move back onto it
+        for c in project.captions { updateCaption(c.id) { _ in } }
         carouselOffset = 0
         if tab == .picture || (tab == .video && mode == .carousel) { tab = .layout }
         playback.projectChanged()
@@ -436,6 +443,7 @@ final class CollageStore {
 
     func selectCell(_ i: Int?) {
         selectedCell = i
+        if i != nil { selectedCaption = nil }
         if i == nil && tab == .picture {
             tab = returnTab
             swapFrom = nil
@@ -445,6 +453,84 @@ final class CollageStore {
     func openPicture() {
         if tab != .picture { returnTab = tab }
         withAnimation(.smooth) { tab = .picture }
+    }
+
+    // MARK: Captions
+
+    func caption(_ id: String?) -> Caption? { id.flatMap { id in project.captions.first { $0.id == id } } }
+
+    func selectCaption(_ id: String?) {
+        if id != nil {
+            if selectedCell != nil { selectCell(nil) }
+            swapFrom = nil
+            if tab != .text { withAnimation(.smooth) { tab = .text } }
+        }
+        if id != selectedCaption {
+            selectedCaption = id
+            if id != nil { UISelectionFeedbackGenerator().selectionChanged() }
+        }
+    }
+
+    /// Adds an empty caption in the middle of the slide on screen and opens the keyboard. It copies the look of the
+    /// caption that was selected (or the last one), so a set of captions matches without restyling each.
+    func addCaption() {
+        guard project.captions.count < maxCaptions else {
+            notify("Up to \(maxCaptions) captions fit on one design. Remove one to add another.")
+            return
+        }
+        var c = Caption()
+        if let like = caption(selectedCaption) ?? project.captions.last {
+            c.font = like.font; c.color = like.color; c.look = like.look; c.align = like.align; c.size = like.size
+        }
+        c.x = isCarousel ? Double(visibleSlide - 1) + 0.5 : 0.5
+        // each new caption starts a little lower than the last, so they don't land on top of each other
+        let taken = project.captions.filter { abs($0.x - c.x) < 0.05 }.map(\.y)
+        var y = 0.5
+        while taken.contains(where: { abs($0 - y) < 0.04 }) && y < 0.86 { y += 0.09 }
+        c.y = y
+        project.captions.append(c)
+        selectCaption(c.id)
+        editingCaption = c.id
+    }
+
+    func updateCaption(_ id: String, _ patch: (inout Caption) -> Void) {
+        guard let i = project.captions.firstIndex(where: { $0.id == id }) else { return }
+        var c = project.captions[i]
+        patch(&c)
+        if c.text.count > maxCaptionLength { c.text = String(c.text.prefix(maxCaptionLength)) }
+        c.size = clamp(c.size, captionSizeRange.lowerBound, captionSizeRange.upperBound)
+        c.x = clamp(c.x, 0, Double(max(1, project.slides)))
+        c.y = clamp(c.y, 0, 1)
+        // keep the angle in -180...180
+        c.rotation = (c.rotation + 540).truncatingRemainder(dividingBy: 360) - 180
+        project.captions[i] = c
+    }
+
+    func removeCaption(_ id: String) {
+        project.captions.removeAll { $0.id == id }
+        if selectedCaption == id { selectedCaption = nil }
+        if editingCaption == id { editingCaption = nil }
+    }
+
+    func duplicateCaption(_ id: String) {
+        guard let src = caption(id) else { return }
+        guard project.captions.count < maxCaptions else {
+            notify("Up to \(maxCaptions) captions fit on one design. Remove one to add another.")
+            return
+        }
+        var c = src
+        c.id = UUID().uuidString
+        c.y = src.y < 0.85 ? src.y + 0.08 : src.y - 0.08
+        project.captions.append(c)
+        selectCaption(c.id)
+    }
+
+    /// The keyboard was closed: a caption left without words is thrown away.
+    func finishEditingCaption() {
+        guard let id = editingCaption else { return }
+        editingCaption = nil
+        updateCaption(id) { $0.text = $0.text.trimmingCharacters(in: .whitespacesAndNewlines) }
+        if caption(id)?.text.isEmpty ?? true { removeCaption(id) }
     }
 
     // MARK: Timeline editing
@@ -530,6 +616,8 @@ final class CollageStore {
         selectedCell = nil
         selectedClip = nil
         swapFrom = nil
+        selectedCaption = nil
+        editingCaption = nil
         tab = .media
         playback.projectChanged()
     }

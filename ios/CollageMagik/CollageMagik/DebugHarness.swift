@@ -32,6 +32,26 @@ enum DebugHarness {
         if let st = env["CM_STYLE"] { store.setLayout(st.hasPrefix(carouselLayoutPrefix) ? st : carouselLayoutPrefix + st) }
         NSLog("CM_DEBUG slides=%d photos=%d layout=%@", store.project.slides, store.project.cellCount, store.project.layoutId)
         if let o = env["CM_OFFSET"], let v = Double(o) { store.carouselOffset = v }
+        // CM_CAPTIONS=1: one caption per look, to check lettering in the preview and in exports. CM_CAPTION_SELECT=index selects one.
+        if env["CM_CAPTIONS"] != nil {
+            let slides = Double(store.project.slides)
+            let samples: [(String, CaptionFont, String, CaptionLook, Double, Double, Double, Double)] = [
+                ("Summer in Lisbon", .script, "#ffffff", .plain, 110, 0.5, 0.2, 0),
+                ("best week ever", .classic, "#ffd84d", .label, 64, 0.5, 0.36, -6),
+                ("day 3 · the old town\nand way too much gelato 🍦", .typewriter, "#ffffff", .plate, 50, 0.5, 0.56, 0),
+                ("TAKE ME BACK", .poster, "#ff5fa2", .outline, 120, 0.5, 0.78, 0),
+                ("dark ink", .hand, "#101016", .plain, 70, 0.5, 0.9, 4),
+            ]
+            for (i, s) in samples.enumerated() {
+                let x = slides > 1 ? 0.5 + Double(i % Int(slides)) : s.5
+                store.project.captions.append(Caption(text: s.0, font: s.1, color: s.2, look: s.3, size: s.4, x: x, y: s.6, rotation: s.7))
+            }
+            store.tab = .text
+            if let i = env["CM_CAPTION_SELECT"].flatMap(Int.init), store.project.captions.indices.contains(i) {
+                store.selectCaption(store.project.captions[i].id)
+            }
+            if env["CM_CAPTION_EDIT"] != nil { store.editingCaption = store.selectedCaption }
+        }
         if let s = env["CM_SELECT"], let i = Int(s) { store.selectCell(i); store.openPicture() }
         if env["CM_MUSIC"] != nil, let m = env["CM_MUSIC"] { await store.importMusic(URL(fileURLWithPath: m)) }
         if let c = env["CM_CROP"], let i = Int(c) { store.cropCell = i }

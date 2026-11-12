@@ -22,6 +22,11 @@ struct HelpSheet: View {
                     Label("Drag to move it inside its cell. Pinch to zoom.", systemImage: "hand.draw")
                     Label("Press and hold a picture, then drag it onto another cell to swap.", systemImage: "arrow.left.arrow.right")
                 }
+                Section("Captions") {
+                    Label("Open Text and tap Add caption to write on your collage. Pick from 10 lettering styles, any colour, and a shadow, label, plate or outline behind the words.", systemImage: "textformat")
+                    Label("Drag a caption to move it (it clicks onto the middle), pinch to resize it and twist with two fingers to turn it. Tap it again to change the words.", systemImage: "hand.draw")
+                    Label("Long captions wrap by themselves so they always fit inside the picture. Captions are part of every export.", systemImage: "text.justify.left")
+                }
                 Section("Videos & music") {
                     Label("Videos play inside the collage. Cut them on the Timeline: drag the ends to trim, drag a clip to delay it, Split at the playhead.", systemImage: "scissors")
                     Label("Add your own music (MP3, M4A, WAV) and set volume and fade out.", systemImage: "music.note")

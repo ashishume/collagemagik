@@ -136,17 +136,20 @@ struct Project: Equatable {
     var safeZone: Bool = false
     var lanes: [Lane] = []
     var music: MusicTrack? = nil
+    /// Text placed on top of the pictures, drawn in order (the last one is on top).
+    var captions: [Caption] = []
 }
 
 /// The editor's bottom tabs. Picture is not one of them: it opens by itself while a picture is selected.
 enum Tab: String, CaseIterable, Identifiable {
-    case media, layout, style, video, picture
+    case media, layout, style, text, video, picture
     var id: String { rawValue }
     var label: String {
         switch self {
         case .media: "Media"
         case .layout: "Layout"
         case .style: "Style"
+        case .text: "Text"
         case .video: "Video"
         case .picture: "Picture"
         }
@@ -156,6 +159,7 @@ enum Tab: String, CaseIterable, Identifiable {
         case .media: "photo.on.rectangle.angled"
         case .layout: "square.grid.2x2"
         case .style: "paintpalette"
+        case .text: "textformat"
         case .video: "film.stack"
         case .picture: "slider.horizontal.3"
         }
@@ -163,7 +167,7 @@ enum Tab: String, CaseIterable, Identifiable {
 
     /// The tabs shown in the dock. Carousels are photos only, so they have no Video tab.
     static func dock(for mode: EditMode) -> [Tab] {
-        mode == .carousel ? [.media, .layout, .style] : [.media, .layout, .style, .video]
+        mode == .carousel ? [.media, .layout, .style, .text] : [.media, .layout, .style, .text, .video]
     }
 }
 

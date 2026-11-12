@@ -14,6 +14,7 @@ struct ExportSnapshot {
 enum CollageRenderer {
     static func draw(
         ctx: CGContext, W: Double, H: Double, snapshot: ExportSnapshot,
+        captionLayer: CGImage? = nil,
         image: (String) -> CGImage?
     ) {
         let project = snapshot.project
@@ -35,6 +36,16 @@ enum CollageRenderer {
                 drawMedia(ctx, img, item: item, rect: r, view: cell.view)
             }
             ctx.restoreGState()
+        }
+        // Captions go on top. A video hands in a ready-made layer so the words aren't laid out again for every frame.
+        if let captionLayer {
+            ctx.saveGState()
+            ctx.translateBy(x: 0, y: H)
+            ctx.scaleBy(x: 1, y: -1)
+            ctx.draw(captionLayer, in: CGRect(x: 0, y: 0, width: W, height: H))
+            ctx.restoreGState()
+        } else {
+            CaptionRenderer.drawAll(ctx: ctx, project: project, W: W, H: H)
         }
         ctx.restoreGState()
     }
