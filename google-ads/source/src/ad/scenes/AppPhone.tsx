@@ -55,7 +55,7 @@ const Highlight: React.FC<{ box: Box; at: number; until: number; sw: number; sh:
 
 export const AppPhone: React.FC = () => {
   const f = useCurrentFrame();
-  const { portrait, u, width, height } = useLayout();
+  const { portrait, u, width, height, L } = useLayout();
   const segs = segments();
   const start = segs[0].at;
   const end = cue(APP_WORD, 1); // the end card takes over when the app is named the second time
@@ -69,9 +69,9 @@ export const AppPhone: React.FC = () => {
   const swapped = prev && prev.shot !== cur.shot;
 
   // size and position
-  const baseW = (portrait ? 540 : 380) * u;
+  const baseW = portrait ? 540 * u : L.phoneW;
   const h = phoneHeight(baseW);
-  const homeX = portrait ? width / 2 : width * 0.68;
+  const homeX = portrait ? width / 2 : L.phoneCx;
   const homeY = portrait ? 300 * u + h / 2 : height / 2 - 22 * u;
   // "Same trip. Way better post." moves the phone aside for the before/after
   const aside = interpolate(f, [cue("same"), cue("same") + 20], [0, 1], { ...clamp, easing: AIR });

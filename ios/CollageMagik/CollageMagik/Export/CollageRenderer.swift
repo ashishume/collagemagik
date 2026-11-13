@@ -24,18 +24,32 @@ enum CollageRenderer {
         ctx.fill(CGRect(x: 0, y: 0, width: W, height: H))
 
         let rects = project.cellRects(W: W, H: H)
-        let radius = project.cornerRadius(W: W)
+        let outers = project.frameRects(W: W, H: H)
+        let unit = W / project.canvasWidth
         for (i, r) in rects.enumerated() {
             guard i < project.cells.count else { break }
             let cell = project.cells[i]
-            ctx.saveGState()
-            let rr = max(0, min(radius, r.w / 2, r.h / 2))
-            ctx.addPath(CGPath(roundedRect: r.cgRect, cornerWidth: rr, cornerHeight: rr, transform: nil))
-            ctx.clip()
-            if let id = cell.mediaId, let item = snapshot.items[id], let img = image(id) {
-                drawMedia(ctx, img, item: item, rect: r, view: cell.view)
+            let framed = project.isFramed(i)
+            drawPrint(
+                ctx, outer: outers[i], picture: r, radius: project.pictureRadius(i, W: W),
+                frame: framed ? project.frame : .none, frameColor: project.frameColor,
+                edge: project.frameEdges(i, outers[i], W: W).side, seed: i, unit: unit
+            ) {
+                if let id = cell.mediaId, let item = snapshot.items[id], let img = image(id) {
+                    drawMedia(ctx, img, item: item, rect: r, view: cell.view)
+                }
             }
-            ctx.restoreGState()
+        }
+        // Photos laid on top of the layout, in order.
+        for (k, o) in project.overlays.enumerated() {
+            guard let item = snapshot.items[o.mediaId], let img = image(o.mediaId) else { continue }
+            let g = project.overlayGeometry(o, aspect: item.height / item.width, W: W, H: H)
+            drawPrint(
+                ctx, outer: g.outer, picture: g.picture, radius: o.frame == .torn ? 0 : 3 * unit,
+                frame: o.frame, frameColor: o.frameColor, edge: g.edge, seed: 1000 + k, unit: unit
+            ) {
+                drawMedia(ctx, img, item: item, rect: g.picture, view: MediaView())
+            }
         }
         // Captions go on top. A video hands in a ready-made layer so the words aren't laid out again for every frame.
         if let captionLayer {
@@ -48,6 +62,43 @@ enum CollageRenderer {
             CaptionRenderer.drawAll(ctx: ctx, project: project, W: W, H: H)
         }
         ctx.restoreGState()
+    }
+
+    /// One photo with its frame and drop shadow, turned by `outer.tilt` about its centre. `content` draws the picture,
+    /// clipped to `picture` (canvas coordinates, before the turn).
+    static func drawPrint(
+        _ ctx: CGContext, outer: PxRect, picture: PxRect, radius: Double,
+        frame: PhotoFrame, frameColor: String, edge: Double, seed: Int, unit: Double,
+        content: () -> Void
+    ) {
+        ctx.saveGState()
+        defer { ctx.restoreGState() }
+        if outer.tilt != 0 {
+            let c = outer.center
+            ctx.translateBy(x: c.x, y: c.y)
+            ctx.rotate(by: outer.tilt * RAD)
+            ctx.translateBy(x: -c.x, y: -c.y)
+        }
+        let rr = max(0, min(radius, picture.w / 2, picture.h / 2))
+        let path = CGPath(roundedRect: picture.cgRect, cornerWidth: rr, cornerHeight: rr, transform: nil)
+        if frame != .none {
+            ctx.saveGState()
+            ctx.setShadow(offset: CGSize(width: 0, height: 7 * unit), blur: 22 * unit, color: UIColor.black.withAlphaComponent(0.38).cgColor)
+            if frame.hasEdge {
+                let shape = frameOutline(frame, size: CGSize(width: outer.w, height: outer.h), radius: 3 * unit, edge: edge, seed: seed)
+                var move = CGAffineTransform(translationX: outer.x, y: outer.y)
+                if let placed = shape.copy(using: &move) { ctx.addPath(placed) }
+                ctx.setFillColor(UIColor(hex: frameColor).cgColor)
+            } else {
+                ctx.addPath(path)
+                ctx.setFillColor(UIColor.black.cgColor)
+            }
+            ctx.fillPath()
+            ctx.restoreGState()
+        }
+        ctx.addPath(path)
+        ctx.clip()
+        content()
     }
 
     /// The context must have a top-left origin (flipped). The picture is drawn with zoom, pan, rotation, flip and straighten.
@@ -83,6 +134,22 @@ enum CollageRenderer {
                 kCGImageSourceThumbnailMaxPixelSize: maxPx,
             ]
             if let cg = CGImageSourceCreateThumbnailAtIndex(src, 0, opts as CFDictionary) { out[id] = cg }
+        }
+        // photos on top: the same photo may also be in a cell, so keep whichever copy is bigger
+        for o in project.overlays {
+            guard let item = snapshot.items[o.mediaId], item.kind == .photo else { continue }
+            let g = project.overlayGeometry(o, aspect: item.height / item.width, W: W, H: H)
+            let need = neededPhotoSize(srcW: item.width, srcH: item.height, cell: g.picture, view: MediaView())
+            let maxPx = max(need.w, need.h)
+            if let existing = out[o.mediaId], max(existing.width, existing.height) >= maxPx { continue }
+            guard let src = CGImageSourceCreateWithURL(item.url as CFURL, nil) else { continue }
+            let opts: [CFString: Any] = [
+                kCGImageSourceCreateThumbnailFromImageAlways: true,
+                kCGImageSourceCreateThumbnailWithTransform: true,
+                kCGImageSourceShouldCacheImmediately: true,
+                kCGImageSourceThumbnailMaxPixelSize: maxPx,
+            ]
+            if let cg = CGImageSourceCreateThumbnailAtIndex(src, 0, opts as CFDictionary) { out[o.mediaId] = cg }
         }
         return out
     }

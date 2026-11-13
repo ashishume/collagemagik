@@ -41,6 +41,37 @@ enum DebugHarness {
             if v.count > 1, grid.inner[0].count > 1 { grid = grid.moving(LayoutDivider(band: 0, index: 0), first: v[1]).grid }
             store.project.cellSizes = grid
         }
+        // CM_LAYOUT_ID=2-inset picks a collage layout by id; CM_FRAME=border|instant|torn|shadow, CM_FRAME_COLOR=#f4ecdc.
+        if let id = env["CM_LAYOUT_ID"] { store.setLayout(id) }
+        if let f = env["CM_FRAME"].flatMap(PhotoFrame.init(rawValue:)) { store.project.frame = f }
+        if let c = env["CM_FRAME_COLOR"] { store.project.frameColor = c }
+        if let g = env["CM_GAP"].flatMap(Double.init) { store.project.gap = g }
+        // CM_DEMO=1: captions using the bundled scripts, a two-size mix and every decoration.
+        if env["CM_DEMO"] != nil {
+            store.project.captions += [
+                Caption(text: "Bodhgaya trip", font: .vows, size: 150, x: 0.5, y: 0.1, rotation: -4, ornament: .swash),
+                Caption(text: "woke up to\nthis view\nKashmir, you beauty!", font: .dreamy, size: 130, x: 0.5, y: 0.34, ornament: .divider, mix: .both, accentFont: .diary),
+                Caption(text: "Dawki River,\nMeghalaya", font: .signature, size: 120, x: 0.45, y: 0.58, ornament: .heart),
+                Caption(text: "golden hour", font: .diary, color: "#ffd84d", look: .outline, size: 80, x: 0.62, y: 0.9, ornament: .sparkles),
+            ]
+            if let i = env["CM_CAPTION_SELECT"].flatMap(Int.init), store.project.captions.indices.contains(i) {
+                store.selectCaption(store.project.captions[i].id)
+            }
+        }
+        // CM_OVERLAYS=1,2 lays tray photos 1 and 2 on top (CM_OVERLAY_FRAME=torn etc., CM_OVERLAY_SELECT=1 keeps the last selected).
+        if let list = env["CM_OVERLAYS"] {
+            for i in list.split(separator: ",").compactMap({ Int($0) }) where store.items.indices.contains(i) {
+                store.addOverlay(store.items[i].id)
+            }
+            if let f = env["CM_OVERLAY_FRAME"].flatMap(PhotoFrame.init(rawValue:)) {
+                for o in store.project.overlays { store.updateOverlay(o.id) { $0.frame = f } }
+            }
+            if let c = env["CM_OVERLAY_COLOR"] { for o in store.project.overlays { store.updateOverlay(o.id) { $0.frameColor = c } } }
+            if let x = env["CM_OVERLAY_CX"].flatMap(Double.init), let o = store.project.overlays.first {
+                store.updateOverlay(o.id) { $0.cx = x; $0.cy = 0.45; $0.w = 0.6 }
+            }
+            if env["CM_OVERLAY_SELECT"] == nil { store.selectOverlay(nil) }
+        }
         if let t = env["CM_TAB"] {
             switch t {
             case "timeline": store.tab = .video; store.videoSection = .timeline

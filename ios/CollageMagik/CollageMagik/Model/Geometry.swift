@@ -9,9 +9,26 @@ struct PxRect: Equatable {
     var y: Double
     var w: Double
     var h: Double
+    /// Degrees the rect is turned about its centre (photos on top).
+    var tilt: Double = 0
 
     var cgRect: CGRect { CGRect(x: x, y: y, width: w, height: h) }
-    func contains(_ px: Double, _ py: Double) -> Bool { px >= x && px <= x + w && py >= y && py <= y + h }
+    var center: CGPoint { CGPoint(x: x + w / 2, y: y + h / 2) }
+    func contains(_ px: Double, _ py: Double) -> Bool {
+        var px = px, py = py
+        if tilt != 0 {
+            let cx = x + w / 2, cy = y + h / 2
+            let t = -tilt * RAD, dx = px - cx, dy = py - cy
+            px = cx + dx * cos(t) - dy * sin(t)
+            py = cy + dx * sin(t) + dy * cos(t)
+        }
+        return px >= x && px <= x + w && py >= y && py <= y + h
+    }
+    /// Smaller on every side by `d`.
+    func inset(_ d: Double) -> PxRect { inset(left: d, top: d, right: d, bottom: d) }
+    func inset(left: Double, top: Double, right: Double, bottom: Double) -> PxRect {
+        PxRect(x: x + left, y: y + top, w: max(1, w - left - right), h: max(1, h - top - bottom), tilt: tilt)
+    }
 }
 
 @inline(__always) func clamp(_ v: Double, _ lo: Double, _ hi: Double) -> Double { min(hi, max(lo, v)) }

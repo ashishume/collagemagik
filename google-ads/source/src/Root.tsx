@@ -11,6 +11,7 @@ export const RemotionRoot: React.FC = () => {
       <Folder name="Videos">
         <Composition id="AdVertical" component={Ad} durationInFrames={TOTAL} fps={30} width={1080} height={1920} />
         <Composition id="AdLandscape" component={Ad} durationInFrames={TOTAL} fps={30} width={1920} height={1080} />
+        <Composition id="AdSquare" component={Ad} durationInFrames={TOTAL} fps={30} width={1080} height={1080} />
       </Folder>
       <Folder name="Image-assets">
         {THEMES.flatMap((theme) =>

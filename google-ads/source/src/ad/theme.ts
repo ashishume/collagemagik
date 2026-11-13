@@ -35,7 +35,12 @@ export const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as 
 export const useLayout = () => {
   const { width, height, fps } = useVideoConfig();
   const portrait = height > width;
+  const square = width === height;
   // u = 1 design unit; 1080 units across the short side.
   const u = Math.min(width, height) / 1080;
-  return { width, height, fps, portrait, u };
+  // Side-by-side layouts (phone right, text column left): landscape 1920x1080, and the narrower square 1080x1080.
+  const L = square
+    ? { phoneCx: width * 0.71, storyCx: width * 0.71, phoneW: 350 * u, leftX: 56 * u, colW: 470 * u, headTop: 200 * u, headScale: 0.68, edge: 30 * u }
+    : { phoneCx: width * 0.68, storyCx: width * 0.62, phoneW: 380 * u, leftX: 140 * u, colW: 820 * u, headTop: 290 * u, headScale: 1, edge: 60 * u };
+  return { width, height, fps, portrait, square, u, L };
 };

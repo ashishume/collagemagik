@@ -98,6 +98,46 @@ struct CaptionLookPicker: View {
     }
 }
 
+/// Decorations (heart, divider, sparkles, swash) and the "two sizes" mix, in one row.
+struct CaptionExtrasRow: View {
+    let caption: Caption
+    let update: ((inout Caption) -> Void) -> Void
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                GlassEffectContainer(spacing: 6) {
+                    HStack(spacing: 6) {
+                        ForEach(CaptionOrnament.allCases) { o in
+                            GlassIconButton(symbol: o.symbol, label: "Decoration: \(o.title)", isOn: caption.ornament == o, size: 30) {
+                                update { $0.ornament = o }
+                            }
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+            Menu {
+                Picker("Two sizes", selection: Binding(get: { caption.mix }, set: { m in update { $0.mix = m } })) {
+                    ForEach(CaptionMix.allCases) { m in Text(m.title).tag(m) }
+                }
+                Picker("Small lines lettering", selection: Binding(get: { caption.accentFont }, set: { f in update { $0.accentFont = f } })) {
+                    ForEach(CaptionFont.allCases) { f in Text(f.label).tag(f) }
+                }
+                .pickerStyle(.menu)
+            } label: {
+                Label("Mix: \(caption.mix.short)", systemImage: "textformat.size")
+                    .font(.footnote.weight(.medium))
+                    .lineLimit(1)
+                    .padding(.horizontal, 10)
+                    .frame(height: 30)
+                    .glassEffect(caption.mix == .none ? .regular.interactive() : .regular.tint(Color.brand.opacity(0.7)).interactive(), in: .capsule)
+            }
+            .accessibilityHint("Makes the first or last line small, in its own lettering. Put each part on its own line.")
+        }
+    }
+}
+
 // MARK: - Text tab
 
 struct TextPanel: View {
@@ -140,7 +180,7 @@ struct TextPanel: View {
             HintRow(
                 symbol: "hand.draw",
                 text: captions.isEmpty
-                    ? "Write on your \(store.isCarousel ? "carousel" : "collage") in 10 lettering styles."
+                    ? "Write on your \(store.isCarousel ? "carousel" : "collage") in \(CaptionFont.allCases.count) lettering styles."
                     : "Tap a caption to style it. Drag, pinch or twist to place it."
             )
             .lineLimit(1)
@@ -152,6 +192,7 @@ struct TextPanel: View {
         VStack(spacing: 7) {
             CaptionFontStrip(selection: c.font) { f in store.updateCaption(c.id) { $0.font = f } }
             CaptionColorStrip(selection: c.color) { hex in store.updateCaption(c.id) { $0.color = hex } }
+            CaptionExtrasRow(caption: c) { patch in store.updateCaption(c.id, patch) }
             HStack(spacing: 8) {
                 CaptionLookPicker(selection: c.look) { l in store.updateCaption(c.id) { $0.look = l } }
                 GlassIconButton(symbol: c.align.symbol, label: "Line up the words: \(c.align.rawValue)", size: 30) {

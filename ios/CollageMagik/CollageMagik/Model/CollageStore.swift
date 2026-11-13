@@ -39,6 +39,8 @@ final class CollageStore {
     var selectedCaption: String?
     /// The caption whose words are being typed (opens the caption editor).
     var editingCaption: String?
+    /// The photo on top being moved or styled (opens the On top panel).
+    var selectedOverlay: String?
     var tab: Tab = .media
     var returnTab: Tab = .media
     var videoSection: VideoSection = .timeline
@@ -373,6 +375,8 @@ final class CollageStore {
         items.removeAll { $0.id == mediaId }
         project.cells = project.cells.map { $0.mediaId == mediaId ? CellState() : $0 }
         project.lanes.removeAll { $0.mediaId == mediaId }
+        project.overlays.removeAll { $0.mediaId == mediaId }
+        if let s = selectedOverlay, overlay(s) == nil { selectOverlay(nil) }
         selectedClip = nil
     }
 
@@ -488,8 +492,11 @@ final class CollageStore {
         selectedClip = nil
         swapFrom = nil
         selectedCaption = nil
+        if tab == .overlay { tab = .layout }
+        selectedOverlay = nil
         // captions stay; any that were further right than the design now reaches move back onto it
         for c in project.captions { updateCaption(c.id) { _ in } }
+        for o in project.overlays { updateOverlay(o.id) { _ in } }
         carouselOffset = 0
         if tab == .picture || (tab == .video && mode == .carousel) { tab = .layout }
         playback.projectChanged()
@@ -513,7 +520,7 @@ final class CollageStore {
 
     func selectCell(_ i: Int?) {
         selectedCell = i
-        if i != nil { selectedCaption = nil }
+        if i != nil { selectedCaption = nil; if selectedOverlay != nil { selectOverlay(nil) } }
         if i == nil && tab == .picture {
             tab = returnTab
             swapFrom = nil
@@ -523,6 +530,95 @@ final class CollageStore {
     func openPicture() {
         if tab != .picture { returnTab = tab }
         withAnimation(.smooth) { tab = .picture }
+    }
+
+    // MARK: Photos on top
+
+    func overlay(_ id: String?) -> PhotoOverlay? { id.flatMap { id in project.overlays.first { $0.id == id } } }
+
+    /// Selects a photo on top and opens its panel (nil closes it and goes back to the tab that was open).
+    func selectOverlay(_ id: String?) {
+        selectedOverlay = id
+        if id != nil {
+            selectedCell = nil
+            swapFrom = nil
+            selectedCaption = nil
+            if tab != .overlay && tab != .picture { returnTab = tab }
+            withAnimation(.smooth) { tab = .overlay }
+        } else if tab == .overlay {
+            withAnimation(.smooth) { tab = returnTab }
+        }
+    }
+
+    /// Lays a photo from the tray on top of the design, centred at (cx, cy) (cx in slide widths, cy 0...1).
+    /// It takes the frame of the last photo on top, so a set of prints matches, and a little tilt, like a print dropped on a table.
+    @discardableResult
+    func addOverlay(_ mediaId: String, cx: Double? = nil, cy: Double? = nil) -> Bool {
+        guard let item = item(mediaId) else { return false }
+        guard item.kind == .photo else {
+            notify("Only photos can go on top. Videos play in the layout's cells.")
+            return false
+        }
+        guard project.overlays.count < maxOverlays else {
+            notify("Up to \(maxOverlays) photos fit on top of one design. Remove one to add another.")
+            return false
+        }
+        let n = project.overlays.count
+        let like = project.overlays.last
+        var o = PhotoOverlay(
+            mediaId: mediaId,
+            cx: cx ?? (isCarousel ? Double(visibleSlide - 1) + 0.5 : 0.5) + Double(n % 3) * 0.06,
+            cy: cy ?? 0.5 + Double(n % 3) * 0.05,
+            w: like?.w ?? 0.46,
+            tilt: [-5, 4, -2, 6, -4, 3][n % 6]
+        )
+        o.frame = like?.frame ?? .border
+        o.frameColor = like?.frameColor ?? "#ffffff"
+        project.overlays.append(o)
+        updateOverlay(o.id) { _ in }
+        selectOverlay(o.id)
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        return true
+    }
+
+    func updateOverlay(_ id: String, _ patch: (inout PhotoOverlay) -> Void) {
+        guard let i = project.overlays.firstIndex(where: { $0.id == id }) else { return }
+        var o = project.overlays[i]
+        patch(&o)
+        o.cx = clamp(o.cx, 0, Double(project.slides))
+        o.cy = clamp(o.cy, 0, 1)
+        o.w = clamp(o.w, overlayWidthRange.lowerBound, overlayWidthRange.upperBound)
+        o.tilt = clamp(o.tilt, -180, 180)
+        project.overlays[i] = o
+    }
+
+    func removeOverlay(_ id: String) {
+        project.overlays.removeAll { $0.id == id }
+        if selectedOverlay == id { selectOverlay(nil) }
+    }
+
+    func duplicateOverlay(_ id: String) {
+        guard let src = overlay(id) else { return }
+        guard project.overlays.count < maxOverlays else {
+            notify("Up to \(maxOverlays) photos fit on top of one design. Remove one to add another.")
+            return
+        }
+        var o = src
+        o.id = UUID().uuidString
+        o.cx += 0.06
+        o.cy += 0.04
+        o.tilt = -src.tilt
+        project.overlays.append(o)
+        updateOverlay(o.id) { _ in }
+        selectOverlay(o.id)
+    }
+
+    /// Moves a photo on top one step up (towards the viewer) or down in the pile.
+    func restackOverlay(_ id: String, up: Bool) {
+        guard let i = project.overlays.firstIndex(where: { $0.id == id }) else { return }
+        let j = up ? i + 1 : i - 1
+        guard project.overlays.indices.contains(j) else { return }
+        project.overlays.swapAt(i, j)
     }
 
     // MARK: Captions
@@ -535,6 +631,7 @@ final class CollageStore {
             swapFrom = nil
             if tab != .text { withAnimation(.smooth) { tab = .text } }
         }
+        if id != nil, selectedOverlay != nil { selectOverlay(nil) }
         if id != selectedCaption {
             selectedCaption = id
             if id != nil { UISelectionFeedbackGenerator().selectionChanged() }
@@ -550,7 +647,7 @@ final class CollageStore {
         }
         var c = Caption()
         if let like = caption(selectedCaption) ?? project.captions.last {
-            c.font = like.font; c.color = like.color; c.look = like.look; c.align = like.align; c.size = like.size
+            c.font = like.font; c.color = like.color; c.look = like.look; c.align = like.align; c.size = like.size; c.accentFont = like.accentFont
         }
         c.x = isCarousel ? Double(visibleSlide - 1) + 0.5 : 0.5
         // each new caption starts a little lower than the last, so they don't land on top of each other
@@ -740,6 +837,7 @@ final class CollageStore {
         swapFrom = nil
         selectedCaption = nil
         editingCaption = nil
+        selectedOverlay = nil
         tab = .media
         playback.projectChanged()
     }

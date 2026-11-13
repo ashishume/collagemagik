@@ -28,6 +28,34 @@ struct LayoutRect: Hashable {
     var h: Double
 }
 
+/// What goes around a photo: nothing, a printed border, an instant-photo border (deeper at the bottom), a torn paper
+/// edge, or just a soft shadow. The Style tab sets it for every cell; each photo on top has its own.
+enum PhotoFrame: String, CaseIterable, Identifiable {
+    case none, border, instant, torn, shadow
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .none: "None"
+        case .border: "Border"
+        case .instant: "Instant"
+        case .torn: "Torn"
+        case .shadow: "Shadow"
+        }
+    }
+    var symbol: String {
+        switch self {
+        case .none: "square.dashed"
+        case .border: "square"
+        case .instant: "photo.artframe"
+        case .torn: "scribble.variable"
+        case .shadow: "shadow"
+        }
+    }
+    var hasEdge: Bool { self == .border || self == .instant || self == .torn }
+}
+
+let frameSwatches = ["#ffffff", "#f4ecdc", "#101016", "#ffd6e7", "#c9e4ff"]
+
 /// How a grid layout is split, as fractions that each add up to 1. `rows`: `outer` are band heights from top to
 /// bottom and `inner[i]` the cell widths in band i. Otherwise `outer` are column widths and `inner[i]` cell heights.
 struct LayoutGrid: Hashable {
@@ -160,11 +188,18 @@ struct Project: Equatable {
     var music: MusicTrack? = nil
     /// Text placed on top of the pictures, drawn in order (the last one is on top).
     var captions: [Caption] = []
+    var frame: PhotoFrame = .none
+    var frameColor: String = "#ffffff"
+    /// Frame edge in pixels at 1080 wide.
+    var frameWidth: Double = 22
+    /// Photos laid freely on top of the design (drawn in order, under the captions).
+    var overlays: [PhotoOverlay] = []
 }
 
-/// The editor's bottom tabs. Picture is not one of them: it opens by itself while a picture is selected.
+/// The editor's bottom tabs. Picture and On top are not among them: they open by themselves while a picture in a cell,
+/// or a photo laid on top, is selected.
 enum Tab: String, CaseIterable, Identifiable {
-    case media, layout, style, text, video, picture
+    case media, layout, style, text, video, picture, overlay
     var id: String { rawValue }
     var label: String {
         switch self {
@@ -174,6 +209,7 @@ enum Tab: String, CaseIterable, Identifiable {
         case .text: "Text"
         case .video: "Video"
         case .picture: "Picture"
+        case .overlay: "On top"
         }
     }
     var symbol: String {
@@ -184,6 +220,7 @@ enum Tab: String, CaseIterable, Identifiable {
         case .text: "textformat"
         case .video: "film.stack"
         case .picture: "slider.horizontal.3"
+        case .overlay: "square.on.square"
         }
     }
 

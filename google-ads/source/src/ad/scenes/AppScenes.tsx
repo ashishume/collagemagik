@@ -7,7 +7,7 @@ import { AIR, APP_SUBTITLE, C, clamp, fontFamily, useLayout } from "../theme";
 
 /** Big scene title: top centre in vertical, left column in landscape. `at`/`out` are absolute frames. */
 const Headline: React.FC<{ at: number; out: number; children: React.ReactNode; size?: number }> = ({ at, out, children, size = 1 }) => {
-  const { portrait, u } = useLayout();
+  const { portrait, u, L } = useLayout();
   return (
     <AbsoluteFill style={{ pointerEvents: "none" }}>
       <Air
@@ -17,10 +17,10 @@ const Headline: React.FC<{ at: number; out: number; children: React.ReactNode; s
         style={
           portrait
             ? { position: "absolute", left: 70 * u, right: 70 * u, top: 120 * u, textAlign: "center" }
-            : { position: "absolute", left: 140 * u, top: 290 * u, width: 820 * u }
+            : { position: "absolute", left: L.leftX, top: L.headTop, width: L.colW }
         }
       >
-        <div style={{ fontFamily, fontWeight: 800, fontSize: (portrait ? 84 : 96) * u * size, lineHeight: 1.04, color: C.ink, letterSpacing: -1 * u }}>
+        <div style={{ fontFamily, fontWeight: 800, fontSize: (portrait ? 84 : 96 * L.headScale) * u * size, lineHeight: 1.04, color: C.ink, letterSpacing: -1 * u }}>
           {children}
         </div>
       </Air>
@@ -32,14 +32,14 @@ const P: React.FC<{ c: string; children: React.ReactNode }> = ({ c, children }) 
 
 /** Side positions for stickers around the phone. */
 const useSpots = () => {
-  const { portrait, u, width } = useLayout();
-  const px = width * 0.68; // landscape phone centre
+  const { portrait, square, u, L } = useLayout();
+  const px = L.phoneCx; // phone centre in the side-by-side layouts
   return {
-    leftHigh: portrait ? { left: 50 * u, top: 470 * u } : { left: px - 400 * u, top: 130 * u },
+    leftHigh: portrait ? { left: 50 * u, top: 470 * u } : { left: px - (square ? 330 : 400) * u, top: (square ? 110 : 130) * u },
     // right-anchored so long stickers grow over the phone instead of off the frame
-    rightHigh: portrait ? { right: 50 * u, top: 640 * u } : { right: 60 * u, top: 300 * u },
-    leftLow: portrait ? { left: 50 * u, top: 980 * u } : { left: px - 450 * u, top: 640 * u },
-    rightLow: portrait ? { right: 50 * u, top: 1150 * u } : { right: 60 * u, top: 720 * u },
+    rightHigh: portrait ? { right: 50 * u, top: 640 * u } : { right: L.edge, top: 300 * u },
+    leftLow: portrait ? { left: 50 * u, top: 980 * u } : { left: px - (square ? 420 : 450) * u, top: (square ? 620 : 640) * u },
+    rightLow: portrait ? { right: 50 * u, top: 1150 * u } : { right: L.edge, top: 720 * u },
   };
 };
 
@@ -116,7 +116,7 @@ export const RevealScene: React.FC = () => {
 /** Headlines and stickers that ride along with the persistent phone, from "Photos and videos" to "export". */
 export const FeatureOverlays: React.FC = () => {
   const spots = useSpots();
-  const { portrait } = useLayout();
+  const { portrait, square } = useLayout();
   return (
     <AbsoluteFill>
       {/* Photos and videos, side by side */}
@@ -150,7 +150,7 @@ export const FeatureOverlays: React.FC = () => {
       <Sticker at={cue("carousel")} out={cue("then") - 6} text="1 ➜ 2 ➜ 3" bg={C.blue} color="#fff" tilt={-5} style={spots.leftHigh} />
       <Sticker at={cue("flows")} out={cue("then") - 6} text="✨ photos cross the slides" bg={C.white} tilt={4} size={46} style={spots.rightHigh} />
       <Sticker at={cue("so", 1)} out={cue("then") - 6} text="👆 keep swiping" bg={C.gold} tilt={-4} style={spots.leftLow} />
-      {!portrait ? <PanoramaStrip from={cue("so", 1) - 20} to={cue("then")} /> : null}
+      {!portrait && !square ? <PanoramaStrip from={cue("so", 1) - 20} to={cue("then")} /> : null}
 
       {/* export */}
       <Headline at={cue("then") - 4} out={cue("same")}>
@@ -165,7 +165,7 @@ export const FeatureOverlays: React.FC = () => {
 /** A caption that gets dragged, then twisted, on "drag it, twist it". */
 const DragCaption: React.FC = () => {
   const f = useCurrentFrame();
-  const { u, portrait, width } = useLayout();
+  const { u, portrait, width, L } = useLayout();
   const a = cue("drop");
   const drag = cue("drag");
   const twist = cue("twist");
@@ -175,7 +175,7 @@ const DragCaption: React.FC = () => {
   const dx = interpolate(f, [drag, drag + 16], [0, 1], { ...clamp, easing: AIR });
   const rot = interpolate(f, [twist, twist + 14], [0, 1], { ...clamp, easing: Easing.bezier(0.34, 1.56, 0.64, 1) });
   const out = interpolate(f, [gone, gone + 10], [0, 1], clamp);
-  const cx = portrait ? width / 2 : width * 0.68;
+  const cx = portrait ? width / 2 : L.phoneCx;
   const baseY = portrait ? 790 * u : 470 * u; // below the app's own title caption
   return (
     <div
@@ -209,9 +209,9 @@ const DragCaption: React.FC = () => {
 
 const MusicNotes: React.FC<{ from: number; to: number }> = ({ from, to }) => {
   const f = useCurrentFrame();
-  const { u, portrait, width } = useLayout();
+  const { u, portrait, width, L } = useLayout();
   if (f < from || f > to) return null;
-  const cx = portrait ? width / 2 : width * 0.68;
+  const cx = portrait ? width / 2 : L.phoneCx;
   return (
     <>
       {Array.from({ length: 6 }).map((_, i) => {
@@ -241,14 +241,14 @@ const MusicNotes: React.FC<{ from: number; to: number }> = ({ from, to }) => {
 /** Landscape only: a seamless panorama split across slides, swiping left. */
 const PanoramaStrip: React.FC<{ from: number; to: number }> = ({ from, to }) => {
   const f = useCurrentFrame();
-  const { u } = useLayout();
+  const { u, L, square } = useLayout();
   if (f < from || f > to + 10) return null;
   const p = interpolate(f, [from, from + 18], [0, 1], { ...clamp, easing: AIR });
   const out = interpolate(f, [to - 8, to + 6], [0, 1], clamp);
   const pan = interpolate(f, [from, to], [0, -260], clamp) * u;
   const slideW = 230 * u;
   return (
-    <div style={{ position: "absolute", left: 140 * u, top: 560 * u, width: 820 * u, height: 300 * u, overflow: "hidden", opacity: p * (1 - out), filter: `blur(${(1 - p) * 10 * u}px)` }}>
+    <div style={{ position: "absolute", left: L.leftX, top: (square ? 520 : 560) * u, width: L.colW, height: 300 * u, overflow: "hidden", opacity: p * (1 - out), filter: `blur(${(1 - p) * 10 * u}px)` }}>
       <div style={{ position: "absolute", left: pan, top: 0, display: "flex", gap: 14 * u }}>
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} style={{ width: slideW, height: 287 * u, borderRadius: 18 * u, overflow: "hidden", position: "relative", boxShadow: `0 ${10 * u}px ${24 * u}px rgba(43,20,92,0.2)` }}>
@@ -263,12 +263,12 @@ const PanoramaStrip: React.FC<{ from: number; to: number }> = ({ from, to }) => 
 /** "No blurry mess": a blurry thumbnail crossed out next to a sharp one. */
 const SharpVsBlurry: React.FC<{ at: number; out: number }> = ({ at, out }) => {
   const f = useCurrentFrame();
-  const { u, portrait } = useLayout();
+  const { u, portrait, L } = useLayout();
   const p = interpolate(f, [at, at + 14], [0, 1], { ...clamp, easing: Easing.bezier(0.34, 1.56, 0.64, 1) });
   const o = interpolate(f, [out, out + 10], [0, 1], clamp);
   if (f < at || f > out + 12) return null;
   const s = 170 * u;
-  const pos = portrait ? { left: 40 * u, top: 1180 * u } : { left: 140 * u, top: 600 * u };
+  const pos = portrait ? { left: 40 * u, top: 1180 * u } : { left: L.leftX, top: 600 * u };
   const card = (blur: boolean) => (
     <div style={{ position: "relative" }}>
       <TripPhoto kind="alpine-lake" hd style={{ width: s, height: s, borderRadius: 22 * u, border: `${5 * u}px solid #fff`, filter: blur ? `blur(${7 * u}px)` : undefined, boxShadow: `0 ${10 * u}px ${24 * u}px rgba(43,20,92,0.25)` }} />
@@ -286,14 +286,14 @@ const SharpVsBlurry: React.FC<{ at: number; out: number }> = ({ at, out }) => {
 /** "Same trip. Way better post." A grey photo pile next to the finished collage. */
 export const BeforeAfterScene: React.FC = () => {
   const f = useCurrentFrame();
-  const { u, portrait } = useLayout();
+  const { u, portrait, square, L } = useLayout();
   const a = cue("same");
   const b = cue("way");
   const end = cue(APP_WORD, 1);
   if (f < a - 2 || f > end + 14) return null;
   const p = interpolate(f, [a, a + 20], [0, 1], { ...clamp, easing: AIR });
   const out = interpolate(f, [end - 6, end + 10], [0, 1], { ...clamp, easing: AIR });
-  const base = portrait ? { x: 70 * u, y: 640 * u } : { x: 180 * u, y: 540 * u };
+  const base = portrait ? { x: 70 * u, y: 640 * u } : { x: L.leftX + 40 * u, y: (square ? 500 : 540) * u };
   const tile = (portrait ? 230 : 170) * u;
   const step = (portrait ? 46 : 38) * u;
   return (
@@ -322,9 +322,9 @@ export const BeforeAfterScene: React.FC = () => {
         ))}
       </div>
       <Sticker at={a + 6} out={end - 4} text="20-photo dump 😴" bg={C.ink} color="#fff" tilt={-6} size={44}
-        style={portrait ? { left: 60 * u, top: 1170 * u } : { left: 470 * u, top: 640 * u }} />
+        style={portrait ? { left: 60 * u, top: 1170 * u } : square ? { left: L.leftX + 150 * u, top: 640 * u } : { left: 470 * u, top: 640 * u }} />
       <Sticker at={b} out={end - 4} text="1 post everyone loves 💜" bg={C.white} tilt={4} size={44}
-        style={portrait ? { right: 40 * u, top: 1240 * u } : { right: 60 * u, top: 760 * u }} />
+        style={portrait ? { right: 40 * u, top: 1240 * u } : { right: L.edge, top: 760 * u }} />
     </AbsoluteFill>
   );
 };
@@ -332,7 +332,7 @@ export const BeforeAfterScene: React.FC = () => {
 /** "CollageMagik. And yeah, everything is free. Download now on the App Store." */
 export const EndScene: React.FC = () => {
   const f = useCurrentFrame();
-  const { u, portrait, width, height } = useLayout();
+  const { u, portrait, square, width, height, L } = useLayout();
   const a = cue(APP_WORD, 1);
   const free = cue("free");
   const dl = cue("download");
@@ -345,7 +345,7 @@ export const EndScene: React.FC = () => {
       {/* floating collage tiles orbiting the icon */}
       {Array.from({ length: 8 }).map((_, i) => {
         const ang = (i / 8) * Math.PI * 2 + f / 90;
-        const r = (portrait ? 400 : 520) * u;
+        const r = (portrait ? 400 : square ? 420 : 520) * u;
         return (
           <TripPhoto
             key={i}
@@ -377,7 +377,7 @@ export const EndScene: React.FC = () => {
         </div>
       </Air>
       <Sticker at={free} text="Everything free 🎉" bg={C.gold} tilt={-6} size={56}
-        style={portrait ? { left: 80 * u, top: cy - 300 * u } : { left: width / 2 + 200 * u, top: cy - 260 * u }} />
+        style={portrait ? { left: 80 * u, top: cy - 300 * u } : square ? { right: L.edge, top: cy - 300 * u } : { left: width / 2 + 200 * u, top: cy - 260 * u }} />
       <Air inAt={dl - 4} from={[0, 50]} style={{ position: "absolute", left: 0, right: 0, top: cy + (portrait ? 520 : 430) * u, display: "flex", justifyContent: "center" }}>
         <div style={{ scale: String(1 + Math.max(0, Math.sin((f - dl) / 7)) * 0.03) }}>
           <StoreButton s={u * (portrait ? 1 : 0.95)} />

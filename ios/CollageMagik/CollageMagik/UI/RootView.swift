@@ -160,11 +160,15 @@ struct PanelCard: View {
     private var height: CGFloat {
         let pad: CGFloat = 20
         switch store.tab {
-        case .media: return 96 + pad
+        case .media: return (store.items.isEmpty ? 96 : 116) + pad
         // collages with borders to drag get a row with the hint and "Reset sizes"
-        case .layout: return (store.isCarousel ? 100 : store.project.resizableGrid?.dividers.isEmpty == false ? 138 : 106) + pad
-        case .style: return (store.project.format == .story ? 156 : 124) + pad
-        case .text: return (store.caption(store.selectedCaption) == nil ? 66 : 172) + pad
+        case .layout:
+            if store.isCarousel { return 100 + pad }
+            return (store.project.resizableGrid?.dividers.isEmpty == false ? 138 : 106) + pad
+        case .style:
+            let frame: CGFloat = store.project.frame == .none ? 40 : store.project.frame.hasEdge ? 92 : 58
+            return (store.project.format == .story ? 156 : 124) + frame + pad
+        case .text: return (store.caption(store.selectedCaption) == nil ? 66 : 226) + pad
         case .video:
             let n = placedLanes(store.project).count
             if n == 0 { return 44 + pad }
@@ -173,6 +177,9 @@ struct PanelCard: View {
             case .timeline: return picker + timelineContentHeight(lanes: n) + pad + 6
             case .sound: return picker + CGFloat(n) * 36 + (store.project.music == nil ? 34 : 3 * 36) + pad + 4
             }
+        case .overlay:
+            guard let o = store.overlay(store.selectedOverlay) else { return 44 + pad }
+            return (o.frame.hasEdge ? 168 : 136) + pad
         case .picture:
             guard let s = store.selectedCell, store.project.cells.indices.contains(s) else { return 44 + pad }
             if store.swapFrom != nil { return 36 + pad }
@@ -190,6 +197,7 @@ struct PanelCard: View {
                 case .text: TextPanel()
                 case .video: VideoPanel()
                 case .picture: PicturePanel()
+                case .overlay: OverlayPanel()
                 }
             }
             .frame(maxWidth: .infinity)

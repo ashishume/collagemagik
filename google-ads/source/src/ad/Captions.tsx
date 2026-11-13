@@ -27,7 +27,7 @@ const pages: Caption[][] = (() => {
 export const Captions: React.FC<{ voiceStart: number }> = ({ voiceStart }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const { u, portrait, height } = useLayout();
+  const { u, portrait, height, width } = useLayout();
   const ms = ((frame - voiceStart) / fps) * 1000;
   const page = pages.find((p, i) => {
     const end = pages[i + 1] ? pages[i + 1][0].startMs : p[p.length - 1].endMs + 600;
@@ -64,7 +64,7 @@ export const Captions: React.FC<{ voiceStart: number }> = ({ voiceStart }) => {
           fontWeight: 800,
           fontSize: size,
           lineHeight: 1.15,
-          maxWidth: (portrait ? 960 : 1500) * u,
+          maxWidth: portrait ? 960 * u : Math.min(1500 * u, width - 160 * u),
         }}
       >
         {page.map((w, i) => {

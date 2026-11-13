@@ -106,8 +106,8 @@ final class GoogleAdsManager: NSObject {
 
     // MARK: Full-screen ad after export
 
-    /// Call when an export has finished, before its result is shown. Returns once the ad (if any) has been closed.
-    func beforeShowingExportResult() async {
+    /// Call once an export has finished and its result is on screen. Returns once the ad (if any) has been closed.
+    func afterShowingExportResult() async {
         guard isEnabled, canShowAds else { return }
         let count = defaults.integer(forKey: Key.exports) + 1
         defaults.set(count, forKey: Key.exports)

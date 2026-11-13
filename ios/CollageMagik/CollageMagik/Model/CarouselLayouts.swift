@@ -15,13 +15,47 @@ extension Project {
     var canvasHeight: Double { format.height }
     var canvasAspect: Double { canvasWidth / canvasHeight }
 
-    /// Cell rectangles for a canvas drawn `W` × `H` pixels wide.
+    /// The picture areas for a canvas drawn `W` × `H` pixels wide: inside the frame, when the cell has one.
     func cellRects(W: Double, H: Double) -> [PxRect] {
+        let outer = frameRects(W: W, H: H)
+        return outer.indices.map { i in
+            let e = frameEdges(i, outer[i], W: W)
+            return outer[i].inset(left: e.side, top: e.side, right: e.side, bottom: e.bottom)
+        }
+    }
+
+    /// The whole of each cell, frame included.
+    func frameRects(W: Double, H: Double) -> [PxRect] {
         cellPixelRects(layout(for: self).rects, W: W, H: H, gap: gap, unit: W / canvasWidth)
     }
 
     /// Corner radius for a canvas drawn `W` pixels wide.
     func cornerRadius(W: Double) -> Double { radius * W / canvasWidth }
+
+    /// Does cell `i` get the Style tab's frame?
+    func isFramed(_ i: Int) -> Bool { frame != .none && i < cellCount }
+
+    /// Frame thickness around cell `i` (sides, and the bottom, which is deeper on an instant photo), in canvas pixels.
+    func frameEdges(_ i: Int, _ r: PxRect, W: Double) -> (side: Double, bottom: Double) {
+        guard isFramed(i), frame.hasEdge else { return (0, 0) }
+        let side = min(frameWidth * W / canvasWidth, min(r.w, r.h) * 0.12)
+        switch frame {
+        case .instant: return (side, min(side * 3.4, r.h * 0.3))
+        case .torn: return (side * 1.2, side * 1.2)
+        default: return (side, side)
+        }
+    }
+
+    /// Corner radius of the picture in cell `i`: printed photos have small corners.
+    func pictureRadius(_ i: Int, W: Double) -> Double {
+        let r = cornerRadius(W: W)
+        guard isFramed(i) else { return r }
+        switch frame {
+        case .torn: return 0
+        case .shadow: return r
+        default: return min(r, 3 * W / canvasWidth)
+        }
+    }
 }
 
 // MARK: - Carousel layouts

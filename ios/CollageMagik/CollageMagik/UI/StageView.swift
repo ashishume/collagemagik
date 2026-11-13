@@ -154,6 +154,12 @@ struct StageView: View {
     @State private var snapY = false
     @State private var captionPinch: (id: String, size: Double)?
     @State private var captionTurn: (id: String, rotation: Double)?
+    /// A photo on top being moved, sized or turned.
+    @State private var overlayDrag: (id: String, cx: Double, cy: Double)?
+    @State private var overlayPinch: (id: String, w: Double)?
+    @State private var overlayTurn: (id: String, tilt: Double)?
+    /// True while a photo from the tray is dragged over the design.
+    @State private var dropTargeted = false
 
     var body: some View {
         GeometryReader { geo in
@@ -181,11 +187,28 @@ struct StageView: View {
         ZStack(alignment: .topLeading) {
             canvas(size: size)
             if interactive { gestures(size: size, shift: .zero, frame: nil) }
+            if dropTargeted { dropHighlight }
         }
+        .dropDestination(for: String.self) { ids, loc in
+            interactive && drop(ids, at: loc, size)
+        } isTargeted: { dropTargeted = interactive && $0 }
         .clipShape(RoundedRectangle(cornerRadius: interactive ? 6 : 0, style: .continuous))
         .shadow(color: .black.opacity(interactive ? 0.45 : 0), radius: 22, y: 10)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Collage preview. Tap a picture for options, drag to move it, pinch to zoom, press and hold then drag to swap. Tap a caption to style it, drag to move it.")
+    }
+
+    /// Shown while a tray photo is dragged over the design.
+    private var dropHighlight: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .strokeBorder(Color.brand, lineWidth: 3)
+            Label("Drop to place on top", systemImage: "square.on.square")
+                .font(.footnote.weight(.semibold))
+                .padding(.horizontal, 12).padding(.vertical, 7)
+                .glassEffect(.regular.tint(Color.brand.opacity(0.6)), in: .capsule)
+        }
+        .allowsHitTesting(false)
     }
 
     // MARK: Carousel
@@ -204,7 +227,11 @@ struct StageView: View {
                 .offset(x: -shift.x)
             gestures(size: frame.size, shift: shift, frame: frame)
                 .frame(width: frame.viewport.width, height: frame.viewport.height)
+            if dropTargeted { dropHighlight.frame(width: frame.viewport.width, height: frame.viewport.height) }
         }
+        .dropDestination(for: String.self) { ids, loc in
+            drop(ids, at: CGPoint(x: loc.x + shift.x, y: loc.y + shift.y), frame.size)
+        } isTargeted: { dropTargeted = $0 }
         .frame(width: frame.viewport.width, height: frame.viewport.height, alignment: .topLeading)
         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         .shadow(color: .black.opacity(0.45), radius: 22, y: 10)
@@ -251,7 +278,11 @@ struct StageView: View {
             Rectangle().fill(Color(hex: project.bg))
 
             ForEach(Array(px.enumerated()), id: \.offset) { i, r in
-                cell(i, r, radius: radius)
+                cell(i, r, size: size)
+            }
+
+            ForEach(Array(project.overlays.enumerated()), id: \.element.id) { k, o in
+                overlayView(o, index: k, size)
             }
 
             ForEach(project.captions) { c in
@@ -265,11 +296,21 @@ struct StageView: View {
                 }
                 // selection and swap marks
                 if let s = store.selectedCell, px.indices.contains(s) {
-                    ring(px[s], color: .brand, radius: radius)
+                    ring(px[s], color: .brand, radius: project.pictureRadius(s, W: size.width))
                 }
                 if let s = store.swapFrom, px.indices.contains(s) {
-                    ring(px[s], color: .orange, radius: radius)
+                    ring(px[s], color: .orange, radius: project.pictureRadius(s, W: size.width))
                 }
+                if let o = store.overlay(store.selectedOverlay), let g = overlayGeometry(o, size) {
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .strokeBorder(.white, style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+                        .background(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(Color.brand, lineWidth: 2.5))
+                        .frame(width: g.outer.w + 10, height: g.outer.h + 10)
+                        .rotationEffect(.degrees(g.outer.tilt))
+                        .position(g.outer.center)
+                        .allowsHitTesting(false)
+                }
+
 
                 if project.mode == .collage && (store.tab == .layout || dividerDrag != nil) {
                     dividerHandles(size)
@@ -309,27 +350,102 @@ struct StageView: View {
     }
 
     @ViewBuilder
-    private func cell(_ i: Int, _ r: PxRect, radius: Double) -> some View {
-        let state = store.project.cells.indices.contains(i) ? store.project.cells[i] : CellState()
+    private func cell(_ i: Int, _ r: PxRect, size: CGSize) -> some View {
+        let project = store.project
+        let state = project.cells.indices.contains(i) ? project.cells[i] : CellState()
         let item = state.mediaId.flatMap { store.item($0) }
-        ZStack {
-            if let item {
-                MediaPlacementView(
-                    item: item,
-                    rect: PxRect(x: 0, y: 0, w: r.w, h: r.h),
-                    view: state.view,
-                    player: item.kind == .video ? store.playback.player(for: item) : nil
-                )
-            } else if !interactive {
-                Color.white.opacity(0.06)
-            } else {
-                EmptySlot(index: i, side: min(r.w, r.h), radius: min(radius, r.w / 2, r.h / 2))
+        let outers = project.frameRects(W: size.width, H: size.height)
+        let outer = outers.indices.contains(i) ? outers[i] : r
+        let pr = min(project.pictureRadius(i, W: size.width), r.w / 2, r.h / 2)
+        let unit = size.width / project.canvasWidth
+        let framed = project.isFramed(i)
+        ZStack(alignment: .topLeading) {
+            if framed {
+                if project.frame.hasEdge {
+                    Path(frameOutline(project.frame, size: CGSize(width: outer.w, height: outer.h), radius: 3 * unit,
+                                      edge: project.frameEdges(i, outer, W: size.width).side, seed: i))
+                        .fill(Color(hex: project.frameColor))
+                        .shadow(color: .black.opacity(0.38), radius: 11 * unit, y: 7 * unit)
+                } else {
+                    RoundedRectangle(cornerRadius: pr, style: .continuous)
+                        .fill(.black)
+                        .frame(width: r.w, height: r.h)
+                        .shadow(color: .black.opacity(0.38), radius: 11 * unit, y: 7 * unit)
+                        .offset(x: r.x - outer.x, y: r.y - outer.y)
+                }
             }
+            ZStack {
+                if let item {
+                    MediaPlacementView(
+                        item: item,
+                        rect: PxRect(x: 0, y: 0, w: r.w, h: r.h),
+                        view: state.view,
+                        player: item.kind == .video ? store.playback.player(for: item) : nil
+                    )
+                } else if !interactive {
+                    Color.white.opacity(0.06)
+                } else {
+                    EmptySlot(index: i, side: min(r.w, r.h), radius: pr)
+                }
+            }
+            .frame(width: r.w, height: r.h)
+            .clipShape(RoundedRectangle(cornerRadius: pr, style: .continuous))
+            .offset(x: r.x - outer.x, y: r.y - outer.y)
         }
-        .frame(width: r.w, height: r.h)
-        .clipShape(RoundedRectangle(cornerRadius: min(radius, r.w / 2, r.h / 2), style: .continuous))
-        .offset(x: r.x, y: r.y)
+        .frame(width: outer.w, height: outer.h, alignment: .topLeading)
+        .rotationEffect(.degrees(outer.tilt))
+        .offset(x: outer.x, y: outer.y)
         .allowsHitTesting(false)
+    }
+
+    private func overlayGeometry(_ o: PhotoOverlay, _ size: CGSize) -> OverlayGeometry? {
+        guard let item = store.item(o.mediaId) else { return nil }
+        return store.project.overlayGeometry(o, aspect: item.height / item.width, W: size.width, H: size.height)
+    }
+
+    /// A photo laid on top: its frame (with a drop shadow) and the whole photo inside, turned by its tilt.
+    @ViewBuilder
+    private func overlayView(_ o: PhotoOverlay, index k: Int, _ size: CGSize) -> some View {
+        if let item = store.item(o.mediaId), let g = overlayGeometry(o, size) {
+            let unit = size.width / store.project.canvasWidth
+            let pr: Double = o.frame == .torn ? 0 : 3 * unit
+            ZStack(alignment: .topLeading) {
+                if o.frame.hasEdge {
+                    Path(frameOutline(o.frame, size: CGSize(width: g.outer.w, height: g.outer.h), radius: 3 * unit, edge: g.edge, seed: 1000 + k))
+                        .fill(Color(hex: o.frameColor))
+                        .shadow(color: .black.opacity(0.38), radius: 11 * unit, y: 7 * unit)
+                } else if o.frame == .shadow {
+                    RoundedRectangle(cornerRadius: pr, style: .continuous)
+                        .fill(.black)
+                        .frame(width: g.picture.w, height: g.picture.h)
+                        .shadow(color: .black.opacity(0.38), radius: 11 * unit, y: 7 * unit)
+                        .offset(x: g.picture.x - g.outer.x, y: g.picture.y - g.outer.y)
+                }
+                MediaPlacementView(item: item, rect: PxRect(x: 0, y: 0, w: g.picture.w, h: g.picture.h), view: MediaView(), player: nil)
+                    .frame(width: g.picture.w, height: g.picture.h)
+                    .clipShape(RoundedRectangle(cornerRadius: pr, style: .continuous))
+                    .offset(x: g.picture.x - g.outer.x, y: g.picture.y - g.outer.y)
+            }
+            .frame(width: g.outer.w, height: g.outer.h, alignment: .topLeading)
+            .rotationEffect(.degrees(g.outer.tilt))
+            .offset(x: g.outer.x, y: g.outer.y)
+            .allowsHitTesting(false)
+            .accessibilityLabel("Photo on top: \(item.name)")
+        }
+    }
+
+    /// The photo on top under a touch (the one on top of the pile wins).
+    private func overlayAt(_ p: CGPoint, _ size: CGSize) -> PhotoOverlay? {
+        store.project.overlays.last { o in
+            overlayGeometry(o, size)?.outer.contains(p.x, p.y) ?? false
+        }
+    }
+
+    /// A photo dragged in from the tray: it lands on top, centred where it was dropped.
+    private func drop(_ ids: [String], at p: CGPoint, _ size: CGSize) -> Bool {
+        guard let id = ids.first, store.item(id) != nil else { return false }
+        let slideW = size.width / Double(max(1, store.project.slides))
+        return store.addOverlay(id, cx: p.x / slideW, cy: p.y / size.height)
     }
 
     /// A caption, drawn by the same code as the export and then turned and placed.
@@ -444,6 +560,7 @@ struct StageView: View {
         RoundedRectangle(cornerRadius: min(radius, r.w / 2, r.h / 2), style: .continuous)
             .strokeBorder(color, lineWidth: 3)
             .frame(width: r.w, height: r.h)
+            .rotationEffect(.degrees(r.tilt))
             .offset(x: r.x, y: r.y)
             .allowsHitTesting(false)
     }
@@ -515,6 +632,18 @@ struct StageView: View {
             store.selectCaption(nil)
             return
         }
+        // photos on top sit above the cells: tap one to select it
+        if let o = overlayAt(p, size) {
+            if store.selectedOverlay != o.id {
+                store.selectOverlay(o.id)
+                UISelectionFeedbackGenerator().selectionChanged()
+            }
+            return
+        }
+        if store.selectedOverlay != nil {
+            store.selectOverlay(nil)
+            return
+        }
         if cell < 0 {
             store.selectCell(nil)
         } else if store.project.cells[cell].mediaId == nil {
@@ -531,6 +660,14 @@ struct StageView: View {
         if store.swapFrom == nil, let c = captionAt(p, size) {
             store.selectCaption(c.id)
             captionDrag = CaptionDrag(id: c.id, x: c.x, y: c.y)
+            gestureCell = -1
+            swiping = false
+            return
+        }
+        overlayDrag = nil
+        if store.swapFrom == nil, let o = overlayAt(p, size) {
+            if store.selectedOverlay != o.id { store.selectOverlay(o.id) }
+            overlayDrag = (o.id, o.cx, o.cy)
             gestureCell = -1
             swiping = false
             return
@@ -556,6 +693,10 @@ struct StageView: View {
     }
 
     private func panEnd(_ velocity: CGSize, frame: CarouselFrame?) {
+        if overlayDrag != nil {
+            overlayDrag = nil
+            return
+        }
         if dividerDrag != nil {
             dividerDrag = nil
             return
@@ -598,6 +739,14 @@ struct StageView: View {
             }
             return
         }
+        if var drag = overlayDrag {
+            let slideW = size.width / Double(max(1, store.project.slides))
+            drag.cx += d.width / slideW
+            drag.cy += d.height / size.height
+            overlayDrag = drag
+            store.updateOverlay(drag.id) { $0.cx = drag.cx; $0.cy = drag.cy }
+            return
+        }
         if dividerDrag != nil {
             dragDivider(d, size)
             return
@@ -611,6 +760,12 @@ struct StageView: View {
               let id = store.project.cells[ci].mediaId, let item = store.item(id) else { return }
         let r = rects(size)[ci]
         let cell = store.project.cells[ci]
+        // a turned photo moves along its own sides
+        var d = d
+        if r.tilt != 0 {
+            let t = -r.tilt * RAD
+            d = CGSize(width: d.width * cos(t) - d.height * sin(t), height: d.width * sin(t) + d.height * cos(t))
+        }
         let moved = placeMedia(srcW: item.width, srcH: item.height, cell: r, view: cell.view)
         let panX = panAfterDrag(cell.panX, deltaPx: d.width, overflowPx: moved.overflowX)
         let panY = panAfterDrag(cell.panY, deltaPx: d.height, overflowPx: moved.overflowY)
@@ -653,15 +808,30 @@ struct StageView: View {
             pinchCell = -1
             return
         }
+        // a selected photo on top is resized by a pinch anywhere; otherwise the one under the fingers
+        overlayPinch = (store.overlay(store.selectedOverlay) ?? overlayAt(p, size)).map { ($0.id, $0.w) }
+        if overlayPinch != nil {
+            pinchCell = -1
+            return
+        }
+
         pinchCell = store.selectedCell ?? hitCell(rects(size), x: p.x, y: p.y)
         pinchBase = store.project.cells.indices.contains(pinchCell) ? store.project.cells[pinchCell].zoom : 1
     }
 
     private func turnBegin() {
         captionTurn = store.caption(store.selectedCaption).map { ($0.id, $0.rotation) }
+        overlayTurn = captionTurn == nil ? store.overlay(store.selectedOverlay).map { ($0.id, $0.tilt) } : nil
     }
 
     private func turn(_ radians: CGFloat) {
+        if let t = overlayTurn {
+            var deg = t.tilt + Double(radians) / RAD
+            let quarter = (deg / 90).rounded() * 90
+            if abs(deg - quarter) < 3 { deg = quarter }
+            store.updateOverlay(t.id) { $0.tilt = deg }
+            return
+        }
         guard let t = captionTurn else { return }
         var deg = t.rotation + Double(radians) / RAD
         // straight and quarter turns hold on a little, so a level caption is easy to get back
@@ -671,6 +841,10 @@ struct StageView: View {
     }
 
     private func pinch(_ scale: CGFloat) {
+        if let o = overlayPinch {
+            store.updateOverlay(o.id) { $0.w = o.w * Double(scale) }
+            return
+        }
         if let c = captionPinch {
             store.updateCaption(c.id) { $0.size = c.size * Double(scale) }
             return
@@ -680,7 +854,7 @@ struct StageView: View {
     }
 
     private func liftBegin(_ p: CGPoint, _ size: CGSize) {
-        guard captionAt(p, size) == nil else { return }
+        guard captionAt(p, size) == nil, overlayAt(p, size) == nil else { return }
         let cell = hitCell(rects(size), x: p.x, y: p.y)
         guard cell >= 0, store.swapFrom == nil, store.project.cells[cell].mediaId != nil else { return }
         selectAndOpen(cell)

@@ -36,12 +36,12 @@ final class ExportJob {
                     let url = try await exporter.exportVideo(quality: quality) { p in
                         Task { @MainActor in self.progress = p }
                     }
-                    await showAdBeforeResult()
                     state = .done(url, isVideo: true)
+                    showAdAfterResult()
                 } else {
                     let url = try await Task.detached { try exporter.exportPNG(at: stillTime, quality: quality) }.value
-                    await showAdBeforeResult()
                     state = .done(url, isVideo: false)
+                    showAdAfterResult()
                 }
             } catch is CancellationError {
                 state = .idle
@@ -61,8 +61,8 @@ final class ExportJob {
         task = Task {
             do {
                 let urls = try await Task.detached { try exporter.exportSlides() }.value
-                await showAdBeforeResult()
                 state = .doneSlides(urls)
+                showAdAfterResult()
             } catch {
                 state = .failed(error.localizedDescription)
             }
@@ -73,15 +73,15 @@ final class ExportJob {
         exporter?.cancel()
     }
 
-    /// True while the full-screen ad that comes before the result is up (the export itself is finished).
-    var waitingForAd = false
-
-    /// Google ads: one full-screen ad between "export finished" and showing the result.
-    private func showAdBeforeResult() async {
+    /// Google ads: the finished collage is shown (and kept in My Library) first; the full-screen ad, if one is due,
+    /// comes a moment later, over the result.
+    private func showAdAfterResult() {
         progress = 1
-        waitingForAd = true
-        await GoogleAdsManager.shared.beforeShowingExportResult()
-        waitingForAd = false
+        Task {
+            try? await Task.sleep(for: .seconds(1.5))
+            guard !Task.isCancelled else { return }
+            await GoogleAdsManager.shared.afterShowingExportResult()
+        }
     }
 }
 
@@ -355,15 +355,13 @@ struct ExportSheet: View {
             .scaleEffect(1.8)
             .frame(height: 110)
             .padding(.top, 24)
-            Text(job.waitingForAd ? "Done! Your collage is ready — it opens right after a short ad." : "Rendering your collage. Keep the screen on.")
+            Text("Rendering your collage. Keep the screen on.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            if !job.waitingForAd {
-                Button(role: .cancel) { job.cancel() } label: {
-                    Label("Cancel", systemImage: "xmark").frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.glass)
+            Button(role: .cancel) { job.cancel() } label: {
+                Label("Cancel", systemImage: "xmark").frame(maxWidth: .infinity)
             }
+            .buttonStyle(.glass)
         }
     }
 

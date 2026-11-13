@@ -76,12 +76,12 @@ const CameraRoll: React.FC<{ width: number }> = ({ width }) => {
 /** "Just got back from the best trip ever... four hundred photos and videos." */
 export const IntroScene: React.FC<{ dur: number }> = ({ dur }) => {
   const f = useCurrentFrame();
-  const { portrait, u, width, height } = useLayout();
+  const { portrait, square, u, width, height, L } = useLayout();
   const bob = useFloat(10, 35);
   const count = Math.round(interpolate(f, [20, 130], [0, 412], { ...clamp, easing: Easing.out(Easing.quad) }));
-  const phoneW = (portrait ? 540 : 380) * u;
+  const phoneW = portrait ? 540 * u : L.phoneW;
   const ph = phoneHeight(phoneW);
-  const phoneX = portrait ? width / 2 - phoneW / 2 : width * 0.62 - phoneW / 2;
+  const phoneX = portrait ? width / 2 - phoneW / 2 : L.storyCx - phoneW / 2;
   const phoneY = portrait ? 300 * u : (height - ph) / 2;
   const centered = { left: 0, right: 0, marginLeft: "auto", marginRight: "auto", width: "fit-content" } as const;
   return (
@@ -92,12 +92,12 @@ export const IntroScene: React.FC<{ dur: number }> = ({ dur }) => {
         </div>
       </Air>
       <Sticker at={14} out={dur - 10} text="✈️ Back from the trip!" bg={C.white} tilt={-6}
-        style={portrait ? { ...centered, top: 250 * u } : { left: width * 0.62 - 560 * u, top: 110 * u }} />
+        style={portrait ? { ...centered, top: 250 * u } : square ? { right: L.edge, top: 70 * u } : { left: L.storyCx - 560 * u, top: 110 * u }} />
       <Sticker at={34} out={dur - 10} text={`📸 ${count} photos & videos`} bg={C.gold} tilt={4} size={52}
-        style={portrait ? { ...centered, top: 1320 * u } : { left: width * 0.62 + 60 * u, top: 800 * u }} />
+        style={portrait ? { ...centered, top: 1320 * u } : square ? { right: L.edge, top: 800 * u } : { left: L.storyCx + 60 * u, top: 800 * u }} />
       {!portrait ? (
-        <Air inAt={8} outAt={dur - 12} from={[-60, 0]} style={{ position: "absolute", left: 140 * u, top: 360 * u, width: 640 * u }}>
-          <div style={{ fontFamily, fontWeight: 800, fontSize: 92 * u, lineHeight: 1.02, color: C.ink }}>
+        <Air inAt={8} outAt={dur - 12} from={[-60, 0]} style={{ position: "absolute", left: L.leftX, top: (square ? 300 : 360) * u, width: square ? L.colW : 640 * u }}>
+          <div style={{ fontFamily, fontWeight: 800, fontSize: 92 * u * (square ? 0.78 : 1), lineHeight: 1.02, color: C.ink }}>
             Too many <span style={{ color: C.purple }}>trip pics?</span>
           </div>
         </Air>
@@ -109,10 +109,10 @@ export const IntroScene: React.FC<{ dur: number }> = ({ dur }) => {
 /** "But dumping them all at once? Nobody's swiping through that." */
 export const DumpScene: React.FC<{ dur: number }> = ({ dur }) => {
   const f = useCurrentFrame();
-  const { portrait, u, width, height } = useLayout();
-  const cardW = (portrait ? 640 : 420) * u;
+  const { portrait, square, u, width, height, L } = useLayout();
+  const cardW = (portrait ? 640 : square ? 380 : 420) * u;
   const cardH = cardW * 1.25;
-  const cx = portrait ? width / 2 : width * 0.62;
+  const cx = portrait ? width / 2 : L.storyCx;
   const cy = portrait ? 290 * u + cardH / 2 + 70 * u : height / 2 + 20 * u;
   // swipes start quick and slow down, as the viewer loses interest
   const progress = interpolate(f, [4, dur * 0.85], [0, 7.3], { ...clamp, easing: Easing.out(Easing.cubic) });
@@ -158,12 +158,12 @@ export const DumpScene: React.FC<{ dur: number }> = ({ dur }) => {
         </div>
       </Air>
       <Sticker at={Math.round(dur * 0.45)} out={dur - 8} text="Photo dump = 😴" bg={C.ink} color="#fff" tilt={-5} size={60}
-        style={portrait ? { right: 40 * u, top: 1190 * u } : { left: 140 * u, top: 300 * u }} />
+        style={portrait ? { right: 40 * u, top: 1190 * u } : { left: L.leftX, top: (square ? 200 : 300) * u }} />
       <Sticker at={Math.round(dur * 0.6)} out={dur - 8} text="zzz…" bg={C.lilac} color={C.purple} tilt={8} size={44}
         style={portrait ? { right: 140 * u, top: 250 * u } : { left: cx + cardW / 2 - 40 * u, top: cy - cardH / 2 - 60 * u }} />
       {!portrait ? (
-        <Air inAt={6} outAt={dur - 10} from={[-60, 0]} style={{ position: "absolute", left: 140 * u, top: 470 * u, width: 640 * u }}>
-          <div style={{ fontFamily, fontWeight: 800, fontSize: 80 * u, lineHeight: 1.05, color: C.ink }}>
+        <Air inAt={6} outAt={dur - 10} from={[-60, 0]} style={{ position: "absolute", left: L.leftX, top: (square ? 380 : 470) * u, width: square ? L.colW - 40 * u : 640 * u }}>
+          <div style={{ fontFamily, fontWeight: 800, fontSize: 80 * u * (square ? 0.8 : 1), lineHeight: 1.05, color: C.ink }}>
             Nobody swipes to <span style={{ color: C.pink }}>slide 20.</span>
           </div>
         </Air>
@@ -175,16 +175,16 @@ export const DumpScene: React.FC<{ dur: number }> = ({ dur }) => {
 /** Shown across both story scenes: the app is on screen before the voice names it. */
 export const StoryBadge: React.FC<{ dur: number; switchAt: number }> = ({ dur, switchAt }) => {
   const f = useCurrentFrame();
-  const { portrait, u, width } = useLayout();
+  const { portrait, square, u, width, L } = useLayout();
   const second = f >= switchAt;
   const pulse = 1 + Math.max(0, Math.sin((f - switchAt) / 6)) * 0.03 * (second ? 1 : 0);
   return (
     <div style={{ position: "absolute", inset: 0 }}>
-      <div style={{ position: "absolute", left: 0, right: 0, top: (portrait ? 96 : 60) * u, display: "flex", justifyContent: portrait ? "center" : "flex-start", paddingLeft: portrait ? 0 : 140 * u, scale: String(pulse) }}>
+      <div style={{ position: "absolute", left: 0, right: 0, top: (portrait ? 96 : 60) * u, display: "flex", justifyContent: portrait ? "center" : "flex-start", paddingLeft: portrait ? 0 : L.leftX, scale: String(pulse) }}>
         <AppBadge
           at={!second ? 18 : switchAt}
           out={!second ? switchAt - 14 : dur - 10}
-          scale={portrait ? 1.15 : 0.9}
+          scale={portrait ? 1.15 : square ? 0.72 : 0.9}
           style={{ position: "relative" }}
           sub={!second ? "Your trip, in one post" : "There's a better way →"}
         />
@@ -198,7 +198,7 @@ export const StoryBadge: React.FC<{ dur: number; switchAt: number }> = ({ dur, s
 
 const AppPeek: React.FC<{ dur: number }> = ({ dur }) => {
   const f = useCurrentFrame();
-  const { portrait, u, width, height } = useLayout();
+  const { portrait, u, width, height, L } = useLayout();
   const p = interpolate(f, [40, 70], [0, 1], { ...clamp, easing: AIR });
   const out = interpolate(f, [dur - 14, dur], [0, 1], { ...clamp, easing: AIR });
   const w = (portrait ? 250 : 210) * u;
@@ -209,7 +209,7 @@ const AppPeek: React.FC<{ dur: number }> = ({ dur }) => {
     <div
       style={{
         position: "absolute",
-        ...(portrait ? { left: 40 * u, top: 880 * u } : { left: 140 * u, top: height - 420 * u }),
+        ...(portrait ? { left: 40 * u, top: 880 * u } : { left: L.leftX, top: height - 420 * u }),
         width: portrait ? w : undefined,
         opacity: p * (1 - out),
         translate: `${(1 - p) * -80 * u}px ${bob}px`,

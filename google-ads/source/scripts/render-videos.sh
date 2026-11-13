@@ -27,3 +27,4 @@ render() { # composition id, file name
 
 render AdVertical "collagemagik-trip-ad-vertical-9x16-1080x1920"
 render AdLandscape "collagemagik-trip-ad-landscape-16x9-1920x1080"
+render AdSquare "collagemagik-trip-ad-square-1x1-1080x1080"
