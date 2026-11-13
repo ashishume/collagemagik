@@ -7,8 +7,9 @@ import UserMessagingPlatform
 ///
 /// * A small banner above the bottom tool bar (`AdBannerSlot`), the same one on every tab, never over the collage or its tools.
 /// * One full-screen ad after an export finishes, **before** the result is shown, so it never interrupts editing.
-/// * The first time, a short thank-you note explains that ads keep the app alive, then Apple's tracking question is asked.
-/// * Google's consent message (UMP) runs first; in the EU/UK no ad is requested until the person has answered it.
+/// * At first launch: Google's consent message (UMP; in the EU/UK no ad is requested until the person has answered it), then
+///   Apple's tracking question, then the SDK starts.
+/// * Before the first full-screen ad, a short thank-you note explains that ads keep the app alive.
 /// * Photos, videos, music and collages are never given to the ad SDK.
 @MainActor
 @Observable
@@ -37,7 +38,8 @@ final class GoogleAdsManager: NSObject {
 
     // MARK: Start-up and consent
 
-    /// Call once at launch: asks Google's consent message if needed (EU/UK), then starts the SDK.
+    /// Call once at launch, in Google's recommended order: Google's consent message if needed (EU/UK), then Apple's tracking
+    /// question (first launch only), then the SDK. Asking at launch means everyone sees the tracking question, App Review included.
     func appDidLaunch() {
         guard isEnabled, !started else { return }
         let params = RequestParameters()
@@ -56,6 +58,7 @@ final class GoogleAdsManager: NSObject {
                 if let error { NSLog("CM_GADS consent info failed: %@", error.localizedDescription) }
                 await self.presentConsentFormIfRequired()
                 self.refreshPrivacyStatus()
+                await self.requestTrackingIfNeeded()
                 self.startIfAllowed()
             }
         }
@@ -118,7 +121,6 @@ final class GoogleAdsManager: NSObject {
                 ProStore.shared.openPaywall()
                 return
             }
-            await requestTrackingIfNeeded()
         }
 
         if interstitial == nil {
@@ -183,9 +185,14 @@ final class GoogleAdsManager: NSObject {
         }
     }
 
+    /// Apple's tracking question, once. Ads still show if the person says no, just without the advertising ID.
     private func requestTrackingIfNeeded() async {
         guard ATTrackingManager.trackingAuthorizationStatus == .notDetermined else { return }
-        try? await Task.sleep(for: .seconds(0.5)) // the alert must finish closing: Apple's prompt needs an active app
+        // Apple's prompt only appears in an active app: wait for launch (or the consent form) to settle first.
+        try? await Task.sleep(for: .seconds(0.5))
+        for _ in 0..<50 where UIApplication.shared.applicationState != .active {
+            try? await Task.sleep(for: .milliseconds(200))
+        }
         _ = await ATTrackingManager.requestTrackingAuthorization()
     }
 

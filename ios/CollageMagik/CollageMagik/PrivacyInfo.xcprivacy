@@ -2,9 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- CollageMagik has no account and no server of its own. It shows Meta Audience Network ads (full-screen, after an export),
-	     so it declares tracking and the data that SDK collects. The SDK ships its own manifest with the same entries.
-	     Photos, videos, music and collages are never collected. -->
+	<!-- CollageMagik has no account and no server of its own. It shows Google AdMob ads (a banner, and a full-screen ad after an
+	     export); the Meta Audience Network SDK is also linked (switched off in AdsSwitch). So it declares tracking and the data
+	     those SDKs collect. Each SDK ships its own manifest with its tracking domains; the Meta ones are repeated below.
+	     Apple's tracking question is asked at launch (GoogleAdsManager.appDidLaunch). Photos, videos, music and collages are
+	     never collected. -->
 	<key>NSPrivacyTracking</key>
 	<true/>
 	<key>NSPrivacyTrackingDomains</key>
