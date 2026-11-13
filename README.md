@@ -6,6 +6,10 @@ browser: there is no backend, nothing is uploaded, and nothing is saved. A refre
 Built mobile-first (phone layout, installable as a home-screen app, share sheet on export). On desktop and laptop
 screens it uses the full window: preview and timeline on the left, a wider side panel on the right.
 
+**iPhone app:** the native SwiftUI version is in [`ios/`](ios/README.md). It is on the App Store as
+[Insta Collage Maker & Editor](https://apps.apple.com/app/id6832640005) and adds carousels, captions, resizable cells,
+My Library, ads and Insta Collage Pro (removes ads). This README covers the web app.
+
 ## Run it
 
 ```bash
