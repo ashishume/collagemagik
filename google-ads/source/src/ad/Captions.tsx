@@ -7,12 +7,12 @@ import { AIR, C, clamp, fontFamily, useLayout } from "./theme";
 const captions = raw as Caption[];
 
 /** Groups words into short pages (3-4 words), breaking at sentence ends and pauses. */
-const pages: Caption[][] = (() => {
+const toPages = (words: Caption[]): Caption[][] => {
   const out: Caption[][] = [];
   let cur: Caption[] = [];
-  captions.forEach((c, i) => {
+  words.forEach((c, i) => {
     cur.push(c);
-    const next = captions[i + 1];
+    const next = words[i + 1];
     const endsSentence = /[.?!,]$/.test(c.text.trim());
     const pause = next ? next.startMs - c.endMs > 250 : true;
     if (cur.length >= 4 || endsSentence || pause || !next) {
@@ -21,10 +21,14 @@ const pages: Caption[][] = (() => {
     }
   });
   return out;
-})();
+};
+const defaultPages = toPages(captions);
+const pageCache = new WeakMap<Caption[], Caption[][]>();
 
 /** Word-by-word captions with the spoken word highlighted, for people watching on mute. */
-export const Captions: React.FC<{ voiceStart: number }> = ({ voiceStart }) => {
+export const Captions: React.FC<{ voiceStart: number; words?: Caption[]; portraitTop?: number }> = ({ voiceStart, words, portraitTop = 0.775 }) => {
+  if (words && !pageCache.has(words)) pageCache.set(words, toPages(words));
+  const pages = words ? pageCache.get(words)! : defaultPages;
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const { u, portrait, height, width } = useLayout();
@@ -43,7 +47,7 @@ export const Captions: React.FC<{ voiceStart: number }> = ({ voiceStart }) => {
         position: "absolute",
         left: 0,
         right: 0,
-        top: portrait ? height * 0.775 : height * 0.86,
+        top: portrait ? height * portraitTop : height * 0.86,
         display: "flex",
         justifyContent: "center",
         padding: `0 ${80 * u}px`,

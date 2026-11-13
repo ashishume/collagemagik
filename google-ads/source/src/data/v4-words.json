@@ -1,0 +1,765 @@
+[
+  {
+    "text": "Just",
+    "startMs": 120,
+    "endMs": 430,
+    "timestampMs": 280,
+    "confidence": 0.596094
+  },
+  {
+    "text": "got",
+    "startMs": 430,
+    "endMs": 790,
+    "timestampMs": 500,
+    "confidence": 0.99601
+  },
+  {
+    "text": "back",
+    "startMs": 790,
+    "endMs": 1210,
+    "timestampMs": 700,
+    "confidence": 0.998473
+  },
+  {
+    "text": "from",
+    "startMs": 1210,
+    "endMs": 1610,
+    "timestampMs": 880,
+    "confidence": 0.996664
+  },
+  {
+    "text": "my",
+    "startMs": 1610,
+    "endMs": 2100,
+    "timestampMs": 1040,
+    "confidence": 0.995805
+  },
+  {
+    "text": "trip!",
+    "startMs": 2100,
+    "endMs": 2600,
+    "timestampMs": 1440,
+    "confidence": 0.997178
+  },
+  {
+    "text": "But",
+    "startMs": 2600,
+    "endMs": 2900,
+    "timestampMs": 2680,
+    "confidence": 0.766724
+  },
+  {
+    "text": "a",
+    "startMs": 2900,
+    "endMs": 2920,
+    "timestampMs": 2840,
+    "confidence": 0.975243
+  },
+  {
+    "text": "boring",
+    "startMs": 2920,
+    "endMs": 3440,
+    "timestampMs": 3200,
+    "confidence": 0.994719
+  },
+  {
+    "text": "photo",
+    "startMs": 3440,
+    "endMs": 3750,
+    "timestampMs": 3660,
+    "confidence": 0.972363
+  },
+  {
+    "text": "dump?",
+    "startMs": 3750,
+    "endMs": 4300,
+    "timestampMs": 3960,
+    "confidence": 0.989455
+  },
+  {
+    "text": "Nobody's",
+    "startMs": 4300,
+    "endMs": 4900,
+    "timestampMs": 4640,
+    "confidence": 0.99113
+  },
+  {
+    "text": "swiping",
+    "startMs": 4900,
+    "endMs": 5430,
+    "timestampMs": 4980,
+    "confidence": 0.999514
+  },
+  {
+    "text": "that.",
+    "startMs": 5430,
+    "endMs": 5980,
+    "timestampMs": 5500,
+    "confidence": 0.993925
+  },
+  {
+    "text": "So,",
+    "startMs": 5980,
+    "endMs": 6300,
+    "timestampMs": 6300,
+    "confidence": 0.99666
+  },
+  {
+    "text": "I",
+    "startMs": 6300,
+    "endMs": 6380,
+    "timestampMs": 6620,
+    "confidence": 0.9967
+  },
+  {
+    "text": "made",
+    "startMs": 6380,
+    "endMs": 6700,
+    "timestampMs": 6780,
+    "confidence": 0.994856
+  },
+  {
+    "text": "a",
+    "startMs": 6700,
+    "endMs": 6790,
+    "timestampMs": 7000,
+    "confidence": 0.996981
+  },
+  {
+    "text": "collage",
+    "startMs": 6790,
+    "endMs": 7340,
+    "timestampMs": 7060,
+    "confidence": 0.99357
+  },
+  {
+    "text": "in",
+    "startMs": 7340,
+    "endMs": 7500,
+    "timestampMs": 7560,
+    "confidence": 0.996041
+  },
+  {
+    "text": "CollageMagik.",
+    "startMs": 7500,
+    "endMs": 8720,
+    "timestampMs": 7680,
+    "confidence": 0.519092
+  },
+  {
+    "text": "Pick",
+    "startMs": 8720,
+    "endMs": 9000,
+    "timestampMs": 8880,
+    "confidence": 0.990684
+  },
+  {
+    "text": "a",
+    "startMs": 9000,
+    "endMs": 9070,
+    "timestampMs": 9020,
+    "confidence": 0.99806
+  },
+  {
+    "text": "layout,",
+    "startMs": 9070,
+    "endMs": 9680,
+    "timestampMs": 9340,
+    "confidence": 0.993375
+  },
+  {
+    "text": "drag",
+    "startMs": 9680,
+    "endMs": 9960,
+    "timestampMs": 9820,
+    "confidence": 0.978171
+  },
+  {
+    "text": "my",
+    "startMs": 9960,
+    "endMs": 10120,
+    "timestampMs": 10020,
+    "confidence": 0.997836
+  },
+  {
+    "text": "photos",
+    "startMs": 10120,
+    "endMs": 10590,
+    "timestampMs": 10300,
+    "confidence": 0.997914
+  },
+  {
+    "text": "in,",
+    "startMs": 10590,
+    "endMs": 10920,
+    "timestampMs": 10620,
+    "confidence": 0.998254
+  },
+  {
+    "text": "drag",
+    "startMs": 10920,
+    "endMs": 11200,
+    "timestampMs": 11120,
+    "confidence": 0.998816
+  },
+  {
+    "text": "the",
+    "startMs": 11200,
+    "endMs": 11410,
+    "timestampMs": 11280,
+    "confidence": 0.998205
+  },
+  {
+    "text": "borders",
+    "startMs": 11410,
+    "endMs": 11980,
+    "timestampMs": 11520,
+    "confidence": 0.985614
+  },
+  {
+    "text": "to",
+    "startMs": 11980,
+    "endMs": 12040,
+    "timestampMs": 11780,
+    "confidence": 0.997288
+  },
+  {
+    "text": "resize,",
+    "startMs": 12040,
+    "endMs": 12700,
+    "timestampMs": 12140,
+    "confidence": 0.989553
+  },
+  {
+    "text": "hold",
+    "startMs": 12700,
+    "endMs": 12960,
+    "timestampMs": 12900,
+    "confidence": 0.803444
+  },
+  {
+    "text": "and",
+    "startMs": 12960,
+    "endMs": 13210,
+    "timestampMs": 13120,
+    "confidence": 0.966547
+  },
+  {
+    "text": "drag",
+    "startMs": 13210,
+    "endMs": 13550,
+    "timestampMs": 13380,
+    "confidence": 0.999443
+  },
+  {
+    "text": "to",
+    "startMs": 13550,
+    "endMs": 13720,
+    "timestampMs": 13580,
+    "confidence": 0.99721
+  },
+  {
+    "text": "swap.",
+    "startMs": 13720,
+    "endMs": 14320,
+    "timestampMs": 13860,
+    "confidence": 0.994818
+  },
+  {
+    "text": "Drop",
+    "startMs": 14320,
+    "endMs": 14610,
+    "timestampMs": 14500,
+    "confidence": 0.994517
+  },
+  {
+    "text": "one",
+    "startMs": 14610,
+    "endMs": 14830,
+    "timestampMs": 14820,
+    "confidence": 0.995019
+  },
+  {
+    "text": "photo",
+    "startMs": 14830,
+    "endMs": 15200,
+    "timestampMs": 15140,
+    "confidence": 0.999466
+  },
+  {
+    "text": "on",
+    "startMs": 15200,
+    "endMs": 15340,
+    "timestampMs": 15380,
+    "confidence": 0.998765
+  },
+  {
+    "text": "top",
+    "startMs": 15340,
+    "endMs": 15610,
+    "timestampMs": 15540,
+    "confidence": 0.998891
+  },
+  {
+    "text": "of",
+    "startMs": 15610,
+    "endMs": 15700,
+    "timestampMs": 15720,
+    "confidence": 0.998015
+  },
+  {
+    "text": "another,",
+    "startMs": 15700,
+    "endMs": 16400,
+    "timestampMs": 16040,
+    "confidence": 0.99806
+  },
+  {
+    "text": "give",
+    "startMs": 16400,
+    "endMs": 16670,
+    "timestampMs": 16540,
+    "confidence": 0.997775
+  },
+  {
+    "text": "it",
+    "startMs": 16670,
+    "endMs": 16820,
+    "timestampMs": 16640,
+    "confidence": 0.997341
+  },
+  {
+    "text": "a",
+    "startMs": 16820,
+    "endMs": 16860,
+    "timestampMs": 16780,
+    "confidence": 0.997375
+  },
+  {
+    "text": "white",
+    "startMs": 16860,
+    "endMs": 17300,
+    "timestampMs": 16980,
+    "confidence": 0.995476
+  },
+  {
+    "text": "instant",
+    "startMs": 17300,
+    "endMs": 17660,
+    "timestampMs": 17360,
+    "confidence": 0.942363
+  },
+  {
+    "text": "frame",
+    "startMs": 17660,
+    "endMs": 18030,
+    "timestampMs": 17800,
+    "confidence": 0.996883
+  },
+  {
+    "text": "or",
+    "startMs": 18030,
+    "endMs": 18220,
+    "timestampMs": 18240,
+    "confidence": 0.662163
+  },
+  {
+    "text": "a",
+    "startMs": 18220,
+    "endMs": 18320,
+    "timestampMs": 18480,
+    "confidence": 0.992901
+  },
+  {
+    "text": "torn",
+    "startMs": 18320,
+    "endMs": 18770,
+    "timestampMs": 18680,
+    "confidence": 0.999262
+  },
+  {
+    "text": "paper",
+    "startMs": 18770,
+    "endMs": 19280,
+    "timestampMs": 18920,
+    "confidence": 0.993028
+  },
+  {
+    "text": "edge,",
+    "startMs": 19280,
+    "endMs": 19640,
+    "timestampMs": 19320,
+    "confidence": 0.980157
+  },
+  {
+    "text": "then",
+    "startMs": 19640,
+    "endMs": 20090,
+    "timestampMs": 19920,
+    "confidence": 0.994583
+  },
+  {
+    "text": "twist",
+    "startMs": 20090,
+    "endMs": 20380,
+    "timestampMs": 20200,
+    "confidence": 0.990184
+  },
+  {
+    "text": "it.",
+    "startMs": 20380,
+    "endMs": 20800,
+    "timestampMs": 20600,
+    "confidence": 0.99931
+  },
+  {
+    "text": "Feel",
+    "startMs": 20800,
+    "endMs": 21050,
+    "timestampMs": 20940,
+    "confidence": 0.997489
+  },
+  {
+    "text": "that",
+    "startMs": 21050,
+    "endMs": 21300,
+    "timestampMs": 21160,
+    "confidence": 0.999032
+  },
+  {
+    "text": "click?",
+    "startMs": 21300,
+    "endMs": 21800,
+    "timestampMs": 21380,
+    "confidence": 0.991261
+  },
+  {
+    "text": "Perfectly",
+    "startMs": 21800,
+    "endMs": 22350,
+    "timestampMs": 22040,
+    "confidence": 0.997154
+  },
+  {
+    "text": "straight.",
+    "startMs": 22350,
+    "endMs": 23040,
+    "timestampMs": 22580,
+    "confidence": 0.998999
+  },
+  {
+    "text": "Add",
+    "startMs": 23040,
+    "endMs": 23310,
+    "timestampMs": 23160,
+    "confidence": 0.996067
+  },
+  {
+    "text": "a",
+    "startMs": 23310,
+    "endMs": 23360,
+    "timestampMs": 23320,
+    "confidence": 0.999237
+  },
+  {
+    "text": "caption",
+    "startMs": 23360,
+    "endMs": 23930,
+    "timestampMs": 23580,
+    "confidence": 0.996767
+  },
+  {
+    "text": "in",
+    "startMs": 23930,
+    "endMs": 24090,
+    "timestampMs": 23840,
+    "confidence": 0.991189
+  },
+  {
+    "text": "a",
+    "startMs": 24090,
+    "endMs": 24170,
+    "timestampMs": 24040,
+    "confidence": 0.997836
+  },
+  {
+    "text": "dreamy",
+    "startMs": 24170,
+    "endMs": 24680,
+    "timestampMs": 24340,
+    "confidence": 0.991
+  },
+  {
+    "text": "script",
+    "startMs": 24680,
+    "endMs": 25160,
+    "timestampMs": 24780,
+    "confidence": 0.99272
+  },
+  {
+    "text": "font,",
+    "startMs": 25160,
+    "endMs": 25520,
+    "timestampMs": 25160,
+    "confidence": 0.999016
+  },
+  {
+    "text": "or",
+    "startMs": 25520,
+    "endMs": 25680,
+    "timestampMs": 25740,
+    "confidence": 0.998574
+  },
+  {
+    "text": "make",
+    "startMs": 25680,
+    "endMs": 26030,
+    "timestampMs": 26000,
+    "confidence": 0.991249
+  },
+  {
+    "text": "it",
+    "startMs": 26030,
+    "endMs": 26240,
+    "timestampMs": 26100,
+    "confidence": 0.997687
+  },
+  {
+    "text": "a",
+    "startMs": 26240,
+    "endMs": 26270,
+    "timestampMs": 26320,
+    "confidence": 0.998475
+  },
+  {
+    "text": "carousel",
+    "startMs": 26270,
+    "endMs": 26930,
+    "timestampMs": 26400,
+    "confidence": 0.989292
+  },
+  {
+    "text": "where",
+    "startMs": 26930,
+    "endMs": 27240,
+    "timestampMs": 27040,
+    "confidence": 0.554202
+  },
+  {
+    "text": "one",
+    "startMs": 27240,
+    "endMs": 27460,
+    "timestampMs": 27340,
+    "confidence": 0.996404
+  },
+  {
+    "text": "photo",
+    "startMs": 27460,
+    "endMs": 27920,
+    "timestampMs": 27680,
+    "confidence": 0.997088
+  },
+  {
+    "text": "flows",
+    "startMs": 27920,
+    "endMs": 28240,
+    "timestampMs": 28100,
+    "confidence": 0.869871
+  },
+  {
+    "text": "across",
+    "startMs": 28240,
+    "endMs": 28580,
+    "timestampMs": 28440,
+    "confidence": 0.719438
+  },
+  {
+    "text": "the",
+    "startMs": 28580,
+    "endMs": 28760,
+    "timestampMs": 28680,
+    "confidence": 0.897606
+  },
+  {
+    "text": "slides",
+    "startMs": 28760,
+    "endMs": 29120,
+    "timestampMs": 29020,
+    "confidence": 0.987389
+  },
+  {
+    "text": "so",
+    "startMs": 29170,
+    "endMs": 29270,
+    "timestampMs": 29260,
+    "confidence": 0.99709
+  },
+  {
+    "text": "they",
+    "startMs": 29270,
+    "endMs": 29580,
+    "timestampMs": 29420,
+    "confidence": 0.988538
+  },
+  {
+    "text": "keep",
+    "startMs": 29580,
+    "endMs": 29900,
+    "timestampMs": 29700,
+    "confidence": 0.992014
+  },
+  {
+    "text": "swiping.",
+    "startMs": 29900,
+    "endMs": 30620,
+    "timestampMs": 29980,
+    "confidence": 0.99907
+  },
+  {
+    "text": "Post,",
+    "startMs": 30620,
+    "endMs": 31320,
+    "timestampMs": 30980,
+    "confidence": 0.988707
+  },
+  {
+    "text": "story,",
+    "startMs": 31320,
+    "endMs": 31680,
+    "timestampMs": 31620,
+    "confidence": 0.510096
+  },
+  {
+    "text": "Instagram,",
+    "startMs": 31680,
+    "endMs": 32640,
+    "timestampMs": 32340,
+    "confidence": 0.991077
+  },
+  {
+    "text": "TikTok,",
+    "startMs": 32640,
+    "endMs": 33310,
+    "timestampMs": 32740,
+    "confidence": 0.964509
+  },
+  {
+    "text": "it",
+    "startMs": 33310,
+    "endMs": 33510,
+    "timestampMs": 33420,
+    "confidence": 0.942154
+  },
+  {
+    "text": "fits.",
+    "startMs": 33510,
+    "endMs": 34180,
+    "timestampMs": 33740,
+    "confidence": 0.998913
+  },
+  {
+    "text": "Export",
+    "startMs": 34180,
+    "endMs": 34930,
+    "timestampMs": 34600,
+    "confidence": 0.989779
+  },
+  {
+    "text": "in",
+    "startMs": 34930,
+    "endMs": 35040,
+    "timestampMs": 34860,
+    "confidence": 0.714829
+  },
+  {
+    "text": "crisp",
+    "startMs": 35040,
+    "endMs": 35600,
+    "timestampMs": 35200,
+    "confidence": 0.66042
+  },
+  {
+    "text": "HD.",
+    "startMs": 35600,
+    "endMs": 36140,
+    "timestampMs": 35700,
+    "confidence": 0.994937
+  },
+  {
+    "text": "Same",
+    "startMs": 36140,
+    "endMs": 36570,
+    "timestampMs": 36440,
+    "confidence": 0.997504
+  },
+  {
+    "text": "trip,",
+    "startMs": 36570,
+    "endMs": 37110,
+    "timestampMs": 36720,
+    "confidence": 0.996508
+  },
+  {
+    "text": "way",
+    "startMs": 37110,
+    "endMs": 37270,
+    "timestampMs": 37420,
+    "confidence": 0.99011
+  },
+  {
+    "text": "better",
+    "startMs": 37270,
+    "endMs": 37800,
+    "timestampMs": 37680,
+    "confidence": 0.999741
+  },
+  {
+    "text": "post.",
+    "startMs": 37800,
+    "endMs": 38440,
+    "timestampMs": 38020,
+    "confidence": 0.977566
+  },
+  {
+    "text": "CollageMagik,",
+    "startMs": 38440,
+    "endMs": 39690,
+    "timestampMs": 38660,
+    "confidence": 0.998205
+  },
+  {
+    "text": "free",
+    "startMs": 39690,
+    "endMs": 39710,
+    "timestampMs": 39820,
+    "confidence": 0.993782
+  },
+  {
+    "text": "on",
+    "startMs": 39710,
+    "endMs": 39850,
+    "timestampMs": 40060,
+    "confidence": 0.997771
+  },
+  {
+    "text": "the",
+    "startMs": 39850,
+    "endMs": 40060,
+    "timestampMs": 40180,
+    "confidence": 0.970939
+  },
+  {
+    "text": "App",
+    "startMs": 40060,
+    "endMs": 40270,
+    "timestampMs": 40340,
+    "confidence": 0.757338
+  },
+  {
+    "text": "Store.",
+    "startMs": 40270,
+    "endMs": 40900,
+    "timestampMs": 40580,
+    "confidence": 0.958549
+  }
+]

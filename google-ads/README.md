@@ -14,6 +14,18 @@ google-ads/
         └── logos/            Square 1:1 and landscape 4:1 logos
 ```
 
+## v4 videos: the editor ad (14 Nov 2026)
+
+`output/v4/collagemagik-editor-ad-*.mp4` (vertical 9:16, square 1:1, landscape 16:9, about 42.5 s). Voiceover:
+`source/voiceover-script-v4.md`, audio `source/public/audio/voiceover-v4.mp3`, word timings `source/src/data/v4-words.json`.
+
+Instead of screenshots, the app is drawn live (`source/src/ad4/Editor.tsx`), so every gesture the voice names happens on
+screen in time with the word: layouts morph, photos are dragged in from the tray, borders slide to resize, hold-and-drag
+swaps two cells, a photo is dropped on top, gets an instant then torn-paper frame, is twisted and clicks straight (yellow
+guides, as in the app), the caption flips fonts to a script, the slides of a carousel fly out of the phone, the design
+changes size and exports in HD. The music sits about 5 dB louder than v3. Render with
+`bash scripts/render-videos.sh v4 Ad4 collagemagik-editor-ad` from `source/`.
+
 ## Rename to CollageMagik (13 Nov 2026), photos v3 + videos v3 re-rendered
 
 The app is now called **CollageMagik**, subtitle "Collage Maker & Editor" (Meta treats "Insta" as its brand term, so the old

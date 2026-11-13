@@ -20,11 +20,11 @@ const out = await transcribe({
   model,
   whisperPath: to,
   whisperCppVersion: version,
-  inputPath: path.join(process.cwd(), "assets-raw/voiceover16k.wav"),
+  inputPath: path.join(process.cwd(), process.argv[2] ?? "assets-raw/voiceover16k.wav"),
   tokenLevelTimestamps: true,
 });
 
 const { captions } = toCaptions({ whisperCppOutput: out });
 fs.mkdirSync("src/data", { recursive: true });
-fs.writeFileSync("src/data/voiceover-captions.json", JSON.stringify(captions, null, 2));
+fs.writeFileSync(process.argv[3] ?? "src/data/voiceover-captions.json", JSON.stringify(captions, null, 2));
 console.log(captions.map((c) => `${(c.startMs / 1000).toFixed(2)} ${c.text}`).join("\n"));

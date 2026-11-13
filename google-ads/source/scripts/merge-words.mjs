@@ -1,7 +1,7 @@
 // Whisper returns sub-word tokens ("Inst", "a", "Coll", "age"). Merge them into whole words with punctuation attached.
 // Run after transcribe.mjs: node scripts/merge-words.mjs
 import fs from "fs";
-const tokens = JSON.parse(fs.readFileSync("src/data/voiceover-captions.json", "utf8"));
+const tokens = JSON.parse(fs.readFileSync(process.argv[2] ?? "src/data/voiceover-captions.json", "utf8"));
 const words = [];
 for (const t of tokens) {
   const startsWord = /^\s/.test(t.text) || words.length === 0;
@@ -18,5 +18,5 @@ for (let i = 0; i < words.length - 1; i++) {
   }
 }
 for (const w of words) w.text = w.text.replace(/^Collage ?Magi[ck]/i, "CollageMagik").replace(/^InstaCollage/, "Insta Collage");
-fs.writeFileSync("src/data/voiceover-words.json", JSON.stringify(words, null, 2));
+fs.writeFileSync(process.argv[3] ?? "src/data/voiceover-words.json", JSON.stringify(words, null, 2));
 console.log(words.map((w) => `${(w.startMs / 1000).toFixed(2)} ${w.text}`).join(" | "));

@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # Renders the vertical and landscape ads into ../output/<version>/ and normalises loudness to -14 LUFS (social video
 # standard) with a two-pass loudnorm, so the ad isn't quieter than the videos around it.
-# Usage (from google-ads/source): bash scripts/render-videos.sh v1
+# Usage (from google-ads/source): bash scripts/render-videos.sh v1 [composition prefix] [file stem]
+#   v4: bash scripts/render-videos.sh v4 Ad4 collagemagik-editor-ad
 set -euo pipefail
 VERSION="${1:-v1}"
+PREFIX="${2:-Ad}"
+STEM="${3:-collagemagik-trip-ad}"
 OUT="../output/$VERSION"
 mkdir -p "$OUT" out/raw
 
@@ -25,6 +28,6 @@ render() { # composition id, file name
   echo "$OUT/$name.mp4"
 }
 
-render AdVertical "collagemagik-trip-ad-vertical-9x16-1080x1920"
-render AdLandscape "collagemagik-trip-ad-landscape-16x9-1920x1080"
-render AdSquare "collagemagik-trip-ad-square-1x1-1080x1080"
+render "${PREFIX}Vertical" "$STEM-vertical-9x16-1080x1920"
+render "${PREFIX}Landscape" "$STEM-landscape-16x9-1920x1080"
+render "${PREFIX}Square" "$STEM-square-1x1-1080x1080"
