@@ -96,8 +96,7 @@ func autoSlides(count n: Int, style: CarouselStyle) -> Int {
 
 /// The style a project starts in for its number of pictures.
 func defaultCarouselStyle(count: Int) -> CarouselStyle {
-    if count <= 1 { return .panorama }
-    return count <= 3 ? .flow : (count <= 6 ? .stagger : .mosaic)
+    count <= 1 ? .panorama : .flow
 }
 
 func resolvedCarouselStyle(layoutId: String, count: Int) -> CarouselStyle {

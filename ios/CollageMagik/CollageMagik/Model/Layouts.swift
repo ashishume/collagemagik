@@ -86,8 +86,8 @@ let allLayouts: [CollageLayout] = [
 ]
 
 let maxCells = 9
-/// A new collage opens with every slot showing, so it is obvious that nine pictures fit. It shrinks to the number actually picked.
-let initialCellCount = maxCells
+/// A new collage opens with four slots showing (a 2x2-style layout). It resizes to the number actually picked.
+let initialCellCount = 4
 /// Carousels: up to ten pictures over two to ten slides (the slide count follows the pictures and the style). A new one opens with five empty slots.
 let maxCarouselPhotos = 10
 let minSlides = 2

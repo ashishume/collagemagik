@@ -423,7 +423,7 @@ struct StageView: View {
         guard store.swapFrom == nil, let grid = project.resizableGrid else { return nil }
         let g = project.gap * size.width / project.canvasWidth
         let slop = max(18, g / 2 + 10)
-        var best: (divider: LayoutDivider, distance: Double)?
+        var best: (divider: LayoutDivider, distance: CGFloat)?
         for d in grid.dividers {
             let l = grid.line(d)
             let ends = dividerPixelLine(l, W: size.width, H: size.height, gapPx: g)
