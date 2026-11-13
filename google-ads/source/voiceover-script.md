@@ -1,6 +1,6 @@
-# Voiceover script (v4: CollageMagik)
+# Voiceover script (CollageMagik, used by the re-rendered v3 videos)
 
-Same words, timing and voice as v3 ("Amy - Conversational Ad & Commercial", Eleven v3), with the app name changed from
+Same words, timing and voice as the original v3 ("Amy - Conversational Ad & Commercial", Eleven v3), with the app name changed from
 "Insta Collage" to CollageMagik. The name is written "Collage Magic" so the voice says it naturally; it sounds the same, and
 `scripts/merge-words.mjs` turns it back into "CollageMagik" for the on-screen captions.
 

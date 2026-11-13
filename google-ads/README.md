@@ -7,21 +7,22 @@ google-ads/
 │   ├── v1/
 │   ├── v2/
 │   └── v3/  (current)
-└── photos/      Images, one folder per version
-    ├── v1/
-    ├── v2/
+└── photos/      Images (v1 and v2 were deleted: they said "Insta Collage")
     └── v3/  (current)
         ├── image-assets/     App, Demand Gen and Responsive Display images
         ├── display-banners/  Fixed-size Display image ads (all under 150 KB)
         └── logos/            Square 1:1 and landscape 4:1 logos
 ```
 
-## Rename to CollageMagik (13 Nov 2026), photos v3
+## Rename to CollageMagik (13 Nov 2026), photos v3 + videos v3 re-rendered
 
 The app is now called **CollageMagik**, subtitle "Collage Maker & Editor" (Meta treats "Insta" as its brand term, so the old
-name "Insta Collage" risks ad rejections). Use `photos/v3/` (all text and file names say CollageMagik). The v1-v3 **videos
-still say and show "Insta Collage"**: don't upload them to Meta. v4 videos need a new voiceover: see
-`source/voiceover-script.md`, then `bash scripts/render-videos.sh v4`.
+name "Insta Collage" risks ad rejections). Use `photos/v3/` (all text and file names say CollageMagik).
+
+The v3 videos were re-rendered as `output/v3/collagemagik-trip-ad-*.mp4`: same edit as v3, with a new voiceover that says
+"CollageMagik" (`source/voiceover-script.md`), so every cue follows the new word timings. They run 42.5 s (the new voice
+is 40.75 s). The `insta-collage-*` videos in `output/v1`-`v3` still say and show "Insta Collage": don't upload them
+to Meta.
 
 ## v3 videos + v2 photos (13 Nov 2026)
 
@@ -39,7 +40,7 @@ Real travel photos everywhere, instead of drawn stand-ins:
 
 ## v2 (13 Nov 2026)
 
-Videos only (`output/v2/`, same file names and specs as v1). Images are unchanged, use `photos/v1/`.
+Videos only (`output/v2/`, same file names and specs as v1). Images were unchanged from `photos/v1/`.
 
 - App screens are always shown whole inside the phone. v1 zoomed in up to 2.3x, which cut screens off at the sides;
   v2 keeps the full screen and puts a glowing outline on the part the voice mentions (clip tracks on "trim", the
@@ -64,7 +65,7 @@ badge and a peek of real app screens are on screen from the first second, before
 feature shot is timed to the word that mentions it (trim, pick the moment, add a song, caption, carousel, export).
 Word-by-word captions are burned in for people watching on mute.
 
-**Images** (`photos/v1/`), three creatives: `trip` (your whole trip, one post), `carousel` (carousels that flow),
+**Images** (`photos/v1/`, since deleted; `photos/v3/` has the same set as CollageMagik), three creatives: `trip` (your whole trip, one post), `carousel` (carousels that flow),
 `features` (photos, videos & captions).
 
 | Folder | Sizes | Where |
