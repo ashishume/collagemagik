@@ -38,7 +38,7 @@ struct HelpSheet: View {
                     Label("Other containers (AVI, MKV, WebM, MPEG-1/2) can't be played by iOS. Convert them to MP4 first.", systemImage: "exclamationmark.triangle")
                 }
                 Section("Export") {
-                    Label("MP4 at 1080 wide (or double on supported iPhones), or a PNG still. Share it or save to Photos.", systemImage: "square.and.arrow.up")
+                    Label("MP4 at 1080 wide (or double on supported iPhones), or a PNG still. With HDR videos it can export in HDR, keeping their bright highlights. Share it or save to Photos.", systemImage: "square.and.arrow.up")
                 }
                 Section("My Library") {
                     Label("Every collage you export is kept in My Library (the ••• menu), on this iPhone only. Open one to play, share, save to Photos or delete it.", systemImage: "photo.stack")

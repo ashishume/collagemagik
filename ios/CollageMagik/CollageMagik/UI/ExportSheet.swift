@@ -22,7 +22,7 @@ final class ExportJob {
 
     var isRunning: Bool { state == .running }
 
-    func start(snapshot: ExportSnapshot, video: Bool, quality: ExportQuality, stillTime: Double) {
+    func start(snapshot: ExportSnapshot, video: Bool, quality: ExportQuality, hdr: Bool = false, stillTime: Double) {
         state = .running
         progress = 0
         saved = false
@@ -33,7 +33,7 @@ final class ExportJob {
             defer { UIApplication.shared.isIdleTimerDisabled = false }
             do {
                 if video {
-                    let url = try await exporter.exportVideo(quality: quality) { p in
+                    let url = try await exporter.exportVideo(quality: quality, hdr: hdr) { p in
                         Task { @MainActor in self.progress = p }
                     }
                     state = .done(url, isVideo: true)
@@ -102,6 +102,11 @@ struct ExportSheet: View {
     @State private var kind: Kind = .video
     @State private var quality: ExportQuality = .standard
     @State private var ultraAvailable = true
+    /// HDR export is offered when a placed video is HDR and this iPhone can encode 10-bit HEVC at that size.
+    @State private var hasHDRVideo = false
+    @State private var hdrStandard = false
+    @State private var hdrUltra = false
+    @State private var hdr = true
     @State private var job = ExportJob()
     @State private var resultPlayer: AVPlayer?
     @State private var saveError: Error?
@@ -114,6 +119,8 @@ struct ExportSheet: View {
         (Int(project.format.width * quality.scale), Int(project.format.height * quality.scale))
     }
     private var isCarousel: Bool { project.mode == .carousel }
+    private var hdrAvailable: Bool { quality == .ultra ? hdrUltra : hdrStandard }
+    private var exportsHDR: Bool { kind == .video && hdr && hdrAvailable }
 
     var body: some View {
         NavigationStack {
@@ -155,6 +162,12 @@ struct ExportSheet: View {
         }
         .task {
             ultraAvailable = CollageExporter.canEncode(format: project.format, quality: .ultra)
+            let videoURLs = placedLanes(project).compactMap { store.item($0.mediaId)?.url }
+            hasHDRVideo = await HDR.containsHDR(videoURLs)
+            if hasHDRVideo {
+                hdrStandard = CollageExporter.canEncode(format: project.format, quality: .standard, hdr: true)
+                hdrUltra = ultraAvailable && CollageExporter.canEncode(format: project.format, quality: .ultra, hdr: true)
+            }
             if !project.lanes.isEmpty == false { kind = .video }
         }
         .onChange(of: job.state) { _, new in
@@ -268,6 +281,7 @@ struct ExportSheet: View {
                 if kind == .video {
                     row("Length", formatTime(store.totalDuration))
                     row("Sound", soundSummary)
+                    if hasHDRVideo { row("Colour", exportsHDR ? "HDR (HLG)" : "SDR") }
                 } else {
                     row("Frame", store.hasPlacedVideo ? "At \(formatTime(store.playback.playhead))" : "Collage")
                 }
@@ -289,6 +303,13 @@ struct ExportSheet: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                if kind == .video && hasHDRVideo {
+                    Toggle(isOn: $hdr) {
+                        Label("HDR", systemImage: "sun.max.fill")
+                    }
+                    .disabled(!hdrAvailable)
+                    .tint(Color.brand)
+                }
                 Text(qualityNote)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
@@ -318,6 +339,12 @@ struct ExportSheet: View {
 
     private var qualityNote: String {
         if kind == .still { return "A single frame saved as a PNG." }
+        if kind == .video && hasHDRVideo && hdr && !hdrAvailable {
+            return "This iPhone can't make HDR video at this size, so it exports in SDR. Try Standard quality for HDR."
+        }
+        if exportsHDR {
+            return "HDR video (10-bit HEVC, HLG) with AAC sound at 30 fps. Your HDR clips keep their bright highlights; photos and captions stay at normal brightness. Keep the screen on until it finishes."
+        }
         return "H.264 video with AAC sound at 30 fps. Your original files are re-read at full quality. Keep the screen on until it finishes."
     }
 
@@ -540,6 +567,6 @@ struct ExportSheet: View {
             project: store.project,
             items: Dictionary(uniqueKeysWithValues: store.items.map { ($0.id, $0) })
         )
-        job.start(snapshot: snapshot, video: kind == .video, quality: quality, stillTime: store.playback.playhead)
+        job.start(snapshot: snapshot, video: kind == .video, quality: quality, hdr: exportsHDR, stillTime: store.playback.playhead)
     }
 }

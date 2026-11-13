@@ -2,7 +2,7 @@
 import SwiftUI
 
 /// Debug-only: lets a script drive the app headlessly (simulator shares the Mac's filesystem).
-/// Env vars: CM_AUTOLOAD=path1,path2  CM_TAB=timeline  CM_PLAY=1  CM_SELECT=0  CM_EXPORT=video|png|ultra  CM_OUT=/path
+/// Env vars: CM_AUTOLOAD=path1,path2  CM_TAB=timeline  CM_PLAY=1  CM_SELECT=0  CM_EXPORT=video|png|ultra  CM_HDR=1  CM_OUT=/path
 @MainActor
 enum DebugHarness {
     static func run(_ store: CollageStore) async {
@@ -118,7 +118,7 @@ enum DebugHarness {
                     try FileManager.default.copyItem(at: url, to: URL(fileURLWithPath: out + ".png"))
                 } else {
                     let q: ExportQuality = e == "ultra" ? .ultra : .standard
-                    let url = try await exporter.exportVideo(quality: q) { p in
+                    let url = try await exporter.exportVideo(quality: q, hdr: env["CM_HDR"] == "1") { p in
                         if Int(p * 100) % 25 == 0 { NSLog("CM_DEBUG progress %.2f", p) }
                     }
                     try? FileManager.default.removeItem(atPath: out + ".mp4")

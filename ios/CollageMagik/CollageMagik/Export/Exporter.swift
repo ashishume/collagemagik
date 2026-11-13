@@ -1,8 +1,10 @@
 import AVFoundation
 import CoreGraphics
+import CoreImage
 import Photos
 import UIKit
 import UniformTypeIdentifiers
+import VideoToolbox
 
 enum ExportQuality: String, CaseIterable, Identifiable {
     case standard, ultra
@@ -17,7 +19,7 @@ struct ExportFailure: LocalizedError {
     var errorDescription: String? { message }
 }
 
-/// Renders the collage to an MP4 (H.264 + AAC, 30 fps) or a PNG still.
+/// Renders the collage to an MP4 (H.264 + AAC, 30 fps; or 10-bit HEVC HLG for HDR) or a PNG still.
 final class CollageExporter: @unchecked Sendable {
     private let snapshot: ExportSnapshot
     private let total: Double
@@ -38,16 +40,36 @@ final class CollageExporter: @unchecked Sendable {
         return (Int(p.canvasWidth * quality.scale), Int(p.canvasHeight * quality.scale))
     }
 
-    /// Can this device encode H.264 at this size?
-    static func canEncode(format: FormatId, quality: ExportQuality) -> Bool {
+    /// Can this device encode this size (H.264, or 10-bit HEVC HLG for HDR)?
+    static func canEncode(format: FormatId, quality: ExportQuality, hdr: Bool = false) -> Bool {
         let w = Int(format.width * quality.scale), h = Int(format.height * quality.scale)
         let tmp = FileManager.default.temporaryDirectory.appendingPathComponent("probe-\(UUID().uuidString).mp4")
         defer { try? FileManager.default.removeItem(at: tmp) }
         guard let writer = try? AVAssetWriter(url: tmp, fileType: .mp4) else { return false }
-        return writer.canApply(outputSettings: videoSettings(w, h), forMediaType: .video)
+        return writer.canApply(outputSettings: videoSettings(w, h, hdr: hdr), forMediaType: .video)
     }
 
-    private static func videoSettings(_ w: Int, _ h: Int) -> [String: Any] {
+    private static func videoSettings(_ w: Int, _ h: Int, hdr: Bool = false) -> [String: Any] {
+        if hdr {
+            // HDR: 10-bit HEVC tagged BT.2020 / HLG, the format iPhone records and Instagram and TikTok accept.
+            let bitrate = Int(20_000_000.0 * Double(w * h) / (1080.0 * 1920.0))
+            return [
+                AVVideoCodecKey: AVVideoCodecType.hevc,
+                AVVideoWidthKey: w,
+                AVVideoHeightKey: h,
+                AVVideoColorPropertiesKey: [
+                    AVVideoColorPrimariesKey: AVVideoColorPrimaries_ITU_R_2020,
+                    AVVideoTransferFunctionKey: AVVideoTransferFunction_ITU_R_2100_HLG,
+                    AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_2020,
+                ],
+                AVVideoCompressionPropertiesKey: [
+                    AVVideoAverageBitRateKey: max(bitrate, 6_000_000),
+                    AVVideoProfileLevelKey: kVTProfileLevel_HEVC_Main10_AutoLevel as String,
+                    AVVideoExpectedSourceFrameRateKey: 30,
+                    AVVideoMaxKeyFrameIntervalKey: 60,
+                ],
+            ]
+        }
         // about 16 Mbps at 1080×1920, scaled with the picture size
         let bitrate = Int(16_000_000.0 * Double(w * h) / (1080.0 * 1920.0))
         return [
@@ -68,10 +90,19 @@ final class CollageExporter: @unchecked Sendable {
         ]
     }
 
-    private func makeFeeders() -> [String: LaneFrameFeeder] {
+    /// One frame reader per placed video. For HDR, frames are scaled to the biggest size a cell shows them at.
+    private func makeFeeders(W: Double = 0, H: Double = 0, hdr: Bool = false) -> [String: LaneFrameFeeder] {
+        let project = snapshot.project
+        let rects = hdr ? project.cellRects(W: W, H: H) : []
         var out: [String: LaneFrameFeeder] = [:]
-        for lane in placedLanes(snapshot.project) {
-            if let item = snapshot.items[lane.mediaId] { out[lane.mediaId] = LaneFrameFeeder(lane: lane, url: item.url) }
+        for lane in placedLanes(project) {
+            guard let item = snapshot.items[lane.mediaId] else { continue }
+            var maxPx = 0
+            for (i, cell) in project.cells.enumerated() where i < rects.count && cell.mediaId == lane.mediaId {
+                let need = neededPhotoSize(srcW: item.width, srcH: item.height, cell: rects[i], view: cell.view)
+                maxPx = max(maxPx, need.w, need.h)
+            }
+            out[lane.mediaId] = LaneFrameFeeder(lane: lane, url: item.url, hdr: hdr, maxPixels: maxPx)
         }
         return out
     }
@@ -133,23 +164,26 @@ final class CollageExporter: @unchecked Sendable {
 
     // MARK: MP4
 
-    func exportVideo(quality: ExportQuality, progress: @escaping @Sendable (Double) -> Void) async throws -> URL {
+    func exportVideo(quality: ExportQuality, hdr: Bool = false, progress: @escaping @Sendable (Double) -> Void) async throws -> URL {
         let (w, h) = size(quality: quality)
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("Collage-\(Int(Date().timeIntervalSince1970)).mp4")
         try? FileManager.default.removeItem(at: url)
 
         let writer = try AVAssetWriter(url: url, fileType: .mp4)
         writer.shouldOptimizeForNetworkUse = true
-        let vSettings = Self.videoSettings(w, h)
+        let vSettings = Self.videoSettings(w, h, hdr: hdr)
         guard writer.canApply(outputSettings: vSettings, forMediaType: .video) else {
-            throw ExportFailure("This iPhone can't encode \(w)×\(h) video. Try Standard quality.")
+            throw ExportFailure(hdr
+                ? "This iPhone can't encode \(w)×\(h) HDR video. Try Standard quality, or turn HDR off."
+                : "This iPhone can't encode \(w)×\(h) video. Try Standard quality.")
         }
         let vInput = AVAssetWriterInput(mediaType: .video, outputSettings: vSettings)
         vInput.expectsMediaDataInRealTime = false
         let adaptor = AVAssetWriterInputPixelBufferAdaptor(
             assetWriterInput: vInput,
             sourcePixelBufferAttributes: [
-                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+                kCVPixelBufferPixelFormatTypeKey as String: hdr ? kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange : kCVPixelFormatType_32BGRA,
+                kCVPixelBufferIOSurfacePropertiesKey as String: [:] as [String: Any],
                 kCVPixelBufferWidthKey as String: w,
                 kCVPixelBufferHeightKey as String: h,
             ]
@@ -200,8 +234,14 @@ final class CollageExporter: @unchecked Sendable {
         }
 
         let photos = CollageRenderer.decodePhotos(snapshot: snapshot, W: Double(w), H: Double(h))
-        let feeders = makeFeeders()
+        let feeders = makeFeeders(W: Double(w), H: Double(h), hdr: hdr)
         let captionLayer = CaptionRenderer.layer(project: snapshot.project, W: w, H: h)
+        // HDR: every frame is drawn into one half-float canvas, then Core Image writes it into the 10-bit HLG buffer.
+        let hdrRowBytes = w * 8
+        let hdrCanvas: UnsafeMutableRawPointer? = hdr ? UnsafeMutableRawPointer.allocate(byteCount: hdrRowBytes * h, alignment: 64) : nil
+        defer { hdrCanvas?.deallocate() }
+        let hdrContext = hdrCanvas.flatMap { CollageRenderer.makeContext(width: w, height: h, data: $0, bytesPerRow: hdrRowBytes, hdr: true) }
+        if hdr && hdrContext == nil { throw ExportFailure("Couldn't set up HDR drawing.") }
         let frameCount = max(1, Int((total * Double(fps)).rounded(.up)))
 
         guard writer.startWriting() else { throw ExportFailure(writer.error?.localizedDescription ?? "Couldn't start the export.") }
@@ -227,16 +267,28 @@ final class CollageExporter: @unchecked Sendable {
                     var pbOut: CVPixelBuffer?
                     CVPixelBufferPoolCreatePixelBuffer(nil, pool, &pbOut)
                     guard let pb = pbOut else { failure = ExportFailure("Couldn't allocate video memory."); return }
-                    CVPixelBufferLockBaseAddress(pb, [])
-                    if let ctx = CollageRenderer.makeContext(
-                        width: w, height: h, data: CVPixelBufferGetBaseAddress(pb), bytesPerRow: CVPixelBufferGetBytesPerRow(pb)
-                    ) {
-                        let t = Double(frameIndex) / Double(fps)
+                    let t = Double(frameIndex) / Double(fps)
+                    if let ctx = hdrContext, let canvas = hdrCanvas {
                         CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot, captionLayer: captionLayer) { id in
                             photos[id] ?? feeders[id]?.frame(at: t)
                         }
+                        let data = Data(bytesNoCopy: canvas, count: hdrRowBytes * h, deallocator: .none)
+                        let frame = CIImage(bitmapData: data, bytesPerRow: hdrRowBytes, size: CGSize(width: w, height: h), format: .RGBAh, colorSpace: HDR.linearSpace)
+                        HDR.ci.render(frame, to: pb, bounds: CGRect(x: 0, y: 0, width: w, height: h), colorSpace: HDR.hlgSpace)
+                        CVBufferSetAttachment(pb, kCVImageBufferColorPrimariesKey, kCVImageBufferColorPrimaries_ITU_R_2020, .shouldPropagate)
+                        CVBufferSetAttachment(pb, kCVImageBufferTransferFunctionKey, kCVImageBufferTransferFunction_ITU_R_2100_HLG, .shouldPropagate)
+                        CVBufferSetAttachment(pb, kCVImageBufferYCbCrMatrixKey, kCVImageBufferYCbCrMatrix_ITU_R_2020, .shouldPropagate)
+                    } else {
+                        CVPixelBufferLockBaseAddress(pb, [])
+                        if let ctx = CollageRenderer.makeContext(
+                            width: w, height: h, data: CVPixelBufferGetBaseAddress(pb), bytesPerRow: CVPixelBufferGetBytesPerRow(pb)
+                        ) {
+                            CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot, captionLayer: captionLayer) { id in
+                                photos[id] ?? feeders[id]?.frame(at: t)
+                            }
+                        }
+                        CVPixelBufferUnlockBaseAddress(pb, [])
                     }
-                    CVPixelBufferUnlockBaseAddress(pb, [])
                     if !adaptor.append(pb, withPresentationTime: CMTime(value: CMTimeValue(frameIndex), timescale: CMTimeScale(fps))) {
                         failure = writer.error ?? ExportFailure("The video encoder stopped.")
                         return
