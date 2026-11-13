@@ -21,6 +21,10 @@ export const C = {
   white: "#FFFFFF",
 };
 
+/** The app's name everywhere in the ads (renamed from "Insta Collage": Meta treats "Insta" as its brand term). */
+export const APP_NAME = "CollageMagik";
+export const APP_SUBTITLE = "Collage Maker & Editor";
+
 /** The "air" easing: a quick lift that settles very softly. Used for almost every entrance. */
 export const AIR = Easing.bezier(0.16, 1, 0.3, 1);
 export const SOFT = Easing.bezier(0.45, 0, 0.25, 1);

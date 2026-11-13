@@ -175,8 +175,8 @@ final class GoogleAdsManager: NSObject {
         guard let top = Self.topViewController() else { return false }
         return await withCheckedContinuation { (c: CheckedContinuation<Bool, Never>) in
             let alert = UIAlertController(
-                title: "Thank you for using Insta Collage 💜",
-                message: "Insta Collage is made by a tiny team and is free for everyone, with no account. A short ad after you export is what keeps the app alive and lets us keep improving it.\n\nYour photos and videos never leave your iPhone. Thank you for your support!",
+                title: "Thank you for using CollageMagik 💜",
+                message: "CollageMagik is made by a tiny team and is free for everyone, with no account. A short ad after you export is what keeps the app alive and lets us keep improving it.\n\nYour photos and videos never leave your iPhone. Thank you for your support!",
                 preferredStyle: .alert
             )
             let ok = UIAlertAction(title: "Happy to help", style: .default) { _ in c.resume(returning: false) }

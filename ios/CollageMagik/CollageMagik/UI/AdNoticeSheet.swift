@@ -19,10 +19,10 @@ struct AdNoticeSheet: View {
                         .background(Color.brand.gradient, in: .rect(cornerRadius: 18, style: .continuous))
                         .accessibilityHidden(true)
 
-                    Text("Ads keep Insta Collage free")
+                    Text("Ads keep CollageMagik free")
                         .font(.title2.bold())
 
-                    Text("Insta Collage is free to use, with no account. After you export, we may show one full-screen ad from Meta Audience Network.")
+                    Text("CollageMagik is free to use, with no account. After you export, we may show one full-screen ad from Meta Audience Network.")
                         .foregroundStyle(.secondary)
 
                     VStack(alignment: .leading, spacing: 12) {

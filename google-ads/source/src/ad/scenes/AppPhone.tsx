@@ -1,6 +1,6 @@
 import React from "react";
 import { Easing, Img, interpolate, staticFile, useCurrentFrame } from "remotion";
-import { cue } from "../cues";
+import { APP_WORD, cue } from "../cues";
 import { phoneHeight, SCREEN_RATIO } from "../Phone";
 import { AIR, clamp, useLayout } from "../theme";
 
@@ -13,7 +13,7 @@ type Seg = { at: number; shot: string; box?: Box; swap?: "fade" | "slide" };
  * a glowing outline points at the part the voice is talking about. Screens dissolve (or slide, for the carousel).
  */
 const segments = (): Seg[] => [
-  // the phone rises once the name "Insta Collage" has had its moment
+  // the phone rises once the app name has had its moment
   { at: cue("photos", 1) - 4, shot: "05-timeline.png", box: [0.155, 0.112, 0.69, 0.57] },
   { at: cue("trim"), shot: "05-timeline.png", box: [0.15, 0.785, 0.5, 0.085] },
   { at: cue("pick"), shot: "06-choose-part.png", box: [0.015, 0.788, 0.94, 0.075] },
@@ -58,7 +58,7 @@ export const AppPhone: React.FC = () => {
   const { portrait, u, width, height } = useLayout();
   const segs = segments();
   const start = segs[0].at;
-  const end = cue("instacollage", 1); // the end card takes over on the second "Insta Collage"
+  const end = cue(APP_WORD, 1); // the end card takes over when the app is named the second time
   if (f < start - 2 || f > end + 24) return null;
 
   const i = Math.max(0, segs.findIndex((s, k) => f >= s.at && (!segs[k + 1] || f < segs[k + 1].at)));

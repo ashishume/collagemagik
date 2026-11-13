@@ -1,4 +1,4 @@
-# Google Ads creatives: Insta Collage
+# Ad creatives: CollageMagik
 
 ```
 google-ads/
@@ -9,13 +9,21 @@ google-ads/
 │   └── v3/  (current)
 └── photos/      Images, one folder per version
     ├── v1/
-    └── v2/  (current)
+    ├── v2/
+    └── v3/  (current)
         ├── image-assets/     App, Demand Gen and Responsive Display images
         ├── display-banners/  Fixed-size Display image ads (all under 150 KB)
         └── logos/            Square 1:1 and landscape 4:1 logos
 ```
 
-## v3 videos + v2 photos (13 Nov 2026), current
+## Rename to CollageMagik (13 Nov 2026), photos v3
+
+The app is now called **CollageMagik**, subtitle "Collage Maker & Editor" (Meta treats "Insta" as its brand term, so the old
+name "Insta Collage" risks ad rejections). Use `photos/v3/` (all text and file names say CollageMagik). The v1-v3 **videos
+still say and show "Insta Collage"**: don't upload them to Meta. v4 videos need a new voiceover: see
+`source/voiceover-script.md`, then `bash scripts/render-videos.sh v4`.
+
+## v3 videos + v2 photos (13 Nov 2026)
 
 Real travel photos everywhere, instead of drawn stand-ins:
 

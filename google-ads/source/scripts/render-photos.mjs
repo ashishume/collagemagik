@@ -18,7 +18,7 @@ const comps = (await getCompositions(serveUrl)).filter((c) => c.durationInFrames
 for (const composition of comps) {
   const { id } = composition;
   if (id.startsWith("logo-")) {
-    const output = path.join(root, "logos", `insta-collage-${id}-${composition.width}x${composition.height}.png`);
+    const output = path.join(root, "logos", `collagemagik-${id}-${composition.width}x${composition.height}.png`);
     fs.mkdirSync(path.dirname(output), { recursive: true });
     await renderStill({ serveUrl, composition, output, imageFormat: "png" });
     console.log(output);
@@ -27,7 +27,7 @@ for (const composition of comps) {
   const isBanner = id.startsWith("banner-");
   const dir = isBanner ? "display-banners" : "image-assets";
   const name = isBanner ? id.replace(/^banner-/, "") : `${id.replace(/^asset-/, "")}-${composition.width}x${composition.height}`;
-  const output = path.join(root, dir, `insta-collage-${name}.jpg`);
+  const output = path.join(root, dir, `collagemagik-${name}.jpg`);
   fs.mkdirSync(path.dirname(output), { recursive: true });
   let q = 92;
   for (;;) {

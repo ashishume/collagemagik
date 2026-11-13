@@ -34,7 +34,7 @@ export const Ad: React.FC = () => {
       </Sequence>
 
       {/* App: one phone that stays on screen, with headlines and stickers timed to the words */}
-      <Sequence name="Reveal: Insta Collage">
+      <Sequence name="Reveal: app name">
         <RevealScene />
       </Sequence>
       <Sequence name="App phone">

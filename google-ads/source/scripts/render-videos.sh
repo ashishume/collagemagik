@@ -25,5 +25,5 @@ render() { # composition id, file name
   echo "$OUT/$name.mp4"
 }
 
-render AdVertical "insta-collage-trip-ad-vertical-9x16-1080x1920"
-render AdLandscape "insta-collage-trip-ad-landscape-16x9-1920x1080"
+render AdVertical "collagemagik-trip-ad-vertical-9x16-1080x1920"
+render AdLandscape "collagemagik-trip-ad-landscape-16x9-1920x1080"

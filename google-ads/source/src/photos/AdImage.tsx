@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Img, staticFile } from "remotion";
 import { Phone, phoneHeight } from "../ad/Phone";
-import { C, fontFamily } from "../ad/theme";
+import { APP_NAME, C, fontFamily } from "../ad/theme";
 import { PHOTO_KINDS, TripPhoto } from "../ad/TripPhoto";
 
 export type Theme = "trip" | "carousel" | "features";
@@ -114,7 +114,7 @@ const Title: React.FC<{ t: (typeof THEMES)[Theme]; size: number; align?: "left" 
 const Brand: React.FC<{ s: number }> = ({ s }) => (
   <div style={{ display: "flex", alignItems: "center", gap: s * 0.4, fontFamily, fontWeight: 800, fontSize: s, color: C.ink, whiteSpace: "nowrap" }}>
     <Icon size={s * 1.7} />
-    Insta Collage
+    {APP_NAME}
   </div>
 );
 
@@ -142,7 +142,7 @@ export const AdImage: React.FC<AdImageProps & { w: number; h: number }> = ({ the
               {twoLines ? <br /> : " "}
               <span style={{ color: t.accent }}>{t.title[1]}</span>
             </div>
-            {w >= 468 && !twoLines ? <div style={{ fontWeight: 600, fontSize: s * 0.17, color: "#5B5375", whiteSpace: "nowrap", marginTop: s * 0.04 }}>Insta Collage · Free on iPhone</div> : null}
+            {w >= 468 && !twoLines ? <div style={{ fontWeight: 600, fontSize: s * 0.17, color: "#5B5375", whiteSpace: "nowrap", marginTop: s * 0.04 }}>{APP_NAME} · Free on iPhone</div> : null}
           </div>
           {w >= 400 ? <Cta s={s * 0.2} /> : null}
         </AbsoluteFill>

@@ -1,6 +1,6 @@
 import React from "react";
 import { Easing, Img, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
-import { AIR, C, clamp, fontFamily, useLayout } from "./theme";
+import { AIR, APP_NAME, C, clamp, fontFamily, useLayout } from "./theme";
 
 /** Fade, lift and un-blur in; drift and blur out. The "air" transition every scene uses. */
 export const Air: React.FC<{
@@ -122,7 +122,7 @@ export const AppBadge: React.FC<{ at: number; out?: number; scale?: number; styl
     >
       <Img src={staticFile("brand/icon.png")} style={{ width: 84 * s, height: 84 * s, borderRadius: 20 * s }} />
       <div>
-        <div style={{ fontWeight: 800, fontSize: 40 * s, color: C.ink, lineHeight: 1.1 }}>Insta Collage</div>
+        <div style={{ fontWeight: 800, fontSize: 40 * s, color: C.ink, lineHeight: 1.1 }}>{APP_NAME}</div>
         <div style={{ fontWeight: 600, fontSize: 26 * s, color: C.purple }}>{sub}</div>
       </div>
     </div>

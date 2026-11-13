@@ -1,9 +1,9 @@
 import React from "react";
 import { AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { Air, StoreButton, Sticker } from "../bits";
-import { cue } from "../cues";
+import { APP_WORD, cue } from "../cues";
 import { PHOTO_KINDS, TripPhoto } from "../TripPhoto";
-import { AIR, C, clamp, fontFamily, useLayout } from "../theme";
+import { AIR, APP_SUBTITLE, C, clamp, fontFamily, useLayout } from "../theme";
 
 /** Big scene title: top centre in vertical, left column in landscape. `at`/`out` are absolute frames. */
 const Headline: React.FC<{ at: number; out: number; children: React.ReactNode; size?: number }> = ({ at, out, children, size = 1 }) => {
@@ -43,12 +43,12 @@ const useSpots = () => {
   };
 };
 
-/** "So I put it all in Insta Collage." Trip photos fly into the app icon, which then names itself. */
+/** "So I put it all in CollageMagik." Trip photos fly into the app icon, which then names itself. */
 export const RevealScene: React.FC = () => {
   const f = useCurrentFrame();
   const { u, width, height, portrait } = useLayout();
   const s = cue("so");
-  const named = cue("instacollage");
+  const named = cue(APP_WORD);
   const next = cue("photos", 1);
   const cx = width / 2;
   const cy = portrait ? height * 0.42 : height * 0.45;
@@ -106,7 +106,7 @@ export const RevealScene: React.FC = () => {
         style={{ position: "absolute", left: 0, right: 0, top: cy + 190 * u - settle * 340 * u, textAlign: "center" }}
       >
         <div style={{ fontFamily, fontWeight: 800, fontSize: 120 * u, color: C.ink, letterSpacing: -2 * u }}>
-          Insta <P c={C.purple}>Collage</P>
+          Collage<P c={C.purple}>Magik</P>
         </div>
       </Air>
     </AbsoluteFill>
@@ -289,7 +289,7 @@ export const BeforeAfterScene: React.FC = () => {
   const { u, portrait } = useLayout();
   const a = cue("same");
   const b = cue("way");
-  const end = cue("instacollage", 1);
+  const end = cue(APP_WORD, 1);
   if (f < a - 2 || f > end + 14) return null;
   const p = interpolate(f, [a, a + 20], [0, 1], { ...clamp, easing: AIR });
   const out = interpolate(f, [end - 6, end + 10], [0, 1], { ...clamp, easing: AIR });
@@ -329,11 +329,11 @@ export const BeforeAfterScene: React.FC = () => {
   );
 };
 
-/** "Insta Collage. And yeah, everything is free. Download now on the App Store." */
+/** "CollageMagik. And yeah, everything is free. Download now on the App Store." */
 export const EndScene: React.FC = () => {
   const f = useCurrentFrame();
   const { u, portrait, width, height } = useLayout();
-  const a = cue("instacollage", 1);
+  const a = cue(APP_WORD, 1);
   const free = cue("free");
   const dl = cue("download");
   if (f < a - 2) return null;
@@ -370,10 +370,10 @@ export const EndScene: React.FC = () => {
       </div>
       <Air inAt={a + 8} from={[0, 40]} style={{ position: "absolute", left: 0, right: 0, top: cy + 230 * u, textAlign: "center", fontFamily }}>
         <div style={{ fontWeight: 800, fontSize: 124 * u, color: C.ink, letterSpacing: -2 * u, lineHeight: 1 }}>
-          Insta <P c={C.purple}>Collage</P>
+          Collage<P c={C.purple}>Magik</P>
         </div>
         <div style={{ fontWeight: 600, fontSize: 42 * u, color: "#5B5375", marginTop: 18 * u }}>
-          Collages · Carousels · Captions · Video
+          {APP_SUBTITLE}
         </div>
       </Air>
       <Sticker at={free} text="Everything free 🎉" bg={C.gold} tilt={-6} size={56}
