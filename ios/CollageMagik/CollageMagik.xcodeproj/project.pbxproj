@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		A10000101 /* FBAudienceNetwork in Frameworks */ = {isa = PBXBuildFile; productRef = A10000102 /* FBAudienceNetwork */; };
 		A10000111 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = A10000112 /* GoogleMobileAds */; };
+		A10000121 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = A10000122 /* FirebaseAnalytics */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +36,7 @@
 			files = (
 				A10000101 /* FBAudienceNetwork in Frameworks */,
 				A10000111 /* GoogleMobileAds in Frameworks */,
+				A10000121 /* FirebaseAnalytics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -81,6 +83,7 @@
 			packageProductDependencies = (
 				A10000102 /* FBAudienceNetwork */,
 				A10000112 /* GoogleMobileAds */,
+				A10000122 /* FirebaseAnalytics */,
 			);
 			productName = CollageMagik;
 			productReference = A10000001 /* CollageMagik.app */;
@@ -113,6 +116,7 @@
 			packageReferences = (
 				A10000103 /* XCRemoteSwiftPackageReference "FBAudienceNetwork" */,
 				A10000113 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+				A10000123 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A10000005 /* Products */;
@@ -213,6 +217,10 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.1;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.axpo.collagemagik;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -247,6 +255,10 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.1;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.axpo.collagemagik;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -296,6 +308,14 @@
 				minimumVersion = 13.12.0;
 			};
 		};
+		A10000123 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.1.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -308,6 +328,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A10000113 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
 			productName = GoogleMobileAds;
+		};
+		A10000122 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000123 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

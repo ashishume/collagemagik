@@ -93,6 +93,7 @@ final class GoogleAdsManager: NSObject {
     private func startIfAllowed() {
         guard isEnabled, !started, ConsentInformation.shared.canRequestAds else { return }
         started = true
+        InstallTracking.startIfAllowed() // counts the install for Google Ads campaigns (no-op until Firebase is set up)
         MobileAds.shared.start { [weak self] _ in
             Task { @MainActor in
                 NSLog("CM_GADS sdk started")

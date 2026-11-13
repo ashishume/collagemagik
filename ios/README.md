@@ -75,6 +75,31 @@ Prices, the trial and the "Save N%" badge all come from the App Store for the pe
 The Pro page opens from More ••• → Remove ads (Pro), from About & Privacy, under each export result, and on its own at
 most once a week. Restore purchases is on the Pro page and in About & Privacy.
 
+## Install tracking (Google Ads conversions)
+
+Google Ads counts an install when the app reports a `first_open` event. `Ads/InstallTracking.swift` starts **Google Analytics
+for Firebase**, which sends it automatically; the app logs no events of its own. It stays off until the Firebase config file
+is added, so nothing is sent today. It starts at the same point as the ads (after Google's consent form in the EU/UK, after
+Apple's tracking question elsewhere), and Debug builds stay silent (`CM_ANALYTICS=1` turns it on for testing). Apple's
+SKAdNetwork IDs in `AdInfo.plist` let Google count installs even when the person declines tracking.
+
+One-time setup:
+
+1. [Firebase console](https://console.firebase.google.com) → create a project → **Add app → iOS** with bundle ID
+   `com.axpo.collagemagik` → download `GoogleService-Info.plist` and put it in `ios/CollageMagik/CollageMagik/` (Xcode picks
+   it up by itself). Turn **Google Analytics** on for the project.
+2. Firebase → **Project settings → Integrations → Google Ads → Link** your Google Ads account (the one that runs the app
+   campaign). Link the same Firebase project to AdMob too, if you want ad revenue in the same place.
+3. Google Ads → **Goals → Conversions → New conversion action → App → Google Analytics 4 (Firebase)** → pick the iOS app →
+   import `first_open` (the install). Set it as a primary action for the app campaign.
+4. Ship a new build (bump the build number). Installs of that version onward start to appear in Google Ads, usually within a day
+   (iOS installs can take a few days because Apple delays SKAdNetwork reports). Installs of older versions can't be counted.
+5. App Store Connect → **App Privacy**: add *Product Interaction* and confirm *Device ID* and *Advertising Data* are marked as
+   used for Analytics and Third-Party Advertising (`PrivacyInfo.xcprivacy` already says so).
+
+To check it before release: set `CM_ANALYTICS=1` for a Debug run, look for `CM_INSTALL tracking started` in the log, and watch
+Firebase → **DebugView** (run with `-FIRDebugEnabled`).
+
 ## My Library and privacy
 
 There is no account and no server of ours. The only network code is the ad SDK and StoreKit. Every export is also copied into the app's own `Documents/MyLibrary/`
@@ -114,7 +139,7 @@ right. AVI, MKV, WebM, MPEG-1/2 can't be decoded by iOS: the app says so and ask
 | `Media/` | Import and validation, live playback engine (one `AVPlayer` per video kept in step with the timeline) |
 | `Export/` | Frame renderer (Core Graphics), per-clip frame reader, audio mix, MP4 writer |
 | `UI/` | Stage, panels, timeline, crop editor, export sheet, glass components |
-| `Ads/` | Google AdMob (on) and Meta Audience Network (off), the switch between them, ad unit IDs |
+| `Ads/` | Google AdMob (on) and Meta Audience Network (off), the switch between them, ad unit IDs, install tracking for Google Ads (Firebase, off until its config file is added) |
 | `Store/` | Insta Collage Pro: StoreKit 2 purchases and the Pro page |
 | `DebugHarness.swift` | Debug builds only: drives the app from environment variables (below) |
 
