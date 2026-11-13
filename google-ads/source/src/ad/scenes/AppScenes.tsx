@@ -176,7 +176,7 @@ const DragCaption: React.FC = () => {
   const rot = interpolate(f, [twist, twist + 14], [0, 1], { ...clamp, easing: Easing.bezier(0.34, 1.56, 0.64, 1) });
   const out = interpolate(f, [gone, gone + 10], [0, 1], clamp);
   const cx = portrait ? width / 2 : width * 0.68;
-  const baseY = portrait ? 640 * u : 380 * u;
+  const baseY = portrait ? 790 * u : 470 * u; // below the app's own title caption
   return (
     <div
       style={{
@@ -252,7 +252,7 @@ const PanoramaStrip: React.FC<{ from: number; to: number }> = ({ from, to }) => 
       <div style={{ position: "absolute", left: pan, top: 0, display: "flex", gap: 14 * u }}>
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} style={{ width: slideW, height: 287 * u, borderRadius: 18 * u, overflow: "hidden", position: "relative", boxShadow: `0 ${10 * u}px ${24 * u}px rgba(43,20,92,0.2)` }}>
-            <TripPhoto kind="sunset" style={{ position: "absolute", top: 0, left: -i * (slideW + 14 * u), width: 5 * slideW + 56 * u, height: "100%" }} />
+            <TripPhoto kind="santorini-sunset" hd style={{ position: "absolute", top: 0, left: -i * (slideW + 14 * u), width: 5 * slideW + 56 * u, height: "100%" }} />
           </div>
         ))}
       </div>
@@ -271,7 +271,7 @@ const SharpVsBlurry: React.FC<{ at: number; out: number }> = ({ at, out }) => {
   const pos = portrait ? { left: 40 * u, top: 1180 * u } : { left: 140 * u, top: 600 * u };
   const card = (blur: boolean) => (
     <div style={{ position: "relative" }}>
-      <TripPhoto kind="mountain" style={{ width: s, height: s, borderRadius: 22 * u, border: `${5 * u}px solid #fff`, filter: blur ? `blur(${7 * u}px)` : undefined, boxShadow: `0 ${10 * u}px ${24 * u}px rgba(43,20,92,0.25)` }} />
+      <TripPhoto kind="alpine-lake" hd style={{ width: s, height: s, borderRadius: 22 * u, border: `${5 * u}px solid #fff`, filter: blur ? `blur(${7 * u}px)` : undefined, boxShadow: `0 ${10 * u}px ${24 * u}px rgba(43,20,92,0.25)` }} />
       <div style={{ position: "absolute", right: -16 * u, top: -16 * u, fontSize: 56 * u }}>{blur ? "❌" : "✅"}</div>
     </div>
   );

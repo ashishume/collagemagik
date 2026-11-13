@@ -10,6 +10,7 @@
 		A10000101 /* FBAudienceNetwork in Frameworks */ = {isa = PBXBuildFile; productRef = A10000102 /* FBAudienceNetwork */; };
 		A10000111 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = A10000112 /* GoogleMobileAds */; };
 		A10000121 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = A10000122 /* FirebaseAnalytics */; };
+		A10000131 /* FacebookCore in Frameworks */ = {isa = PBXBuildFile; productRef = A10000132 /* FacebookCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +38,7 @@
 				A10000101 /* FBAudienceNetwork in Frameworks */,
 				A10000111 /* GoogleMobileAds in Frameworks */,
 				A10000121 /* FirebaseAnalytics in Frameworks */,
+				A10000131 /* FacebookCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -84,6 +86,7 @@
 				A10000102 /* FBAudienceNetwork */,
 				A10000112 /* GoogleMobileAds */,
 				A10000122 /* FirebaseAnalytics */,
+				A10000132 /* FacebookCore */,
 			);
 			productName = CollageMagik;
 			productReference = A10000001 /* CollageMagik.app */;
@@ -117,6 +120,7 @@
 				A10000103 /* XCRemoteSwiftPackageReference "FBAudienceNetwork" */,
 				A10000113 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
 				A10000123 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				A10000133 /* XCRemoteSwiftPackageReference "facebook-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A10000005 /* Products */;
@@ -316,6 +320,14 @@
 				minimumVersion = 13.1.1;
 			};
 		};
+		A10000133 /* XCRemoteSwiftPackageReference "facebook-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/facebook/facebook-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 19.0.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -333,6 +345,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A10000123 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAnalytics;
+		};
+		A10000132 /* FacebookCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000133 /* XCRemoteSwiftPackageReference "facebook-ios-sdk" */;
+			productName = FacebookCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -6,6 +6,19 @@
 	<!-- Google AdMob app ID (required by the Google Mobile Ads SDK, even while Google ads are switched off in AdsSwitch.swift). -->
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-3743383597691737~8957379689</string>
+	<!-- Meta (Facebook) SDK: counts installs for Meta app install campaigns. Meta app "Axpo Collage Maker". The client token is
+	     meant to be embedded in apps (it is not a secret). Automatic logging and advertiser-ID collection start off and are switched
+	     on in code only after the ad consent step (MetaInstallTracking.startIfAllowed). -->
+	<key>FacebookAppID</key>
+	<string>2237577313465697</string>
+	<key>FacebookClientToken</key>
+	<string>f79419a48e7f854fd837b876b8fbcee5</string>
+	<key>FacebookDisplayName</key>
+	<string>Insta Collage</string>
+	<key>FacebookAutoLogAppEventsEnabled</key>
+	<false/>
+	<key>FacebookAdvertiserIDCollectionEnabled</key>
+	<false/>
 	<!-- SKAdNetwork IDs: Google's published list (developers.google.com/admob/ios/quick-start), which includes Meta Audience Network's two. -->
 	<key>SKAdNetworkItems</key>
 	<array>

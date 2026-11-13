@@ -52,10 +52,11 @@ enum DebugHarness {
         NSLog("CM_DEBUG slides=%d photos=%d layout=%@", store.project.slides, store.project.cellCount, store.project.layoutId)
         if let o = env["CM_OFFSET"], let v = Double(o) { store.carouselOffset = v }
         // CM_CAPTIONS=1: one caption per look, to check lettering in the preview and in exports. CM_CAPTION_SELECT=index selects one.
+        // CM_CAPTION_TITLE="Summer in Italy" replaces the first caption's text (to match the photos in marketing captures).
         if env["CM_CAPTIONS"] != nil {
             let slides = Double(store.project.slides)
             let samples: [(String, CaptionFont, String, CaptionLook, Double, Double, Double, Double)] = [
-                ("Summer in Lisbon", .script, "#ffffff", .plain, 110, 0.5, 0.2, 0),
+                (env["CM_CAPTION_TITLE"] ?? "Summer in Lisbon", .script, "#ffffff", .plain, 110, 0.5, 0.2, 0),
                 ("best week ever", .classic, "#ffd84d", .label, 64, 0.5, 0.36, -6),
                 ("day 3 · the old town\nand way too much gelato 🍦", .typewriter, "#ffffff", .plate, 50, 0.5, 0.56, 0),
                 ("TAKE ME BACK", .poster, "#ff5fa2", .outline, 120, 0.5, 0.78, 0),

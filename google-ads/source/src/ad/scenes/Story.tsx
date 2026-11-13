@@ -145,6 +145,7 @@ export const DumpScene: React.FC<{ dur: number }> = ({ dur }) => {
               <TripPhoto
                 key={k}
                 kind={kinds[(slide + k) % kinds.length]}
+                hd
                 style={{ position: "absolute", inset: 0, translate: `${(k - frac) * cardW}px 0px` }}
               />
             ))}

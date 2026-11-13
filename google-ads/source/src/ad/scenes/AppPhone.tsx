@@ -18,7 +18,7 @@ const segments = (): Seg[] => [
   { at: cue("trim"), shot: "05-timeline.png", box: [0.15, 0.785, 0.5, 0.085] },
   { at: cue("pick"), shot: "06-choose-part.png", box: [0.015, 0.788, 0.94, 0.075] },
   { at: cue("add"), shot: "05-timeline.png", box: [0.17, 0.866, 0.32, 0.04] },
-  { at: cue("drop"), shot: "07-captions.png", box: [0.24, 0.165, 0.44, 0.145] },
+  { at: cue("drop"), shot: "07-captions.png", box: [0.245, 0.162, 0.5, 0.148] },
   { at: cue("done"), shot: "07-captions.png" },
   { at: cue("want"), shot: "01-carousel.png" },
   { at: cue("flows"), shot: "02-carousel-next.png", swap: "slide" },

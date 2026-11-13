@@ -5,15 +5,31 @@ google-ads/
 ├── source/      Remotion project that makes every video and image (code, voiceover, music, app screenshots)
 ├── output/      Videos, one folder per version
 │   ├── v1/
-│   └── v2/  (current)
+│   ├── v2/
+│   └── v3/  (current)
 └── photos/      Images, one folder per version
-    └── v1/
+    ├── v1/
+    └── v2/  (current)
         ├── image-assets/     App, Demand Gen and Responsive Display images
         ├── display-banners/  Fixed-size Display image ads (all under 150 KB)
         └── logos/            Square 1:1 and landscape 4:1 logos
 ```
 
-## v2 (13 Nov 2026), current
+## v3 videos + v2 photos (13 Nov 2026), current
+
+Real travel photos everywhere, instead of drawn stand-ins:
+
+- 33 photos from Unsplash (Santorini, Amalfi, Venice, the Maldives, Cappadocia balloons, Lofoten auroras, alpine
+  lakes, road trips, food), in `source/public/travel/`. Scenery, food and places only, no identifiable people.
+- They fill the camera roll, the photo-dump post, the tiles flying into the icon, the before/after pile, the end card
+  and the trip tiles on the images.
+- The app screens inside the phone were recaptured in the simulator with the same photos (`source/public/shots/`):
+  Santorini carousel, tropical grid, an Italy collage with two travel videos on the timeline, the sunset video in
+  Choose part, "Summer in Italy" captions and the Italy collage on the export screen. The two videos are slow pans
+  made from photos (`source/assets-raw/app-media/`).
+- Same edit, timing, music level (0.075) and specs as v2.
+
+## v2 (13 Nov 2026)
 
 Videos only (`output/v2/`, same file names and specs as v1). Images are unchanged, use `photos/v1/`.
 
@@ -49,15 +65,15 @@ Word-by-word captions are burned in for people watching on mute.
 | `display-banners/` | 300x250, 336x280, 728x90, 300x600, 320x50, 320x100, 468x60, 970x90, 970x250, 250x250, 200x200, 160x600, 300x1050 | Display campaigns, "Upload display ads". Each file is 150 KB or less. |
 | `logos/` | 1200x1200 (1:1), 1200x300 (4:1) | Logo assets for Demand Gen and Responsive Display |
 
-## Making a new version (v3, v4…)
+## Making a new version (v4, v5…)
 
 From `source/`:
 
 ```bash
 npm i                                   # first time only
 npx remotion studio                     # preview and tweak in the browser
-bash scripts/render-videos.sh v3        # videos into output/v3/
-node scripts/render-photos.mjs v3       # images into photos/v3/
+bash scripts/render-videos.sh v4        # videos into output/v4/
+node scripts/render-photos.mjs v3       # images into photos/v3/ (photo versions are numbered separately)
 ```
 
 - New voiceover: replace `source/public/audio/voiceover.mp3`, then run `node scripts/transcribe.mjs` and
@@ -68,10 +84,21 @@ node scripts/render-photos.mjs v3       # images into photos/v3/
 - Which screen shows when, and what it highlights: `segments()` in `src/ad/scenes/AppPhone.tsx` (boxes are fractions
   of the screen: x, y, width, height).
 - Image headlines: `THEMES` in `src/photos/AdImage.tsx`. Sizes: `src/photos/sizes.ts`.
+- Photos: put JPEGs in `public/travel/` (and a 480 px copy in `public/travel/thumb/`), list them in `PHOTO_KINDS` in
+  `src/ad/TripPhoto.tsx`, and add the photographer to `public/travel/credits.json`.
+- App screens: build the app for the simulator (Debug), boot an iPhone 17 Pro Max simulator, then
+  `bash scripts/capture-app-screens.sh <path to CollageMagik.app>`. It loads the photos into the app through the
+  debug harness (`ios/.../DebugHarness.swift`, debug builds only) and saves `public/shots/01..07`. The export screen
+  (`09-export.png`) needs taps: load four photos, tap the export button, Still (PNG), Export picture, then
+  `xcrun simctl io booted screenshot public/shots/09-export.png`. Highlight boxes for each screen are in
+  `segments()` in `src/ad/scenes/AppPhone.tsx`.
 
 ## Credits and rights
 
 - Voiceover: ElevenLabs (voice "Amy - Conversational Ad & Commercial").
 - Music: `ikoliks_aj-fun-fun-music-614617.mp3`. Check its licence allows use in paid ads before running the campaign.
-- App screens: real screenshots from `ios/AppStore/screenshots/raw/`. Trip "photos" are drawn in CSS, so there are no
-  stock images to license.
+- Photos: Unsplash, under the Unsplash License (free for commercial use including ads, no attribution required).
+  Photographer and link for each file: `source/public/travel/credits.json`. Not allowed under that licence: selling the
+  photos as they are, or implying a photographer endorses the app, so don't name them in ad copy.
+- App screens: real simulator screenshots of the app (v3 onwards with the Unsplash photos; v1 and v2 used the drawn
+  sample media from `ios/AppStore/screenshots/raw/`).
