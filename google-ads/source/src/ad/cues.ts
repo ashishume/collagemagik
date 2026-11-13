@@ -6,8 +6,8 @@ const captions = raw as Caption[];
 export const FPS = 30;
 /** The voiceover starts this many frames into the video. */
 export const VOICE_START = 6;
-/** Length of the voiceover file (40.20 s) in frames. */
-export const VOICE_FRAMES = Math.ceil(40.2 * FPS);
+/** Length of the voiceover file (40.75 s) in frames. */
+export const VOICE_FRAMES = Math.ceil(40.75 * FPS);
 /** Extra frames after the voice so the end card can breathe. */
 export const TAIL = 45;
 export const TOTAL = VOICE_START + VOICE_FRAMES + TAIL;

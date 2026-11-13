@@ -75,7 +75,8 @@ export const Captions: React.FC<{ voiceStart: number }> = ({ voiceStart }) => {
               key={i}
               style={{
                 color: active ? C.gold : said ? "#fff" : "rgba(255,255,255,0.55)",
-                scale: active ? "1.08" : "1",
+                // long words (e.g. "CollageMagik.") grow less, so the pop doesn't swallow the gap to their neighbours
+                scale: active ? String(1 + Math.min(0.08, 0.4 / w.text.trim().length)) : "1",
                 transformOrigin: "50% 60%",
                 display: "inline-block",
                 whiteSpace: "nowrap",
