@@ -103,9 +103,13 @@ struct RootView: View {
         .sheet(isPresented: $store.aboutOpen) { AboutSheet() }
         .sheet(isPresented: $ads.showNotice) { AdNoticeSheet() }
         .onAppear {
+            ProStore.shared.start()
+            ProStore.shared.appDidLaunch()
             AdManager.shared.appDidLaunch()
             GoogleAdsManager.shared.appDidLaunch()
         }
+        // the Pro page opens here only when no other sheet is up (those host it themselves)
+        .proPaywallHost(active: !store.exportOpen && !store.aboutOpen)
         .fullScreenCover(isPresented: $store.previewOpen) { FullScreenPreview() }
         .fullScreenCover(item: Binding(
             get: { store.cropCell.map(CropTarget.init) },

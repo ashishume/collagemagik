@@ -32,7 +32,8 @@ final class GoogleAdsManager: NSObject {
         static let thanked = "gads.thanksShown"
     }
 
-    var isEnabled: Bool { AdsSwitch.useGoogle }
+    /// Google ads are switched on and the person doesn't have Pro.
+    var isEnabled: Bool { AdsSwitch.useGoogle && !ProStore.shared.isPro }
 
     // MARK: Start-up and consent
 
@@ -110,8 +111,13 @@ final class GoogleAdsManager: NSObject {
         guard Date().timeIntervalSince(last) >= GoogleAdConfig.minimumSecondsBetweenInterstitials else { return }
 
         if !defaults.bool(forKey: Key.thanked) {
-            await showThanks()
+            let wantsPro = await showThanks()
             defaults.set(true, forKey: Key.thanked)
+            if wantsPro {
+                // no ad this time: show what Pro is instead
+                ProStore.shared.openPaywall()
+                return
+            }
             await requestTrackingIfNeeded()
         }
 
@@ -160,16 +166,19 @@ final class GoogleAdsManager: NSObject {
 
     // MARK: The thank-you note
 
-    /// Shown once, before the first full-screen ad.
-    private func showThanks() async {
-        guard let top = Self.topViewController() else { return }
-        await withCheckedContinuation { (c: CheckedContinuation<Void, Never>) in
+    /// Shown once, before the first full-screen ad. Returns true if the person chose "Remove ads with Pro".
+    private func showThanks() async -> Bool {
+        guard let top = Self.topViewController() else { return false }
+        return await withCheckedContinuation { (c: CheckedContinuation<Bool, Never>) in
             let alert = UIAlertController(
                 title: "Thank you for using CollageMagik 💜",
                 message: "CollageMagik is made by a tiny team and is free for everyone, with no account. A short ad after you export is what keeps the app alive and lets us keep improving it.\n\nYour photos and videos never leave your iPhone. Thank you for your support!",
                 preferredStyle: .alert
             )
-            alert.addAction(UIAlertAction(title: "Happy to help", style: .default) { _ in c.resume() })
+            let ok = UIAlertAction(title: "Happy to help", style: .default) { _ in c.resume(returning: false) }
+            alert.addAction(ok)
+            alert.addAction(UIAlertAction(title: "Remove ads with Pro", style: .default) { _ in c.resume(returning: true) })
+            alert.preferredAction = ok
             top.present(alert, animated: true)
         }
     }

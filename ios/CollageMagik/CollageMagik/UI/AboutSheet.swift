@@ -85,6 +85,23 @@ struct AboutSheet: View {
                 }
 
                 Section {
+                    Button { ProStore.shared.openPaywall() } label: {
+                        Label {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(ProStore.shared.isPro ? "CollageMagik Pro is active" : "CollageMagik Pro").foregroundStyle(.primary)
+                                Text(ProStore.shared.isPro ? "No ads. Thank you for your support!" : "Remove all ads: monthly, yearly or once for life.")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
+                        } icon: {
+                            Image(systemName: ProStore.shared.isPro ? "checkmark.seal.fill" : "sparkles").foregroundStyle(Color.brand)
+                        }
+                    }
+                    Button { Task { _ = await ProStore.shared.restore() } } label: {
+                        Label("Restore purchases", systemImage: "arrow.clockwise")
+                    }
+                }
+
+                Section {
                     Link(destination: AppLinks.writeReview) {
                         Label {
                             VStack(alignment: .leading, spacing: 2) {
@@ -184,6 +201,7 @@ struct AboutSheet: View {
             }
         }
         .sheet(isPresented: $showAdChoices) { AdNoticeSheet() }
+        .proPaywallHost()
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
     }

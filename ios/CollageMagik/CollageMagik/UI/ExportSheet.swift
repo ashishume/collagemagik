@@ -143,6 +143,7 @@ struct ExportSheet: View {
         .presentationDetents([.fraction(0.62), .large], selection: $detent)
         .presentationDragIndicator(.visible)
         .interactiveDismissDisabled(job.isRunning)
+        .proPaywallHost()
         .onDisappear {
             // An ad (if one is due) comes only after a finished export, once this sheet is gone.
             let finished: Bool
@@ -430,6 +431,13 @@ struct ExportSheet: View {
             if let saveError {
                 SaveFailureNote(error: saveError)
             }
+            if GoogleAdsManager.shared.isEnabled || AdManager.shared.isEnabled {
+                Button { ProStore.shared.openPaywall() } label: {
+                    Label("Remove ads with Pro", systemImage: "sparkles").font(.footnote.weight(.semibold))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Color.brand)
+            }
             RateUsLink()
         }
     }
@@ -516,6 +524,13 @@ struct ExportSheet: View {
             }
             if let saveError {
                 SaveFailureNote(error: saveError)
+            }
+            if GoogleAdsManager.shared.isEnabled || AdManager.shared.isEnabled {
+                Button { ProStore.shared.openPaywall() } label: {
+                    Label("Remove ads with Pro", systemImage: "sparkles").font(.footnote.weight(.semibold))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Color.brand)
             }
             RateUsLink()
         }

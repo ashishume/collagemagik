@@ -103,6 +103,10 @@ struct TopBar: View {
                     Button { store.helpOpen = true } label: { Label("How it works", systemImage: "questionmark.circle") }
                     Button { store.aboutOpen = true } label: { Label("About & Privacy", systemImage: "hand.raised") }
                     Link(destination: AppLinks.writeReview) { Label("Rate CollageMagik", systemImage: "star") }
+                    Divider()
+                    Button { ProStore.shared.openPaywall() } label: {
+                        Label(ProStore.shared.isPro ? "CollageMagik Pro" : "Remove ads (Pro)", systemImage: "sparkles")
+                    }
                 } label: {
                     BarIcon(symbol: "ellipsis")
                 }

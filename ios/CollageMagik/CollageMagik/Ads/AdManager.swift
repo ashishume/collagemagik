@@ -37,7 +37,7 @@ final class AdManager {
     }
 
     /// False until Meta is switched on in `AdsSwitch` and a placement ID is set in `AdConfig`.
-    var isEnabled: Bool { AdsSwitch.useMeta && AdConfig.isConfigured }
+    var isEnabled: Bool { AdsSwitch.useMeta && AdConfig.isConfigured && !ProStore.shared.isPro }
 
     var trackingStatus: ATTrackingManager.AuthorizationStatus { ATTrackingManager.trackingAuthorizationStatus }
 
