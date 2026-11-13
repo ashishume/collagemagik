@@ -12,6 +12,7 @@ struct StageGestureLayer: UIViewRepresentable {
     /// Two-finger twist, in radians (clockwise is positive). Turns the selected caption.
     var onRotateBegin: () -> Void = {}
     var onRotate: (CGFloat) -> Void = { _ in }
+    var onRotateEnd: () -> Void = {}
     var onLiftBegin: (CGPoint) -> Void
     var onLiftMove: (CGPoint) -> Void
     var onLiftEnd: (CGPoint, Bool) -> Void
@@ -76,6 +77,7 @@ struct StageGestureLayer: UIViewRepresentable {
             switch g.state {
             case .began: parent.onRotateBegin()
             case .changed: parent.onRotate(g.rotation)
+            case .ended, .cancelled, .failed: parent.onRotateEnd()
             default: break
             }
         }
@@ -158,6 +160,8 @@ struct StageView: View {
     @State private var overlayDrag: (id: String, cx: Double, cy: Double)?
     @State private var overlayPinch: (id: String, w: Double)?
     @State private var overlayTurn: (id: String, tilt: Double)?
+    /// The angle, in degrees, a two-finger twist has locked onto (a quarter or eighth turn), shown with guide lines.
+    @State private var turnLock: Double?
     /// True while a photo from the tray is dragged over the design.
     @State private var dropTargeted = false
 
@@ -312,6 +316,13 @@ struct StageView: View {
                 }
 
 
+                if let t = overlayTurn, let o = store.overlay(t.id), let g = overlayGeometry(o, size) {
+                    rotationGuides(center: g.outer.center, degrees: o.tilt, size: size)
+                } else if let t = captionTurn, let c = store.caption(t.id), !c.text.isEmpty {
+                    let l = CaptionRenderer.layout(c, project: project, W: size.width, H: size.height)
+                    rotationGuides(center: l.center, degrees: c.rotation, size: size)
+                }
+
                 if project.mode == .collage && (store.tab == .layout || dividerDrag != nil) {
                     dividerHandles(size)
                 }
@@ -343,6 +354,7 @@ struct StageView: View {
             onPinch: { pinch($0) },
             onRotateBegin: { turnBegin() },
             onRotate: { turn($0) },
+            onRotateEnd: { turnEnd() },
             onLiftBegin: { liftBegin(at($0), size) },
             onLiftMove: { liftMove(at($0), size) },
             onLiftEnd: { liftEnd(at($0), size, completed: $1) }
@@ -488,6 +500,34 @@ struct StageView: View {
             .rotationEffect(.radians(l.rotationRad))
             .position(l.center)
             .allowsHitTesting(false)
+    }
+
+    /// While a caption or photo on top is twisted: its angle, and when it locks onto a straight, quarter or eighth turn,
+    /// lines along both of its axes across the design so the lock can be seen as well as felt.
+    @ViewBuilder
+    private func rotationGuides(center: CGPoint, degrees: Double, size: CGSize) -> some View {
+        let locked = turnLock != nil
+        if locked {
+            let reach = hypot(size.width, size.height)
+            Path { p in
+                for axis in [degrees, degrees + 90] {
+                    let a = axis * RAD
+                    let dx = cos(a) * reach, dy = sin(a) * reach
+                    p.move(to: CGPoint(x: center.x - dx, y: center.y - dy))
+                    p.addLine(to: CGPoint(x: center.x + dx, y: center.y + dy))
+                }
+            }
+            .stroke(Color.yellow, style: StrokeStyle(lineWidth: 1, dash: [6, 4]))
+            .allowsHitTesting(false)
+        }
+        Text("\(Int(normalizedDegrees(degrees).rounded()))°")
+            .font(.caption.weight(.bold).monospacedDigit())
+            .foregroundStyle(locked ? .black : .white)
+            .padding(.horizontal, 9).padding(.vertical, 4)
+            .background(Capsule().fill(locked ? Color.yellow : Color.black.opacity(0.55)))
+            .position(x: center.x, y: max(16, center.y - 54))
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 
     /// The caption under a touch (the one on top wins). A little slack makes small captions easy to grab.
@@ -822,21 +862,40 @@ struct StageView: View {
     private func turnBegin() {
         captionTurn = store.caption(store.selectedCaption).map { ($0.id, $0.rotation) }
         overlayTurn = captionTurn == nil ? store.overlay(store.selectedOverlay).map { ($0.id, $0.tilt) } : nil
+        turnLock = nil
+    }
+
+    private func turnEnd() {
+        captionTurn = nil
+        overlayTurn = nil
+        turnLock = nil
+    }
+
+    /// Straight and quarter turns hold on a little, eighth turns a little less, so a level or square angle is easy to hit.
+    /// Clicks when it locks on.
+    private func lockedAngle(_ deg: Double) -> Double {
+        let quarter = (deg / 90).rounded() * 90
+        let eighth = (deg / 45).rounded() * 45
+        let lock: Double? = abs(deg - quarter) < 4 ? quarter : abs(deg - eighth) < 2.5 ? eighth : nil
+        if let lock, lock != turnLock {
+            if lock.truncatingRemainder(dividingBy: 90) == 0 {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            } else {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            }
+        }
+        turnLock = lock
+        return lock ?? deg
     }
 
     private func turn(_ radians: CGFloat) {
         if let t = overlayTurn {
-            var deg = t.tilt + Double(radians) / RAD
-            let quarter = (deg / 90).rounded() * 90
-            if abs(deg - quarter) < 3 { deg = quarter }
+            let deg = lockedAngle(t.tilt + Double(radians) / RAD)
             store.updateOverlay(t.id) { $0.tilt = deg }
             return
         }
         guard let t = captionTurn else { return }
-        var deg = t.rotation + Double(radians) / RAD
-        // straight and quarter turns hold on a little, so a level caption is easy to get back
-        let quarter = (deg / 90).rounded() * 90
-        if abs(deg - quarter) < 4 { deg = quarter }
+        let deg = lockedAngle(t.rotation + Double(radians) / RAD)
         store.updateCaption(t.id) { $0.rotation = deg }
     }
 
@@ -879,6 +938,13 @@ struct StageView: View {
     }
 }
 
+
+/// An angle in degrees as 0 to 359.
+private func normalizedDegrees(_ d: Double) -> Double {
+    let n = d.truncatingRemainder(dividingBy: 360)
+    let r = n < 0 ? n + 360 : n
+    return r.rounded() == 360 ? 0 : r
+}
 
 /// An empty cell: a dashed slot with a "+". They pop in one after another, so a new collage reads as nine places to fill.
 private struct EmptySlot: View {
