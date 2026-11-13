@@ -102,6 +102,7 @@ struct TopBar: View {
                     Divider()
                     Button { store.helpOpen = true } label: { Label("How it works", systemImage: "questionmark.circle") }
                     Button { store.aboutOpen = true } label: { Label("About & Privacy", systemImage: "hand.raised") }
+                    Link(destination: AppLinks.writeReview) { Label("Rate CollageMagik", systemImage: "star") }
                 } label: {
                     BarIcon(symbol: "ellipsis")
                 }

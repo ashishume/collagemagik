@@ -36,8 +36,8 @@ final class AdManager {
         choice = defaults.string(forKey: Key.choice).flatMap(Choice.init(rawValue:))
     }
 
-    /// False until a placement ID is set in `AdConfig`: then the app behaves as an ad-free app.
-    var isEnabled: Bool { AdConfig.isConfigured }
+    /// False until Meta is switched on in `AdsSwitch` and a placement ID is set in `AdConfig`.
+    var isEnabled: Bool { AdsSwitch.useMeta && AdConfig.isConfigured }
 
     var trackingStatus: ATTrackingManager.AuthorizationStatus { ATTrackingManager.trackingAuthorizationStatus }
 

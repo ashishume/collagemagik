@@ -6,6 +6,29 @@ enum AppLinks {
     static let terms = URL(string: "https://www.axpocreation.com/collagemagik/terms-of-service")!
     static let support = URL(string: "https://www.axpocreation.com/collagemagik/support")!
     static let dataDeletion = URL(string: "https://www.axpocreation.com/collagemagik/account-deletion")!
+    static let appStore = URL(string: "https://apps.apple.com/app/id6832640005")!
+    /// Opens the App Store straight on "Write a Review".
+    static let writeReview = URL(string: "https://apps.apple.com/app/id6832640005?action=write-review")!
+}
+
+/// "Enjoying CollageMagik? Rate us": opens the App Store review page.
+struct RateUsLink: View {
+    var body: some View {
+        Link(destination: AppLinks.writeReview) {
+            HStack(spacing: 8) {
+                Text("Enjoying CollageMagik?").foregroundStyle(.secondary)
+                HStack(spacing: 1) {
+                    ForEach(0..<5, id: \.self) { _ in Image(systemName: "star.fill") }
+                }
+                .font(.caption2)
+                .foregroundStyle(.yellow)
+                Text("Rate us").fontWeight(.semibold)
+            }
+            .font(.footnote)
+            .padding(.vertical, 6)
+        }
+        .accessibilityLabel("Enjoying CollageMagik? Rate us on the App Store")
+    }
 }
 
 /// About, privacy and data: what the app keeps, the legal links, and one button that deletes everything it has stored.
@@ -16,6 +39,7 @@ struct AboutSheet: View {
     @State private var confirmDelete = false
     @State private var showAdChoices = false
     private let ads = AdManager.shared
+    private let gads = GoogleAdsManager.shared
 
     private var adStatus: String {
         switch ads.choice {
@@ -60,11 +84,45 @@ struct AboutSheet: View {
                     .padding(.vertical, 4)
                 }
 
+                Section {
+                    Link(destination: AppLinks.writeReview) {
+                        Label {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Rate CollageMagik")
+                                Text("A quick rating on the App Store helps a lot. Thank you!").font(.caption).foregroundStyle(.secondary)
+                            }
+                        } icon: {
+                            Image(systemName: "star.fill").foregroundStyle(.yellow)
+                        }
+                    }
+                }
+
                 Section("Your privacy") {
                     Label("No account or sign-in. Your photos, videos and music are processed on this iPhone and never uploaded.", systemImage: "lock.shield")
                     Label("Collages you export are kept in My Library on this iPhone, and only there.", systemImage: "internaldrive")
                     if ads.isEnabled {
                         Label("Ads come from Meta Audience Network. They never get your photos, videos, music or collages.", systemImage: "megaphone")
+                    }
+                    if gads.isEnabled {
+                        Label("Ads come from Google AdMob and keep this app free. They never get your photos, videos, music or collages.", systemImage: "megaphone")
+                    }
+                }
+
+                if gads.isEnabled {
+                    Section {
+                        LabeledContent("Tracking (Apple)", value: trackingStatus)
+                        if gads.privacyOptionsRequired {
+                            Button { gads.presentPrivacyOptions() } label: { Label("Ad privacy choices", systemImage: "slider.horizontal.3") }
+                        }
+                        if ads.trackingStatus == .denied || ads.trackingStatus == .authorized {
+                            Link(destination: URL(string: UIApplication.openSettingsURLString)!) {
+                                Label("Change tracking in Settings", systemImage: "gearshape")
+                            }
+                        }
+                    } header: {
+                        Text("Ads")
+                    } footer: {
+                        Text("A small banner sits above the tool bar, and one full-screen ad appears after you export. Ads never cover your collage while you edit.")
                     }
                 }
 

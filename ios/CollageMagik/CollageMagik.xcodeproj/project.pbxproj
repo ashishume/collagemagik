@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		A10000101 /* FBAudienceNetwork in Frameworks */ = {isa = PBXBuildFile; productRef = A10000102 /* FBAudienceNetwork */; };
+		A10000111 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = A10000112 /* GoogleMobileAds */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +34,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000101 /* FBAudienceNetwork in Frameworks */,
+				A10000111 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +80,7 @@
 			name = CollageMagik;
 			packageProductDependencies = (
 				A10000102 /* FBAudienceNetwork */,
+				A10000112 /* GoogleMobileAds */,
 			);
 			productName = CollageMagik;
 			productReference = A10000001 /* CollageMagik.app */;
@@ -109,6 +112,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				A10000103 /* XCRemoteSwiftPackageReference "FBAudienceNetwork" */,
+				A10000113 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A10000005 /* Products */;
@@ -190,7 +194,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 83FYPW267R;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -199,7 +203,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "CollageMagik needs permission to add your finished collages to your photo library. It cannot see or change the photos already there.";
-				INFOPLIST_KEY_NSUserTrackingUsageDescription = "CollageMagik is free because it shows ads. If you allow tracking, Meta can show ads that are more relevant to you. Your photos, videos and music are never shared.";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "CollageMagik is free because it shows ads. If you allow tracking, our ad partners can show ads that are more relevant to you. Your photos, videos and music are never shared.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -208,7 +212,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.axpo.collagemagik;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -224,7 +228,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 83FYPW267R;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -233,7 +237,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "CollageMagik needs permission to add your finished collages to your photo library. It cannot see or change the photos already there.";
-				INFOPLIST_KEY_NSUserTrackingUsageDescription = "CollageMagik is free because it shows ads. If you allow tracking, Meta can show ads that are more relevant to you. Your photos, videos and music are never shared.";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "CollageMagik is free because it shows ads. If you allow tracking, our ad partners can show ads that are more relevant to you. Your photos, videos and music are never shared.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -242,7 +246,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.axpo.collagemagik;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -284,6 +288,14 @@
 				minimumVersion = 6.22.1;
 			};
 		};
+		A10000113 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.12.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -291,6 +303,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A10000103 /* XCRemoteSwiftPackageReference "FBAudienceNetwork" */;
 			productName = FBAudienceNetwork;
+		};
+		A10000112 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000113 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

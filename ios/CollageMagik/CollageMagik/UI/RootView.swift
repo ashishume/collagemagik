@@ -43,6 +43,7 @@ struct RootView: View {
                         TransportBar()
                     }
                     PanelCard()
+                    AdBannerSlot()
                     ToolDock()
                 }
                 .padding(.horizontal, 12)
@@ -101,7 +102,10 @@ struct RootView: View {
         .sheet(isPresented: $libraryOpen) { LibrarySheet() }
         .sheet(isPresented: $store.aboutOpen) { AboutSheet() }
         .sheet(isPresented: $ads.showNotice) { AdNoticeSheet() }
-        .onAppear { AdManager.shared.appDidLaunch() }
+        .onAppear {
+            AdManager.shared.appDidLaunch()
+            GoogleAdsManager.shared.appDidLaunch()
+        }
         .fullScreenCover(isPresented: $store.previewOpen) { FullScreenPreview() }
         .fullScreenCover(item: Binding(
             get: { store.cropCell.map(CropTarget.init) },

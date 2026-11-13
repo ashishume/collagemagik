@@ -1,4 +1,5 @@
 import AVKit
+import StoreKit
 import SwiftUI
 
 @MainActor
@@ -35,9 +36,11 @@ final class ExportJob {
                     let url = try await exporter.exportVideo(quality: quality) { p in
                         Task { @MainActor in self.progress = p }
                     }
+                    await showAdBeforeResult()
                     state = .done(url, isVideo: true)
                 } else {
                     let url = try await Task.detached { try exporter.exportPNG(at: stillTime, quality: quality) }.value
+                    await showAdBeforeResult()
                     state = .done(url, isVideo: false)
                 }
             } catch is CancellationError {
@@ -58,6 +61,7 @@ final class ExportJob {
         task = Task {
             do {
                 let urls = try await Task.detached { try exporter.exportSlides() }.value
+                await showAdBeforeResult()
                 state = .doneSlides(urls)
             } catch {
                 state = .failed(error.localizedDescription)
@@ -68,12 +72,24 @@ final class ExportJob {
     func cancel() {
         exporter?.cancel()
     }
+
+    /// True while the full-screen ad that comes before the result is up (the export itself is finished).
+    var waitingForAd = false
+
+    /// Google ads: one full-screen ad between "export finished" and showing the result.
+    private func showAdBeforeResult() async {
+        progress = 1
+        waitingForAd = true
+        await GoogleAdsManager.shared.beforeShowingExportResult()
+        waitingForAd = false
+    }
 }
 
 struct ExportSheet: View {
     @Environment(CollageStore.self) private var store
     @Environment(LibraryStore.self) private var library
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.requestReview) private var requestReview
 
     /// Every finished export is also kept in My Library, on this iPhone.
     private enum LibrarySave: Equatable { case idle, saving, saved, failed(String) }
@@ -146,12 +162,26 @@ struct ExportSheet: View {
             case .done(let url, let isVideo):
                 withAnimation(.smooth) { detent = .large }
                 keepInLibrary(url, isVideo: isVideo)
+                askForReviewIfDue()
             case .doneSlides(let urls):
                 withAnimation(.smooth) { detent = .large }
                 keepCarouselInLibrary(urls)
+                askForReviewIfDue()
             default:
                 librarySave = .idle
             }
+        }
+    }
+
+    /// Apple's own rating prompt, after the 3rd and 10th finished export (Apple also limits how often it really appears).
+    private func askForReviewIfDue() {
+        let key = "rating.finishedExports"
+        let n = UserDefaults.standard.integer(forKey: key) + 1
+        UserDefaults.standard.set(n, forKey: key)
+        guard n == 3 || n == 10 else { return }
+        Task {
+            try? await Task.sleep(for: .seconds(1.5))
+            requestReview()
         }
     }
 
@@ -324,13 +354,15 @@ struct ExportSheet: View {
             .scaleEffect(1.8)
             .frame(height: 110)
             .padding(.top, 24)
-            Text("Rendering your collage. Keep the screen on.")
+            Text(job.waitingForAd ? "Done! Your collage is ready — it opens right after a short ad." : "Rendering your collage. Keep the screen on.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            Button(role: .cancel) { job.cancel() } label: {
-                Label("Cancel", systemImage: "xmark").frame(maxWidth: .infinity)
+            if !job.waitingForAd {
+                Button(role: .cancel) { job.cancel() } label: {
+                    Label("Cancel", systemImage: "xmark").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.glass)
             }
-            .buttonStyle(.glass)
         }
     }
 
@@ -398,6 +430,7 @@ struct ExportSheet: View {
             if let saveError {
                 SaveFailureNote(error: saveError)
             }
+            RateUsLink()
         }
     }
 
@@ -484,6 +517,7 @@ struct ExportSheet: View {
             if let saveError {
                 SaveFailureNote(error: saveError)
             }
+            RateUsLink()
         }
     }
 
