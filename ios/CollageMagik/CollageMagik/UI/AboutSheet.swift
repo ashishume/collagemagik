@@ -11,12 +11,12 @@ enum AppLinks {
     static let writeReview = URL(string: "https://apps.apple.com/app/id6832640005?action=write-review")!
 }
 
-/// "Enjoying CollageMagik? Rate us": opens the App Store review page.
+/// "Enjoying Insta Collage? Rate us": opens the App Store review page.
 struct RateUsLink: View {
     var body: some View {
         Link(destination: AppLinks.writeReview) {
             HStack(spacing: 8) {
-                Text("Enjoying CollageMagik?").foregroundStyle(.secondary)
+                Text("Enjoying Insta Collage?").foregroundStyle(.secondary)
                 HStack(spacing: 1) {
                     ForEach(0..<5, id: \.self) { _ in Image(systemName: "star.fill") }
                 }
@@ -27,7 +27,7 @@ struct RateUsLink: View {
             .font(.footnote)
             .padding(.vertical, 6)
         }
-        .accessibilityLabel("Enjoying CollageMagik? Rate us on the App Store")
+        .accessibilityLabel("Enjoying Insta Collage? Rate us on the App Store")
     }
 }
 
@@ -77,7 +77,7 @@ struct AboutSheet: View {
                             .clipShape(.rect(cornerRadius: 12, style: .continuous))
                             .accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("CollageMagik").font(.headline)
+                            Text("Insta Collage").font(.headline)
                             Text("Version \(version)").font(.footnote).foregroundStyle(.secondary)
                         }
                     }
@@ -88,7 +88,7 @@ struct AboutSheet: View {
                     Button { ProStore.shared.openPaywall() } label: {
                         Label {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(ProStore.shared.isPro ? "CollageMagik Pro is active" : "CollageMagik Pro").foregroundStyle(.primary)
+                                Text(ProStore.shared.isPro ? "Insta Collage Pro is active" : "Insta Collage Pro").foregroundStyle(.primary)
                                 Text(ProStore.shared.isPro ? "No ads. Thank you for your support!" : "Remove all ads: monthly, yearly or once for life.")
                                     .font(.caption).foregroundStyle(.secondary)
                             }
@@ -105,7 +105,7 @@ struct AboutSheet: View {
                     Link(destination: AppLinks.writeReview) {
                         Label {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Rate CollageMagik")
+                                Text("Rate Insta Collage")
                                 Text("A quick rating on the App Store helps a lot. Thank you!").font(.caption).foregroundStyle(.secondary)
                             }
                         } icon: {

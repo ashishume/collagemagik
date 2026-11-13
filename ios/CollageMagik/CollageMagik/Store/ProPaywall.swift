@@ -52,7 +52,7 @@ struct ProPaywall: View {
             if now { UINotificationFeedbackGenerator().notificationOccurred(.success) }
         }
         .manageSubscriptionsSheet(isPresented: $showManage)
-        .alert("CollageMagik Pro", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
+        .alert("Insta Collage Pro", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(message ?? "")
@@ -87,10 +87,10 @@ struct ProPaywall: View {
             }
             .accessibilityHidden(true)
 
-            Text("CollageMagik Pro")
+            Text("Insta Collage Pro")
                 .font(.system(size: 28, weight: .bold, design: .rounded))
                 .foregroundStyle(LinearGradient(colors: [.white, Color(red: 0.85, green: 0.8, blue: 1)], startPoint: .top, endPoint: .bottom))
-            Text(pro.isPro ? "Thank you for supporting CollageMagik." : "Make collages with no ads, and help a tiny team keep the app going.")
+            Text(pro.isPro ? "Thank you for supporting Insta Collage." : "Make collages with no ads, and help a tiny team keep the app going.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -338,7 +338,7 @@ struct ProPaywall: View {
     private func buy() async {
         switch await pro.purchase(selected) {
         case .purchased:
-            message = "Welcome to Pro! Ads are gone. Thank you for supporting CollageMagik 💜"
+            message = "Welcome to Pro! Ads are gone. Thank you for supporting Insta Collage 💜"
         case .pending:
             message = "Your purchase is waiting for approval. Pro turns on by itself once it's approved."
         case .failed(let why):

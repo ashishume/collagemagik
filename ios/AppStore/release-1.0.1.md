@@ -2,7 +2,7 @@
 
 Everything to enter in App Store Connect for version **1.0.1 (build 2)**: the new Pro plans (in-app purchases), the ads, the privacy answers, and the text for the release. Copy the text blocks as they are.
 
-- App: **CollageMagik**, Apple ID `6832640005`, bundle ID `com.axpo.collagemagik`
+- App: **Insta Collage Maker & Editor** (home-screen and in-app name: **Insta Collage**), Apple ID `6832640005`, bundle ID `com.axpo.collagemagik`
 - App Store link: https://apps.apple.com/app/id6832640005
 - Privacy Policy: https://www.axpocreation.com/collagemagik/privacy-policy
 - Terms of Use: https://www.axpocreation.com/collagemagik/terms-of-service
@@ -17,7 +17,8 @@ Everything to enter in App Store Connect for version **1.0.1 (build 2)**: the ne
 • Choose part: pick exactly which moment of a video plays, with a filmstrip just like trimming a story.
 • Duplicate clips and "Use whole video" in the timeline menu.
 • Adding many photos and videos now shows a progress bar ("Adding 2 of 5") and can be cancelled.
-• New: CollageMagik Pro removes all ads. Monthly, yearly (with a free week) or once for life.
+• New collages start with a 4-photo grid, and carousels start in the Flow style.
+• New: Insta Collage Pro removes all ads. Monthly, yearly (with a free week) or once for life.
 • Rate us from the ••• menu. Thank you for every review!
 ```
 
@@ -34,8 +35,8 @@ App Store Connect → your app → **Monetization → Subscriptions** → create
 | Field | Value |
 |---|---|
 | Reference name | `CollageMagik Pro` |
-| Group display name (English) | `CollageMagik Pro` |
-| Custom app name (optional) | `CollageMagik` |
+| Group display name (English) | `Insta Collage Pro` |
+| Custom app name (optional) | `Insta Collage` |
 
 Put **Yearly at level 1** and **Monthly at level 2** (the order sets which counts as the upgrade when people switch plans).
 
@@ -49,7 +50,7 @@ Put **Yearly at level 1** and **Monthly at level 2** (the order sets which count
 | Price (suggested) | US $2.99 tier (India ₹199). Let Apple fill the other countries. |
 | Family Sharing | Off |
 | Display name (≤ 30 chars) | `Pro Monthly` |
-| Description (≤ 45 chars) | `No ads in CollageMagik, billed monthly` |
+| Description (≤ 45 chars) | `No ads in Insta Collage, billed monthly` |
 
 ### 2c. Yearly subscription
 
@@ -61,7 +62,7 @@ Put **Yearly at level 1** and **Monthly at level 2** (the order sets which count
 | Price (suggested) | US $14.99 tier (India ₹999). That is about 58% less than 12 months of Monthly. |
 | Family Sharing | Off |
 | Display name (≤ 30 chars) | `Pro Yearly` |
-| Description (≤ 45 chars) | `No ads in CollageMagik, billed yearly` |
+| Description (≤ 45 chars) | `No ads in Insta Collage, billed yearly` |
 | Introductory offer | **Free trial, 1 week**, all countries, new subscribers only |
 
 The app reads the trial from the App Store: the Pro page says "1-week free trial" and the button changes to "Start free trial" only for people who can still use it. Change or remove the trial here and the app follows without an update.
@@ -77,7 +78,7 @@ App Store Connect → **Monetization → In-App Purchases** → `+` → **Non-Co
 | Price (suggested) | US $29.99 tier (India ₹2,499) |
 | Family Sharing | Off |
 | Display name (≤ 30 chars) | `Pro Lifetime` |
-| Description (≤ 45 chars) | `No ads in CollageMagik, forever` |
+| Description (≤ 45 chars) | `No ads in Insta Collage, forever` |
 
 ### 2e. Review information (each of the 3 products)
 
@@ -85,7 +86,7 @@ App Store Connect → **Monetization → In-App Purchases** → `+` → **Non-Co
 - **Review notes** (paste into each product):
 
 ```
-CollageMagik Pro removes all ads (the banner above the tool bar and the full-screen ad after an export). Nothing else is locked: every layout, edit and export stays free.
+Insta Collage Pro removes all ads (the banner above the tool bar and the full-screen ad after an export). Nothing else is locked: every layout, edit and export stays free.
 
 To see it: tap ••• (top right) → "Remove ads (Pro)". The Pro page also opens from About & Privacy, under each export result, and on its own at most once every 7 days.
 
@@ -103,7 +104,7 @@ Products that have never been approved must go to review **together with a new a
 Apple requires the subscription terms and a Terms of Use link in the App Store listing. Add this to the end of the description:
 
 ```
-CollageMagik is free to use and shows ads. CollageMagik Pro removes all ads:
+Insta Collage is free to use and shows ads. Insta Collage Pro removes all ads:
 • Pro Monthly and Pro Yearly are auto-renewing subscriptions. Pro Yearly starts with a 1-week free trial for new subscribers.
 • Pro Lifetime is a one-time purchase.
 
@@ -134,13 +135,13 @@ Also check under **App Information → License Agreement**: either keep Apple's 
 
 Check this against Google's own guide before you submit, since Google updates it: https://developers.google.com/admob/ios/privacy/data-disclosure
 
-The app asks Apple's "Allow tracking?" question (once, after the thank-you note shown before the first ad), so declaring **tracking = Yes** is correct.
+The app asks Apple's "Allow tracking?" question once, at first launch (after Google's EU/UK consent form, before any ad loads), so declaring **tracking = Yes** is correct.
 
 **Privacy Policy:** the page at the URL above should now say that:
 - ads come from **Google AdMob** (and possibly Meta Audience Network),
 - the advertising ID is used only with the person's permission,
 - in the EU/UK, Google's consent form asks first,
-- **CollageMagik Pro** is bought through Apple, and the developer never sees any payment details.
+- **Insta Collage Pro** is bought through Apple, and the developer never sees any payment details.
 
 ---
 
@@ -153,7 +154,7 @@ The app asks Apple's "Allow tracking?" question (once, after the thank-you note 
    ```
    Also make sure the App Store listing's **Marketing URL** or **Support URL** is on `axpocreation.com`, so AdMob can find the file.
 3. **Privacy & messaging → European regulations (GDPR)**: create and **publish** a consent message for CollageMagik. Without it, people in the EU/UK see no ads (the app checks this at launch).
-4. **Privacy & messaging → IDFA explainer** is optional: the app already shows its own thank-you note before Apple's tracking question.
+4. **Privacy & messaging → IDFA explainer** is optional: the app asks Apple's tracking question itself at first launch.
 
 Ad unit IDs used by the app (release builds; debug builds use Google's test ads):
 
@@ -168,15 +169,17 @@ Ad unit IDs used by the app (release builds; debug builds use Google's test ads)
 ## 6. "Notes" for App Review (version page → App Review Information)
 
 ```
-CollageMagik needs no sign-in, so no demo account is needed.
+Insta Collage needs no sign-in, so no demo account is needed. Everything runs on the device: photos, videos and music are never uploaded.
 
-Ads: a small Google AdMob banner sits above the bottom tool bar, and one full-screen ad appears after an export finishes, before the result is shown. Before the first full-screen ad the app explains, once, that ads keep the app free, then shows Apple's tracking prompt. In the EU/UK, Google's consent form is shown first.
+TO TEST A COLLAGE: tap "Add" (or ••• → Add from Photos), choose 2-4 photos and/or a short video, then tap the Export button (top right) → Export video or Export picture. In the Layout tab, drag the borders between pictures to resize cells. Exports are kept in My Library (photo-stack button, top left).
+TO TEST A CAROUSEL: tap the carousel button at the top, add 4-6 photos, swipe the preview, then Export (one image per slide).
+"Save to Photos" asks for add-only photo permission. Music is optional: Video tab → Sound → Add background music (needs a video in the collage).
 
-In-app purchases: "CollageMagik Pro" (Monthly, Yearly with a 1-week free trial, Lifetime) only removes ads. Open it from ••• (top right) → "Remove ads (Pro)". Restore purchases is on the same page.
+ADS (Google AdMob): Apple's tracking prompt appears at first launch (in the EU/UK, after Google's consent form). A small banner sits above the bottom tool bar, and one full-screen ad appears after an export finishes, before the result is shown. Before the first full-screen ad the app shows a short "Thank you for using Insta Collage" note, once. Ads are never shown while editing. If no ad is available (no fill), nothing is shown. In the EU/UK, ad choices can be changed in ••• → About & Privacy → Ad privacy choices.
 
-To see an ad quickly: add two photos (+ at the top), tap the Export button (top right), then "Export video".
+IN-APP PURCHASES: "Insta Collage Pro" (Monthly, Yearly with a 1-week free trial, Lifetime) only removes ads; every feature stays free. Open it from ••• (top right) → "Remove ads (Pro)". Restore purchases is on the Pro page and in ••• → About & Privacy.
 
-Photos, videos and music are processed on the device and are never uploaded.
+Privacy, Terms, Support and "Delete all my data" are in ••• → About & Privacy.
 ```
 
 ---

@@ -1,7 +1,7 @@
 [
   {
     "id": "01-photos-that-flow",
-    "feature": "Carousel",
+    "feature": "Carousel (Flow style)",
     "source": "../raw/01-carousel.png",
     "title": ["Photos that flow.", "Slide to slide."],
     "subtitle": "Pictures cross the edge, so people keep swiping.",
@@ -20,9 +20,19 @@
     "accent": "B8386F"
   },
   {
-    "id": "03-35-layouts",
+    "id": "03-resize-any-cell",
+    "feature": "Adjustable collages (new in 1.0.1)",
+    "source": "../raw/03-resize.png",
+    "title": ["Drag a border.", "Resize any cell."],
+    "subtitle": "Make any picture bigger or smaller in one move.",
+    "background": "EEF6FB",
+    "wash": "D3E7F3",
+    "accent": "2F7AA8"
+  },
+  {
+    "id": "04-35-layouts",
     "feature": "Layouts",
-    "source": "../raw/03-layout.png",
+    "source": "../raw/04-layout.png",
     "title": ["35 layouts.", "Your way."],
     "subtitle": "Up to 9 pictures. Story, Post or Square.",
     "background": "F0F5FD",
@@ -30,9 +40,9 @@
     "accent": "3F6DB5"
   },
   {
-    "id": "04-collages-that-move",
+    "id": "05-collages-that-move",
     "feature": "Video timeline",
-    "source": "../raw/04-timeline.png",
+    "source": "../raw/05-timeline.png",
     "title": ["Collages that", "really move."],
     "subtitle": "Videos play inside their cells. Trim, split, sync.",
     "background": "EFF9F5",
@@ -40,9 +50,29 @@
     "accent": "177F70"
   },
   {
-    "id": "05-crop-and-straighten",
+    "id": "06-choose-the-moment",
+    "feature": "Choose part (new in 1.0.1)",
+    "source": "../raw/06-choose-part.png",
+    "title": ["Pick the", "perfect moment."],
+    "subtitle": "Choose exactly which part of a video plays.",
+    "background": "FDF3F0",
+    "wash": "F6DAD1",
+    "accent": "C0503A"
+  },
+  {
+    "id": "07-words-that-pop",
+    "feature": "Captions",
+    "source": "../raw/07-captions.png",
+    "title": ["Add words", "that pop."],
+    "subtitle": "10 fonts, colours and looks. Place them anywhere.",
+    "background": "F8F0FB",
+    "wash": "EBD5F3",
+    "accent": "8E3FAF"
+  },
+  {
+    "id": "08-crop-and-straighten",
     "feature": "Crop and rotate",
-    "source": "../raw/05-crop.png",
+    "source": "../raw/08-crop.png",
     "title": ["Crop, rotate,", "straighten."],
     "subtitle": "Fine-tune any picture or video, to the degree.",
     "background": "FFF3EC",
@@ -50,9 +80,9 @@
     "accent": "B85D36"
   },
   {
-    "id": "06-export-in-high-quality",
+    "id": "09-export-in-high-quality",
     "feature": "Export",
-    "source": "../raw/06-export.png",
+    "source": "../raw/09-export.png",
     "title": ["Export in", "high quality."],
     "subtitle": "MP4 up to 4K or a PNG. Share it or save to Photos.",
     "background": "FFFAED",
@@ -60,9 +90,9 @@
     "accent": "A2771F"
   },
   {
-    "id": "07-kept-private",
+    "id": "10-kept-private",
     "feature": "My Library",
-    "source": "../raw/07-library.png",
+    "source": "../raw/10-library.png",
     "title": ["Your work,", "kept private."],
     "subtitle": "My Library lives on your iPhone. No account needed.",
     "background": "F3F9EE",

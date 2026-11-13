@@ -11,15 +11,15 @@
     {
       "file": "png/01-photos-that-flow-1320x2868.png",
       "source": "../raw/01-carousel.png",
-      "feature": "Carousel",
+      "feature": "Carousel (Flow style)",
       "title": "Photos that flow. Slide to slide.",
       "subtitle": "Pictures cross the edge, so people keep swiping.",
       "width": 1320,
       "height": 2868,
       "mode": "RGB",
       "color_profile": "sRGB",
-      "source_sha256": "3f302c4fe11497b754afa1016b9f215ca388e0fec8fa707e2c631381e18fb260",
-      "sha256": "d32aded89862cdccae698bf96226c0f3030bf45b3b06d4b22414edefc93065f4",
+      "source_sha256": "ed542858181488dfe410aaea63bb0a1153bdda55dcf60673c2994ff3ce6418ac",
+      "sha256": "e0ae0fec619b73dc248d8d1289ec8668e804f541ecfdd39855206d68f3516907",
       "screen_opaque_pixels_match_resized_source": true,
       "headline_font_sizes": [
         120,
@@ -36,8 +36,8 @@
       "height": 2868,
       "mode": "RGB",
       "color_profile": "sRGB",
-      "source_sha256": "17db252539c3d4adecdb8417f124e62706ff6ff37c09f6cc87a0c4461ab631ba",
-      "sha256": "9394688a8f378f9087f28f27a68c8b1a8712da146fe561089a03cd38a3ce6a0b",
+      "source_sha256": "36b7290c3a6d67a3665720e54fbccd32dfa18d96e6e6d5b1b43f8056917646b7",
+      "sha256": "f70e3564aceb668b62f673b8adc0019e217669bebc6d556da67f9e986044b45c",
       "screen_opaque_pixels_match_resized_source": true,
       "headline_font_sizes": [
         120,
@@ -45,8 +45,26 @@
       ]
     },
     {
-      "file": "png/03-35-layouts-1320x2868.png",
-      "source": "../raw/03-layout.png",
+      "file": "png/03-resize-any-cell-1320x2868.png",
+      "source": "../raw/03-resize.png",
+      "feature": "Adjustable collages (new in 1.0.1)",
+      "title": "Drag a border. Resize any cell.",
+      "subtitle": "Make any picture bigger or smaller in one move.",
+      "width": 1320,
+      "height": 2868,
+      "mode": "RGB",
+      "color_profile": "sRGB",
+      "source_sha256": "af6c69e363e58ccd8d020f39e2c7cb3db3a2bfc1175081f5f498179c73c41335",
+      "sha256": "47fc4b97c54cdb108963861dfe8236dfd9becfd7449da1addc937931b307364b",
+      "screen_opaque_pixels_match_resized_source": true,
+      "headline_font_sizes": [
+        120,
+        120
+      ]
+    },
+    {
+      "file": "png/04-35-layouts-1320x2868.png",
+      "source": "../raw/04-layout.png",
       "feature": "Layouts",
       "title": "35 layouts. Your way.",
       "subtitle": "Up to 9 pictures. Story, Post or Square.",
@@ -54,8 +72,8 @@
       "height": 2868,
       "mode": "RGB",
       "color_profile": "sRGB",
-      "source_sha256": "dc99b2de91ea502216246ebfb58230578fdc387241fbdb87b74345ed4b26582e",
-      "sha256": "5fe15800143da827c119565399df040b9d25c8d16b0198eb627800934d186f9d",
+      "source_sha256": "9105ef8869121184dfedff28ed47cbf4d53e2b1b6c7707ca8f87f25ce0daf5a7",
+      "sha256": "14596e39e352cfb894399163d637c08e0591c7b05f3cb82bb09721f71fca9f78",
       "screen_opaque_pixels_match_resized_source": true,
       "headline_font_sizes": [
         120,
@@ -63,8 +81,8 @@
       ]
     },
     {
-      "file": "png/04-collages-that-move-1320x2868.png",
-      "source": "../raw/04-timeline.png",
+      "file": "png/05-collages-that-move-1320x2868.png",
+      "source": "../raw/05-timeline.png",
       "feature": "Video timeline",
       "title": "Collages that really move.",
       "subtitle": "Videos play inside their cells. Trim, split, sync.",
@@ -72,8 +90,8 @@
       "height": 2868,
       "mode": "RGB",
       "color_profile": "sRGB",
-      "source_sha256": "cdb1ad8fc9febd77bad9d5eee098f1e1824bbaabf378bee7d0dd158fc48356cd",
-      "sha256": "281823273ed396a5f13b55b0b0c6c90d72ce4219d04e22092969e6dafd1c296b",
+      "source_sha256": "78245491f620364a386d86aea7c228e08bbb47aca2b28d449d11efcc8eaac309",
+      "sha256": "6a9e99f4d4c7cce3bf2fe7e506ff0fe9181cecd0b1574591496739e9402faa59",
       "screen_opaque_pixels_match_resized_source": true,
       "headline_font_sizes": [
         120,
@@ -81,8 +99,44 @@
       ]
     },
     {
-      "file": "png/05-crop-and-straighten-1320x2868.png",
-      "source": "../raw/05-crop.png",
+      "file": "png/06-choose-the-moment-1320x2868.png",
+      "source": "../raw/06-choose-part.png",
+      "feature": "Choose part (new in 1.0.1)",
+      "title": "Pick the perfect moment.",
+      "subtitle": "Choose exactly which part of a video plays.",
+      "width": 1320,
+      "height": 2868,
+      "mode": "RGB",
+      "color_profile": "sRGB",
+      "source_sha256": "bab406528495b14c86be1d37ebf56dfc2e0da1ea70f7c0eddeb1f90dc5b6befe",
+      "sha256": "10afa8f6d230cbfbd8f4aab3f7b5f0827f79373b06a4b6390f4ca0f4dae929ad",
+      "screen_opaque_pixels_match_resized_source": true,
+      "headline_font_sizes": [
+        120,
+        120
+      ]
+    },
+    {
+      "file": "png/07-words-that-pop-1320x2868.png",
+      "source": "../raw/07-captions.png",
+      "feature": "Captions",
+      "title": "Add words that pop.",
+      "subtitle": "10 fonts, colours and looks. Place them anywhere.",
+      "width": 1320,
+      "height": 2868,
+      "mode": "RGB",
+      "color_profile": "sRGB",
+      "source_sha256": "6f2ce2c256442d501b943bc59715fa6488b15c514a26b7460da1ab776e4a06f1",
+      "sha256": "1a528c771801d33bdcf4437b544bc015b1a0d7db964aa3a126ddf7fd3c00f1cd",
+      "screen_opaque_pixels_match_resized_source": true,
+      "headline_font_sizes": [
+        120,
+        120
+      ]
+    },
+    {
+      "file": "png/08-crop-and-straighten-1320x2868.png",
+      "source": "../raw/08-crop.png",
       "feature": "Crop and rotate",
       "title": "Crop, rotate, straighten.",
       "subtitle": "Fine-tune any picture or video, to the degree.",
@@ -90,8 +144,8 @@
       "height": 2868,
       "mode": "RGB",
       "color_profile": "sRGB",
-      "source_sha256": "32348584b5de1eca7b69589fa69695ad2b602add25f2efcc2703c39bf2a39286",
-      "sha256": "7fe14c5cbc2dabeb5e4ddd82948de259b72b48c50689a2f6007b2f0e4759c3cf",
+      "source_sha256": "c696710abe01a4ee8ef1d023ce72335b23fd22584f467cd9a8ab8b8ffe13454d",
+      "sha256": "22dbe10de7553667c9366fe8ad9784669aa0a4104cd7e7f49ca18698a22c3f07",
       "screen_opaque_pixels_match_resized_source": true,
       "headline_font_sizes": [
         120,
@@ -99,8 +153,8 @@
       ]
     },
     {
-      "file": "png/06-export-in-high-quality-1320x2868.png",
-      "source": "../raw/06-export.png",
+      "file": "png/09-export-in-high-quality-1320x2868.png",
+      "source": "../raw/09-export.png",
       "feature": "Export",
       "title": "Export in high quality.",
       "subtitle": "MP4 up to 4K or a PNG. Share it or save to Photos.",
@@ -109,7 +163,7 @@
       "mode": "RGB",
       "color_profile": "sRGB",
       "source_sha256": "2f0773decf91a6c2a4645d8e10874f16f78d0af506247dbe82631d2e3d8078c0",
-      "sha256": "fa6168e6a86fa294e9c9aa7c1db1ed20766473e484a14ee6a3009a95cadf1e78",
+      "sha256": "f649ed674bbf7536579be31088592c9765332cac5aac9e4e9a94c053770ed986",
       "screen_opaque_pixels_match_resized_source": true,
       "headline_font_sizes": [
         120,
@@ -117,8 +171,8 @@
       ]
     },
     {
-      "file": "png/07-kept-private-1320x2868.png",
-      "source": "../raw/07-library.png",
+      "file": "png/10-kept-private-1320x2868.png",
+      "source": "../raw/10-library.png",
       "feature": "My Library",
       "title": "Your work, kept private.",
       "subtitle": "My Library lives on your iPhone. No account needed.",
@@ -127,7 +181,7 @@
       "mode": "RGB",
       "color_profile": "sRGB",
       "source_sha256": "e6d1c9a966cd696a8ba647ffc208ab718a6d4efad0bb220c19dbe5b29178fe2a",
-      "sha256": "f0af4f02463637b9b20ec7cdef65b526ac27667bf5e8a183beeec7bb46ffdc47",
+      "sha256": "4d525d4d2cbba9337646449125ba9bfa73c86e4e4a14b59c76ba0acdd9724e8c",
       "screen_opaque_pixels_match_resized_source": true,
       "headline_font_sizes": [
         120,
