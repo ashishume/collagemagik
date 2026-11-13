@@ -45,17 +45,18 @@ enum MediaLoader {
         return t.conforms(to: .audio)
     }
 
-    static func load(url: URL, name: String) async throws -> MediaItem {
+    /// `id` keeps an item's identity when a draft is reopened.
+    static func load(url: URL, name: String, id: String = newId()) async throws -> MediaItem {
         switch kind(of: url) {
-        case .photo: return try loadPhoto(url: url, name: name)
-        case .video: return try await loadVideo(url: url, name: name)
+        case .photo: return try loadPhoto(url: url, name: name, id: id)
+        case .video: return try await loadVideo(url: url, name: name, id: id)
         case nil: throw ImportError("\(name): only photos and videos can be added.")
         }
     }
 
     // MARK: Photos
 
-    static func loadPhoto(url: URL, name: String) throws -> MediaItem {
+    static func loadPhoto(url: URL, name: String, id: String = newId()) throws -> MediaItem {
         guard let src = CGImageSourceCreateWithURL(url as CFURL, nil),
               let props = CGImageSourceCopyPropertiesAtIndex(src, 0, nil) as? [CFString: Any],
               let pw = (props[kCGImagePropertyPixelWidth] as? NSNumber)?.doubleValue,
@@ -75,7 +76,7 @@ enum MediaLoader {
         }
         guard let preview = thumb(1600), let small = thumb(420) else { throw ImportError("\(name): this picture couldn't be read.") }
         return MediaItem(
-            id: newId(), kind: .photo, url: url, name: name,
+            id: id, kind: .photo, url: url, name: name,
             width: swapped ? ph : pw, height: swapped ? pw : ph,
             duration: 0, hasAudio: false, thumbnail: small, preview: preview
         )
@@ -90,7 +91,7 @@ enum MediaLoader {
         return String(bytes: bytes, encoding: .macOSRoman)?.trimmingCharacters(in: .whitespaces)
     }
 
-    static func loadVideo(url: URL, name: String) async throws -> MediaItem {
+    static func loadVideo(url: URL, name: String, id: String = newId()) async throws -> MediaItem {
         let asset = AVURLAsset(url: url)
         let ext = url.pathExtension.uppercased()
         let supported = "Use an MP4 or MOV video (H.264 or HEVC)."
@@ -136,7 +137,7 @@ enum MediaLoader {
             throw ImportError("\(name): the pictures in this video can't be decoded on this iPhone. \(supported)")
         }
         return MediaItem(
-            id: newId(), kind: .video, url: url, name: name,
+            id: id, kind: .video, url: url, name: name,
             width: w, height: h, duration: seconds, hasAudio: hasAudio, thumbnail: thumbnail, preview: nil
         )
     }

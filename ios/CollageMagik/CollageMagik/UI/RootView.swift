@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 struct RootView: View {
     @Environment(CollageStore.self) private var store
     @Environment(LibraryStore.self) private var library
+    @Environment(\.scenePhase) private var scenePhase
     /// "New collage" / "New carousel" waiting for the user to confirm (their current work would be cleared).
     @State private var pendingNew: EditMode?
     @State private var libraryOpen = false
@@ -126,7 +127,14 @@ struct RootView: View {
         )) { target in
             CaptionEditor(id: target.id)
         }
-        .onChange(of: store.project) { store.playback.projectChanged() }
+        .onChange(of: store.project) {
+            store.playback.projectChanged()
+            store.scheduleDraftSave()
+        }
+        .onChange(of: store.items.map(\.id)) { store.scheduleDraftSave() }
+        // leaving the app: save at once, iOS may close it in the background
+        .onChange(of: scenePhase) { _, phase in if phase != .active { store.saveDraftNow() } }
+        .task { await store.restoreLastDraft() }
         // a caption stays selected only while its tools are showing
         .onChange(of: store.tab) { _, tab in if tab != .text { store.selectedCaption = nil } }
         #if DEBUG
@@ -144,11 +152,12 @@ struct RootView: View {
             titleVisibility: .visible,
             presenting: pendingNew
         ) { mode in
-            Button(mode == .carousel ? "New carousel" : "New collage", role: .destructive) {
+            Button(mode == .carousel ? "New carousel" : "New collage") {
                 withAnimation(.smooth) { store.newCollage(mode: mode) }
             }
+            Button("Keep editing", role: .cancel) {}
         } message: { _ in
-            Text("Your current work will be cleared.")
+            Text("Your current design is kept in My Library, under Drafts.")
         }
     }
 }

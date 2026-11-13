@@ -336,8 +336,10 @@ private struct TimelineArea: View {
 
     private func ruler(view: Double, pxPerSec: Double) -> some View {
         let step = view <= 15 ? 2.0 : view <= 30 ? 5.0 : 10.0
+        // no "0s" (the playhead's knob sits on it), and no label too close to the right edge to fit
+        let last = view - 18 / max(pxPerSec, 0.01)
         return ZStack(alignment: .topLeading) {
-            ForEach(Array(stride(from: 0.0, through: view, by: step)), id: \.self) { t in
+            ForEach(Array(stride(from: step, through: max(step, last), by: step)).filter { $0 <= last }, id: \.self) { t in
                 Text("\(Int(t))s")
                     .font(.system(size: 8.5, weight: .medium).monospacedDigit())
                     .foregroundStyle(.secondary)

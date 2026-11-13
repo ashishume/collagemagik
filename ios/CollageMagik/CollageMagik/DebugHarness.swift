@@ -3,6 +3,7 @@ import SwiftUI
 
 /// Debug-only: lets a script drive the app headlessly (simulator shares the Mac's filesystem).
 /// Env vars: CM_AUTOLOAD=path1,path2  CM_TAB=timeline  CM_PLAY=1  CM_SELECT=0  CM_EXPORT=video|png|ultra  CM_HDR=1  CM_OUT=/path
+/// Drafts: CM_OPEN=n opens the n-th draft, CM_NEW=1 starts a new collage after the last draft reopens. CM_SHEET=export|help|about.
 @MainActor
 enum DebugHarness {
     static func run(_ store: CollageStore) async {
@@ -130,6 +131,30 @@ enum DebugHarness {
             }
         }
         if env["CM_DUP"] == "1" { store.duplicateSelectedClip() }
+        // CM_SHEET=export|help|about opens that sheet (for screenshots)
+        switch env["CM_SHEET"] {
+        case "export": store.exportOpen = true
+        case "help": store.helpOpen = true
+        case "about": store.aboutOpen = true
+        default: break
+        }
+        // CM_OPEN=n: opens the n-th draft in My Library (0 = newest), as tapping it there does
+        if let n = env["CM_OPEN"].flatMap(Int.init) {
+            try? await Task.sleep(for: .seconds(4))
+            if store.drafts.indices.contains(n) {
+                let id = store.drafts[n].id
+                await store.openDraft(id)
+                NSLog("CM_DEBUG opened draft %@: items %d, cells %d, current %@", id, store.items.count, store.placedMediaCount, store.draftId)
+            }
+        }
+        // CM_NEW=1: after the last draft has reopened, start a new collage (the draft must stay in My Library)
+        if env["CM_NEW"] == "1" {
+            try? await Task.sleep(for: .seconds(4))
+            NSLog("CM_DEBUG before new: draft %@ items %d", store.draftId, store.items.count)
+            store.newCollage()
+            try? await Task.sleep(for: .seconds(2))
+            NSLog("CM_DEBUG after new: draft %@ items %d drafts %d", store.draftId, store.items.count, store.drafts.count)
+        }
         if env["CM_PART"] == "1" { store.openChoosePart() }
         if env["CM_PREVIEW"] == "1" { store.previewOpen = true }
         if env["CM_PLAY"] == "1" { store.playback.play() }

@@ -58,7 +58,7 @@ let frameSwatches = ["#ffffff", "#f4ecdc", "#101016", "#ffd6e7", "#c9e4ff"]
 
 /// How a grid layout is split, as fractions that each add up to 1. `rows`: `outer` are band heights from top to
 /// bottom and `inner[i]` the cell widths in band i. Otherwise `outer` are column widths and `inner[i]` cell heights.
-struct LayoutGrid: Hashable {
+struct LayoutGrid: Hashable, Codable {
     var rows: Bool
     var outer: [Double]
     var inner: [[Double]]
@@ -80,7 +80,7 @@ struct CollageLayout: Identifiable, Hashable {
     var count: Int { rects.count }
 }
 
-struct CellState: Equatable {
+struct CellState: Equatable, Codable {
     var mediaId: String? = nil
     /// 1 = the photo or video just covers the cell.
     var zoom: Double = 1
@@ -99,7 +99,7 @@ struct CellState: Equatable {
 }
 
 /// A piece of a video placed on the timeline. All values are seconds.
-struct Clip: Identifiable, Equatable {
+struct Clip: Identifiable, Equatable, Codable {
     var id: String
     /// Where the clip begins on the timeline.
     var start: Double
@@ -108,7 +108,7 @@ struct Clip: Identifiable, Equatable {
     var outPoint: Double
 }
 
-struct Lane: Equatable {
+struct Lane: Equatable, Codable {
     var mediaId: String
     var clips: [Clip]
     /// Repeat the lane's clips when they end (otherwise the last frame is held).
@@ -118,7 +118,7 @@ struct Lane: Equatable {
 }
 
 /// Background music (the person's own audio file), shown as its own ribbon on the timeline.
-struct MusicTrack: Equatable {
+struct MusicTrack: Equatable, Codable {
     var url: URL
     var name: String
     var duration: Double
@@ -168,7 +168,7 @@ enum EditMode: String, CaseIterable, Identifiable {
     var label: String { self == .collage ? "Collage" : "Carousel" }
 }
 
-struct Project: Equatable {
+struct Project: Equatable, Codable {
     var mode: EditMode = .collage
     var format: FormatId = .story
     var cellCount: Int = initialCellCount

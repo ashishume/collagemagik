@@ -376,9 +376,12 @@ extension StylePanel {
                 .padding(.leading, 4)
             }
             if frame != .none {
-                Text("Framing every photo in the layout. Photos on top have their own frame.")
+                // one line: the card's height leaves room for exactly one
+                Text("Frames every photo in the layout. Photos on top have their own.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }

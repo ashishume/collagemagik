@@ -13,11 +13,17 @@ struct ImportProgress: Equatable {
     private(set) var itemFraction = 0.0
     private(set) var detail = ""
 
-    init(total: Int) { self.total = max(1, total) }
+    /// Replaces "Adding 2 of 5", e.g. "Opening your draft".
+    var heading: String?
+
+    init(total: Int, heading: String? = nil) {
+        self.total = max(1, total)
+        self.heading = heading
+    }
 
     /// The whole import, 0...1.
     var fraction: Double { min(1, (Double(current - 1) + itemFraction) / Double(total)) }
-    var title: String { total == 1 ? "Adding 1 item" : "Adding \(current) of \(total)" }
+    var title: String { heading ?? (total == 1 ? "Adding 1 item" : "Adding \(current) of \(total)") }
 
     mutating func start(item: Int, detail: String) {
         current = min(max(1, item), total)

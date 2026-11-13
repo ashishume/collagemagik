@@ -75,8 +75,19 @@ final class CollageStore {
     let playback = PlaybackEngine()
     private var toastSeq = 0
 
+    // Drafts: the design in progress is saved as you go, so closing the app (or iOS closing it) loses nothing.
+    /// The draft this design is saved as.
+    private(set) var draftId = newId()
+    private var draftCreated = Date()
+    /// Every saved draft, newest first (for My Library).
+    private(set) var drafts: [DraftSummary] = []
+    @ObservationIgnored private var saveTask: Task<Void, Never>?
+    /// What was last written, so opening a draft (or an edit that changes nothing) doesn't save it again.
+    @ObservationIgnored private var lastSaved: (project: Project, items: [String])?
+
     init() {
         playback.store = self
+        drafts = DraftDisk.list()
     }
 
     var totalDuration: Double { CollageMagik.totalDuration(project) }
@@ -815,8 +826,13 @@ final class CollageStore {
         if selectedClip == musicClipId { selectedClip = nil }
     }
 
-    /// Starts over, as a collage or a carousel. With no mode given the current mode is kept.
-    func newCollage(mode newMode: EditMode? = nil) {
+    /// Starts over, as a collage or a carousel. With no mode given the current mode is kept. The design in progress
+    /// stays in Drafts (unless `keepDraft` is false, when it has just been deleted).
+    func newCollage(mode newMode: EditMode? = nil, keepDraft: Bool = true) {
+        if keepDraft { saveDraftNow() } else { saveTask?.cancel() }
+        draftId = newId()
+        draftCreated = Date()
+        lastSaved = nil
         playback.pause()
         playback.playhead = 0
         for i in items { playback.dispose(i.id) }
@@ -840,5 +856,136 @@ final class CollageStore {
         selectedOverlay = nil
         tab = .media
         playback.projectChanged()
+    }
+}
+
+// MARK: - Drafts
+
+extension CollageStore {
+    /// True when there is something worth keeping.
+    var hasContent: Bool {
+        !items.isEmpty || project.captions.contains { !$0.text.isEmpty } || project.music != nil
+    }
+
+    /// Saves a moment after the last change (edits come in bursts: a drag is dozens of changes).
+    func scheduleDraftSave() {
+        saveTask?.cancel()
+        saveTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(1.2))
+            guard !Task.isCancelled, let self else { return }
+            if self.importing { self.scheduleDraftSave(); return }
+            self.saveDraftNow()
+        }
+    }
+
+    /// Saves the design now (the files are written in the background). An empty design removes its draft.
+    func saveDraftNow() {
+        saveTask?.cancel()
+        let id = draftId
+        guard hasContent else {
+            if lastSaved != nil || drafts.contains(where: { $0.id == id }) {
+                lastSaved = nil
+                DraftDisk.queue.async {
+                    DraftDisk.remove(id)
+                    Task { @MainActor [weak self] in self?.refreshDrafts() }
+                }
+            }
+            return
+        }
+        let ids = items.map(\.id)
+        if let last = lastSaved, last.project == project, last.items == ids { return }
+        lastSaved = (project, ids)
+        let project = project
+        let created = draftCreated
+        let media = items.map { DraftDisk.Media(id: $0.id, isVideo: $0.kind == .video, url: $0.url, name: $0.name) }
+        let thumb = DraftDisk.thumbnail(project: project, items: items)
+        DraftDisk.queue.async {
+            try? DraftDisk.write(id: id, createdAt: created, project: project, items: media, thumb: thumb)
+            Task { @MainActor [weak self] in self?.refreshDrafts() }
+        }
+    }
+
+    func refreshDrafts() {
+        DraftDisk.queue.async {
+            let list = DraftDisk.list()
+            Task { @MainActor [weak self] in self?.drafts = list }
+        }
+    }
+
+    /// On launch: carries on with the last design, if there is one.
+    func restoreLastDraft() async {
+        #if DEBUG
+        // the debug harness sets up its own design
+        let env = ProcessInfo.processInfo.environment
+        if env["CM_AUTOLOAD"] != nil || env["CM_DEMO"] != nil || env["CM_IMPORT"] != nil { return }
+        #endif
+        guard !hasContent, let latest = DraftDisk.list().first else { return }
+        await openDraft(latest.id)
+    }
+
+    /// Opens a saved draft in place of the current design (which is saved first).
+    func openDraft(_ id: String) async {
+        if id == draftId && hasContent { return }
+        saveDraftNow()
+        let file: DraftFile
+        do { file = try DraftDisk.read(id) } catch {
+            notify("This draft couldn't be opened.")
+            return
+        }
+        let mediaDir = DraftDisk.media(id)
+        playback.pause()
+        for i in items { playback.dispose(i.id) }
+        importProgress = ImportProgress(total: file.items.count, heading: "Opening your draft")
+        importing = true
+        var loaded: [MediaItem] = []
+        for (i, d) in file.items.enumerated() {
+            importProgress?.start(item: i + 1, detail: d.isVideo ? "Reading video…" : "Reading photo…")
+            if let item = try? await MediaLoader.load(url: mediaDir.appendingPathComponent(d.file), name: d.name, id: d.id) {
+                loaded.append(item)
+            }
+            importProgress?.finishItem(added: loaded.count)
+        }
+        var p = file.project
+        // anything whose file couldn't be read leaves the design
+        let ids = Set(loaded.map(\.id))
+        for i in p.cells.indices where p.cells[i].mediaId.map({ !ids.contains($0) }) ?? false { p.cells[i].mediaId = nil }
+        p.lanes.removeAll { !ids.contains($0.mediaId) }
+        p.overlays.removeAll { !ids.contains($0.mediaId) }
+        if let mf = file.musicFile, FileManager.default.fileExists(atPath: mediaDir.appendingPathComponent(mf).path) {
+            p.music?.url = mediaDir.appendingPathComponent(mf)
+        } else {
+            p.music = nil
+        }
+        items = loaded
+        project = p
+        draftId = file.id
+        draftCreated = file.createdAt
+        lastSaved = (p, loaded.map(\.id))
+        selectedCell = nil
+        selectedClip = nil
+        swapFrom = nil
+        selectedCaption = nil
+        editingCaption = nil
+        selectedOverlay = nil
+        carouselOffset = 0
+        playback.playhead = 0
+        tab = .media
+        importing = false
+        withAnimation(.smooth) { importProgress = nil }
+        playback.projectChanged()
+        if loaded.count < file.items.count {
+            let missing = file.items.count - loaded.count
+            notify("\(missing) \(missing == 1 ? "item" : "items") in this draft couldn't be read and \(missing == 1 ? "was" : "were") left out.")
+        }
+    }
+
+    /// Deletes a draft. Deleting the one that is open starts a new design.
+    func deleteDraft(_ id: String) {
+        if id == draftId { newCollage(keepDraft: false) }
+        drafts.removeAll { $0.id == id }
+        DraftDisk.queue.async {
+            DraftDisk.remove(id)
+            Task { @MainActor [weak self] in self?.refreshDrafts() }
+        }
     }
 }

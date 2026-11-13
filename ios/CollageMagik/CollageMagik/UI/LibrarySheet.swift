@@ -1,12 +1,14 @@
 import AVKit
 import SwiftUI
 
-/// My Library: every collage you have exported, stored on this iPhone only.
+/// My Library: the designs in progress (drafts) and every collage you have exported, stored on this iPhone only.
 struct LibrarySheet: View {
     @Environment(LibraryStore.self) private var library
+    @Environment(CollageStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State private var selected: LibraryEntry?
     @State private var pendingDelete: LibraryEntry?
+    @State private var pendingDraftDelete: DraftSummary?
     @State private var detent: PresentationDetent = .medium
 
     private let columns = [GridItem(.adaptive(minimum: 110), spacing: 8, alignment: .top)]
@@ -14,14 +16,16 @@ struct LibrarySheet: View {
     var body: some View {
         NavigationStack {
             Group {
-                if library.entries.isEmpty {
+                if library.entries.isEmpty && store.drafts.isEmpty {
                     ContentUnavailableView(
-                        "No collages yet",
+                        "Nothing here yet",
                         systemImage: "photo.stack",
-                        description: Text("Collages you export are kept here, on this iPhone only. Nothing is uploaded.")
+                        description: Text("Designs you're working on are saved here as drafts, and collages you export are kept here too. All on this iPhone only; nothing is uploaded.")
                     )
                 } else {
                     ScrollView {
+                        if !store.drafts.isEmpty { draftsSection }
+                        if !library.entries.isEmpty && !store.drafts.isEmpty { sectionHeader("Exported", count: library.entries.count) }
                         LazyVGrid(columns: columns, spacing: 8) {
                             ForEach(library.entries) { entry in
                                 Button { selected = entry } label: { LibraryCell(entry: entry) }
@@ -35,12 +39,14 @@ struct LibrarySheet: View {
                         }
                         .padding(12)
 
+                        if !library.entries.isEmpty {
                         Text("\(library.entries.count) \(library.entries.count == 1 ? "collage" : "collages") · \(ByteCountFormatter.string(fromByteCount: library.totalBytes, countStyle: .file)) on this iPhone. Touch and hold a collage to share or delete it.")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 24)
                             .padding(.bottom, 20)
+                        }
                     }
                     .scrollEdgeEffectStyle(.soft, for: .top)
                 }
@@ -61,11 +67,113 @@ struct LibrarySheet: View {
             } message: {
                 Text("It is removed from My Library. A copy you saved to Photos is not affected.")
             }
+            .confirmationDialog("Delete this draft?", isPresented: Binding(
+                get: { pendingDraftDelete != nil }, set: { if !$0 { pendingDraftDelete = nil } }
+            ), titleVisibility: .visible) {
+                Button("Delete draft", role: .destructive) {
+                    if let d = pendingDraftDelete { withAnimation { store.deleteDraft(d.id) } }
+                    pendingDraftDelete = nil
+                }
+            } message: {
+                Text(pendingDraftDelete?.id == store.draftId
+                     ? "This is the design that's open now. It's cleared and can't be brought back. Collages you exported stay."
+                     : "The design and its copies of your photos and videos are removed from this iPhone. Your Photos library is not affected.")
+            }
         }
         .presentationDetents([.medium, .large], selection: $detent)
         .presentationDragIndicator(.visible)
         // A single collage needs the room: its player and the Share / Save / Delete buttons.
         .onChange(of: selected) { _, new in if new != nil { withAnimation(.smooth) { detent = .large } } }
+    }
+}
+
+extension LibrarySheet {
+    private func sectionHeader(_ title: String, count: Int) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title).font(.headline)
+            Text("\(count)").font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
+    }
+
+    private var draftsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionHeader("Drafts", count: store.drafts.count)
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(alignment: .top, spacing: 10) {
+                    ForEach(store.drafts) { d in
+                        Button { open(d) } label: { DraftCell(draft: d, isOpen: d.id == store.draftId) }
+                            .buttonStyle(.plain)
+                            .contextMenu {
+                                Button { open(d) } label: { Label(d.id == store.draftId ? "Keep editing" : "Open", systemImage: "pencil") }
+                                Button(role: .destructive) { pendingDraftDelete = d } label: { Label("Delete draft", systemImage: "trash") }
+                            }
+                            .accessibilityLabel("Draft, \(d.format.label), \(d.summary), edited \(d.updatedAt.formatted(.relative(presentation: .named)))")
+                            .accessibilityHint(d.id == store.draftId ? "Open now" : "Opens this design")
+                    }
+                }
+                .padding(.horizontal, 12)
+            }
+            .scrollClipDisabled()
+            Text("Saved as you edit. Tap a draft to keep working on it; touch and hold to delete it.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 16)
+        }
+        .padding(.bottom, 8)
+    }
+
+    private func open(_ d: DraftSummary) {
+        dismiss()
+        guard d.id != store.draftId else { return }
+        Task { await store.openDraft(d.id) }
+    }
+}
+
+private struct DraftCell: View {
+    let draft: DraftSummary
+    let isOpen: Bool
+    private let height: CGFloat = 160
+    /// Story drafts are narrow: the card stays wide enough for its two lines of text.
+    private var width: CGFloat { min(280, max(124, height * draft.aspect)) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Color.clear
+                .frame(width: width, height: height)
+                .overlay {
+                    if let img = UIImage(contentsOfFile: draft.thumbURL.path) {
+                        Image(uiImage: img).resizable().scaledToFill()
+                    } else {
+                        Rectangle().fill(.quaternary)
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(isOpen ? Color.brand : .clear, lineWidth: 2.5)
+                }
+                .overlay(alignment: .topLeading) {
+                    if isOpen {
+                        Text("Open now")
+                            .font(.caption2.weight(.bold))
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 4)
+                            .glassEffect(.regular.tint(Color.brand.opacity(0.7)), in: .capsule)
+                            .padding(6)
+                    }
+                }
+            Text(draft.updatedAt, format: .relative(presentation: .named, unitsStyle: .abbreviated))
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+            Text(draft.summary)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+        .frame(width: width, alignment: .leading)
     }
 }
 

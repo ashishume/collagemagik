@@ -2,7 +2,7 @@ import Foundation
 
 /// A photo laid freely on top of the design, like a print dropped on the page. It sits above the layout's cells and
 /// below the captions, works in collages and carousels (it can cross a slide seam), and keeps the photo's own shape.
-struct PhotoOverlay: Identifiable, Equatable {
+struct PhotoOverlay: Identifiable, Equatable, Codable {
     var id: String = UUID().uuidString
     var mediaId: String
     /// Centre. `cx` is in slide widths (0...1 in a collage, 0...slides in a carousel), `cy` is 0...1 down the design.

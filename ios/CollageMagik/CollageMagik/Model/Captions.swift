@@ -246,7 +246,7 @@ enum CaptionMix: String, CaseIterable, Identifiable {
 let captionAccentScale = 0.44
 
 /// A line of text placed on top of the collage.
-struct Caption: Identifiable, Equatable {
+struct Caption: Identifiable, Equatable, Codable {
     var id: String = UUID().uuidString
     var text: String = ""
     var font: CaptionFont = .classic
