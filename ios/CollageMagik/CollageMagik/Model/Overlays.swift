@@ -14,6 +14,31 @@ struct PhotoOverlay: Identifiable, Equatable, Codable {
     var tilt: Double = 0
     var frame: PhotoFrame = .border
     var frameColor: String = "#ffffff"
+    /// The photo inside the print, edited like a picture in a cell: 1 = the photo just fills the print.
+    var zoom: Double = 1
+    /// -1...1, 0 = centred.
+    var panX: Double = 0
+    var panY: Double = 0
+    /// Quarter turns clockwise, in degrees (0, 90, 180, 270). The print turns with the photo, so it keeps its shape.
+    var rotation: Double = 0
+    var flip: Bool = false
+    /// Straighten inside the print, -45...45.
+    var angle: Double = 0
+
+    var view: MediaView {
+        MediaView(zoom: zoom, panX: panX, panY: panY, rotation: rotation, flip: flip, angle: angle)
+    }
+
+    mutating func apply(_ v: MediaView) {
+        zoom = v.zoom; panX = v.panX; panY = v.panY; rotation = v.rotation; flip = v.flip; angle = v.angle
+    }
+
+    /// Height / width of the print's picture: the photo's own shape, turned by its quarter turns.
+    func aspect(srcW: Double, srcH: Double, rotation r: Double? = nil) -> Double {
+        let turns = Int(((r ?? rotation) / 90).rounded())
+        let sideways = ((turns % 4) + 4) % 2 == 1
+        return sideways ? srcW / max(1, srcH) : srcH / max(1, srcW)
+    }
 }
 
 /// Most photos on top of one design.
@@ -30,6 +55,11 @@ struct OverlayGeometry {
 }
 
 extension Project {
+    /// Canvas pixels for a photo on top showing `item`.
+    func overlayGeometry(_ o: PhotoOverlay, item: MediaItem, W: Double, H: Double) -> OverlayGeometry {
+        overlayGeometry(o, aspect: o.aspect(srcW: item.width, srcH: item.height), W: W, H: H)
+    }
+
     /// Canvas pixels for a photo on top whose source is `aspect` (height / width) on a canvas `W` × `H`.
     func overlayGeometry(_ o: PhotoOverlay, aspect: Double, W: Double, H: Double) -> OverlayGeometry {
         let slideW = W / canvasWidth * format.width
