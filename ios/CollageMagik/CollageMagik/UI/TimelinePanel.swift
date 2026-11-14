@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Play / pause, a scrubber and the time. Sits under the preview whenever the collage has a video.
+/// Play / pause, a scrubber, the time and the way into the video timeline. Sits under the preview whenever the
+/// collage has a video.
 struct TransportBar: View {
     @Environment(CollageStore.self) private var store
 
@@ -26,6 +27,20 @@ struct TransportBar: View {
             Text("\(formatTime(pb.playhead)) / \(formatTime(store.totalDuration))")
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .fixedSize()
+
+            // The video tools aren't in the dock (a collage often has no video): this is the way in, shown only
+            // while there is a video to cut.
+            Button { store.openVideo(.timeline) } label: {
+                Label("Timeline", systemImage: "film.stack")
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+                    .fixedSize()
+            }
+            .buttonStyle(.glassProminent)
+            .controlSize(.small)
+            .accessibilityHint("Cut the video, choose its part, and set its sound and background music")
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 2)

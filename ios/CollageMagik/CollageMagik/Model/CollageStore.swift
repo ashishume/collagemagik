@@ -57,6 +57,8 @@ final class CollageStore {
     var helpOpen = false
     var previewOpen = false
     var cropCell: Int?
+    /// The photo on top open in the crop screen.
+    var cropOverlay: String?
     /// The video clip open in the "Choose part" editor.
     var partClip: ClipRef?
     /// The media tray is full: shows an alert that says how to make room. `trayFullSkipped` = how many picked items were not added.
@@ -70,6 +72,8 @@ final class CollageStore {
     var importerIsMusic = false
     /// Cell the next picked media goes into (nil = first free cell).
     var pickTarget: Int?
+    /// Photo on top whose picture the next picked photo replaces.
+    var pickOverlay: String?
     var pickedItems: [PhotosPickerItem] = []
 
     let playback = PlaybackEngine()
@@ -133,15 +137,17 @@ final class CollageStore {
         return true
     }
 
-    func openAdd(cell: Int? = nil) {
+    func openAdd(cell: Int? = nil, overlay: String? = nil) {
         guard !refuseIfTrayFull() else { return }
         pickTarget = cell
+        pickOverlay = overlay
         showPhotoPicker = true
     }
 
-    func openFiles(cell: Int? = nil) {
+    func openFiles(cell: Int? = nil, overlay: String? = nil) {
         guard !refuseIfTrayFull() else { return }
         pickTarget = cell
+        pickOverlay = overlay
         importerIsMusic = false
         showFileImporter = true
     }
@@ -195,14 +201,17 @@ final class CollageStore {
             withAnimation(.smooth) { importProgress = nil }
         }
         let fresh = items.isEmpty
-        let replacing = pickTarget.map { project.cells.indices.contains($0) && project.cells[$0].mediaId != nil } ?? false
+        // replacing a picture (in a cell or on top) leaves the layout and the open tool alone
+        let replacing = pickOverlay != nil || (pickTarget.map { project.cells.indices.contains($0) && project.cells[$0].mediaId != nil } ?? false)
         var target = pickTarget
+        var overlayTarget = pickOverlay
         var added = 0
         var leftInTray = 0
         var skippedForTray = 0
         var problems: [String] = []
         var cancelled = false
         pickTarget = nil
+        pickOverlay = nil
         func skip(_ text: String) {
             problems.append(text)
             notify(text)
@@ -280,6 +289,14 @@ final class CollageStore {
             if item.kind == .video {
                 project.lanes.append(newLane(mediaId: item.id, duration: item.duration, volume: project.lanes.isEmpty ? 1 : 0))
             }
+            if let o = overlayTarget, item.kind == .photo, overlay(o) != nil {
+                // "Change" on a photo on top: the new photo takes its place in the same print
+                replaceOverlayMedia(o, with: item.id)
+                overlayTarget = nil
+                added += 1
+                importProgress?.finishItem(added: added)
+                continue
+            }
             // The collage only has room for `cellLimit` pictures. The rest wait in the tray to be swapped in.
             if !placeMedia(item.id, cell: target, quiet: true) { leftInTray += 1 }
             target = nil
@@ -320,8 +337,7 @@ final class CollageStore {
         // otherwise the layouts for the new cell count.
         if !replacing, added > 0 {
             if hasPlacedVideo {
-                videoSection = .timeline
-                withAnimation(.smooth) { tab = .video }
+                openVideo(.timeline)
             } else if added >= 2 {
                 withAnimation(.smooth) { tab = .layout }
             }
@@ -539,8 +555,43 @@ final class CollageStore {
     }
 
     func openPicture() {
-        if tab != .picture { returnTab = tab }
+        if tab.inDock { returnTab = tab }
         withAnimation(.smooth) { tab = .picture }
+    }
+
+    /// Clears every selection (picture, photo on top, caption) and leaves the panels that belong to it.
+    func deselectAll() {
+        if selectedCaption != nil { selectCaption(nil) }
+        if selectedOverlay != nil { selectOverlay(nil) }
+        if selectedCell != nil || swapFrom != nil { swapFrom = nil; selectCell(nil) }
+    }
+
+    /// A dock tab was chosen. Its panel edits the whole design, so nothing stays selected (otherwise a selected photo
+    /// would look as if it were being edited). The Media tray keeps the selection: tapping a tray photo replaces it.
+    func dockTabChanged(_ t: Tab) {
+        guard t.inDock else { return }
+        if t != .text { selectedCaption = nil }
+        if t != .media {
+            selectedCell = nil
+            swapFrom = nil
+            selectedOverlay = nil
+        }
+    }
+
+    // MARK: Video tools
+
+    /// Opens the video timeline (or sound) panel. It is not in the dock: it opens from the bar under the preview, or
+    /// from a selected video.
+    func openVideo(_ section: VideoSection = .timeline) {
+        guard hasPlacedVideo else { return }
+        if tab.inDock { returnTab = tab }
+        videoSection = section
+        withAnimation(.smooth) { tab = .video }
+    }
+
+    /// Leaves the video panel: back to the selected picture's options, or to the tab that was open.
+    func closeVideo() {
+        withAnimation(.smooth) { tab = selectedCell != nil ? .picture : returnTab }
     }
 
     // MARK: Photos on top
@@ -554,7 +605,7 @@ final class CollageStore {
             selectedCell = nil
             swapFrom = nil
             selectedCaption = nil
-            if tab != .overlay && tab != .picture { returnTab = tab }
+            if tab.inDock { returnTab = tab }
             withAnimation(.smooth) { tab = .overlay }
         } else if tab == .overlay {
             withAnimation(.smooth) { tab = returnTab }
@@ -600,7 +651,39 @@ final class CollageStore {
         o.cy = clamp(o.cy, 0, 1)
         o.w = clamp(o.w, overlayWidthRange.lowerBound, overlayWidthRange.upperBound)
         o.tilt = clamp(o.tilt, -180, 180)
+        o.zoom = clamp(o.zoom, 1, 4)
+        o.panX = clamp(o.panX, -1, 1)
+        o.panY = clamp(o.panY, -1, 1)
+        let turns = Int((o.rotation / 90).rounded())
+        o.rotation = Double(((turns * 90) % 360 + 360) % 360)
+        o.angle = clamp(o.angle, -45, 45)
         project.overlays[i] = o
+    }
+
+    /// Turns the photo on top a quarter turn; the print turns with it, keeping its width.
+    func rotateOverlay(_ id: String, dir: Double = 1) {
+        updateOverlay(id) { $0.rotation += 90 * dir; $0.panX = 0; $0.panY = 0 }
+    }
+
+    func flipOverlay(_ id: String) {
+        updateOverlay(id) { $0.flip.toggle(); $0.panX = -$0.panX }
+    }
+
+    func applyOverlayView(_ id: String, _ v: MediaView) {
+        updateOverlay(id) { $0.apply(v) }
+    }
+
+    /// Zoom, position, rotation, flip and straighten back to the photo as it was laid down.
+    func resetOverlayView(_ id: String) { applyOverlayView(id, MediaView()) }
+
+    /// Puts another photo in the same print (same place, size, tilt and frame).
+    func replaceOverlayMedia(_ id: String, with mediaId: String) {
+        guard let item = item(mediaId) else { return }
+        guard item.kind == .photo else {
+            notify("Only photos can go on top. Videos play in the layout's cells.")
+            return
+        }
+        updateOverlay(id) { $0.mediaId = mediaId; $0.apply(MediaView()) }
     }
 
     func removeOverlay(_ id: String) {

@@ -44,12 +44,12 @@ enum CollageRenderer {
         // Photos laid on top of the layout, in order.
         for (k, o) in project.overlays.enumerated() {
             guard let item = snapshot.items[o.mediaId], let img = image(o.mediaId) else { continue }
-            let g = project.overlayGeometry(o, aspect: item.height / item.width, W: W, H: H)
+            let g = project.overlayGeometry(o, item: item, W: W, H: H)
             drawPrint(
                 ctx, outer: g.outer, picture: g.picture, radius: o.frame == .torn ? 0 : 3 * unit,
                 frame: o.frame, frameColor: o.frameColor, edge: g.edge, seed: 1000 + k, unit: unit
             ) {
-                drawMedia(ctx, img, item: item, rect: g.picture, view: MediaView())
+                drawMedia(ctx, img, item: item, rect: g.picture, view: o.view)
             }
         }
         // Captions go on top. A video hands in a ready-made layer so the words aren't laid out again for every frame.
@@ -139,8 +139,8 @@ enum CollageRenderer {
         // photos on top: the same photo may also be in a cell, so keep whichever copy is bigger
         for o in project.overlays {
             guard let item = snapshot.items[o.mediaId], item.kind == .photo else { continue }
-            let g = project.overlayGeometry(o, aspect: item.height / item.width, W: W, H: H)
-            let need = neededPhotoSize(srcW: item.width, srcH: item.height, cell: g.picture, view: MediaView())
+            let g = project.overlayGeometry(o, item: item, W: W, H: H)
+            let need = neededPhotoSize(srcW: item.width, srcH: item.height, cell: g.picture, view: o.view)
             let maxPx = max(need.w, need.h)
             if let existing = out[o.mediaId], max(existing.width, existing.height) >= maxPx { continue }
             guard let src = CGImageSourceCreateWithURL(item.url as CFURL, nil) else { continue }

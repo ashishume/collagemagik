@@ -1,7 +1,15 @@
 import SwiftUI
 
-struct CropTarget: Identifiable {
-    let id: Int
+/// What the crop screen edits: the picture in a cell, or a photo laid on top.
+enum CropTarget: Identifiable {
+    case cell(Int)
+    case overlay(String)
+    var id: String {
+        switch self {
+        case .cell(let i): "cell-\(i)"
+        case .overlay(let o): "overlay-\(o)"
+        }
+    }
 }
 
 /// Crop screen for one picture or video: the whole picture is shown with the cell's frame over it, so you can see what is cut off.
@@ -9,7 +17,7 @@ struct CropTarget: Identifiable {
 struct CropEditor: View {
     @Environment(CollageStore.self) private var store
     @Environment(\.dismiss) private var dismiss
-    let cellIndex: Int
+    let target: CropTarget
 
     @State private var draft = MediaView()
     @State private var loaded = false
@@ -18,16 +26,42 @@ struct CropEditor: View {
     @State private var pinchBase: Double?
 
     private var item: MediaItem? {
-        guard store.project.cells.indices.contains(cellIndex), let id = store.project.cells[cellIndex].mediaId else { return nil }
-        return store.item(id)
+        switch target {
+        case .cell(let i):
+            guard store.project.cells.indices.contains(i), let id = store.project.cells[i].mediaId else { return nil }
+            return store.item(id)
+        case .overlay(let o):
+            return store.overlay(o).flatMap { store.item($0.mediaId) }
+        }
     }
 
-    /// Aspect ratio of the cell this picture sits in, so the frame matches what will be used.
+    /// Width / height of the frame: the cell the picture sits in, or for a photo on top its print, which keeps the
+    /// photo's own shape and turns with it.
     private var aspect: Double {
-        let p = store.project
-        let rects = p.cellRects(W: p.canvasWidth, H: p.canvasHeight)
-        guard rects.indices.contains(cellIndex) else { return 1 }
-        return rects[cellIndex].w / rects[cellIndex].h
+        switch target {
+        case .cell(let i):
+            let p = store.project
+            let rects = p.cellRects(W: p.canvasWidth, H: p.canvasHeight)
+            guard rects.indices.contains(i) else { return 1 }
+            return rects[i].w / rects[i].h
+        case .overlay(let id):
+            guard let o = store.overlay(id), let item else { return 1 }
+            return 1 / o.aspect(srcW: item.width, srcH: item.height, rotation: draft.rotation)
+        }
+    }
+
+    private var savedView: MediaView? {
+        switch target {
+        case .cell(let i): store.project.cells.indices.contains(i) ? store.project.cells[i].view : nil
+        case .overlay(let o): store.overlay(o)?.view
+        }
+    }
+
+    private func apply() {
+        switch target {
+        case .cell(let i): store.applyView(i, draft)
+        case .overlay(let o): store.applyOverlayView(o, draft)
+        }
     }
 
     var body: some View {
@@ -53,7 +87,7 @@ struct CropEditor: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Apply", systemImage: "checkmark") {
-                        store.applyView(cellIndex, draft)
+                        apply()
                         dismiss()
                     }
                     .buttonStyle(.glassProminent)
@@ -61,8 +95,8 @@ struct CropEditor: View {
             }
         }
         .onAppear {
-            guard !loaded, store.project.cells.indices.contains(cellIndex) else { return }
-            draft = store.project.cells[cellIndex].view
+            guard !loaded, let v = savedView else { return }
+            draft = v
             loaded = true
         }
     }
