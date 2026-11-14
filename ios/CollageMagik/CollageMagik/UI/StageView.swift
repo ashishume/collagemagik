@@ -160,6 +160,8 @@ struct StageView: View {
     @State private var overlayDrag: (id: String, cx: Double, cy: Double)?
     @State private var overlayPinch: (id: String, w: Double)?
     @State private var overlayTurn: (id: String, tilt: Double)?
+    /// A picture in a cell being straightened with a two-finger twist.
+    @State private var cellTurn: (cell: Int, angle: Double)?
     /// The angle, in degrees, a two-finger twist has locked onto (a quarter or eighth turn), shown with guide lines.
     @State private var turnLock: Double?
     /// True while a photo from the tray is dragged over the design.
@@ -199,7 +201,7 @@ struct StageView: View {
         .clipShape(RoundedRectangle(cornerRadius: interactive ? 6 : 0, style: .continuous))
         .shadow(color: .black.opacity(interactive ? 0.45 : 0), radius: 22, y: 10)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Collage preview. Tap a picture for options, drag to move it, pinch to zoom, press and hold then drag to swap. Tap a caption to style it, drag to move it.")
+        .accessibilityLabel("Collage preview. Tap a picture, photo on top or caption to select it; drag, pinch or twist then edits only what is selected. Tap outside it to deselect. Press and hold a picture then drag to swap.")
     }
 
     /// Shown while a tray photo is dragged over the design.
@@ -318,6 +320,8 @@ struct StageView: View {
 
                 if let t = overlayTurn, let o = store.overlay(t.id), let g = overlayGeometry(o, size) {
                     rotationGuides(center: g.outer.center, degrees: o.tilt, size: size)
+                } else if let t = cellTurn, px.indices.contains(t.cell), project.cells.indices.contains(t.cell) {
+                    rotationGuides(center: px[t.cell].center, degrees: project.cells[t.cell].angle, size: size)
                 } else if let t = captionTurn, let c = store.caption(t.id), !c.text.isEmpty {
                     let l = CaptionRenderer.layout(c, project: project, W: size.width, H: size.height)
                     rotationGuides(center: l.center, degrees: c.rotation, size: size)
@@ -412,7 +416,7 @@ struct StageView: View {
 
     private func overlayGeometry(_ o: PhotoOverlay, _ size: CGSize) -> OverlayGeometry? {
         guard let item = store.item(o.mediaId) else { return nil }
-        return store.project.overlayGeometry(o, aspect: item.height / item.width, W: size.width, H: size.height)
+        return store.project.overlayGeometry(o, item: item, W: size.width, H: size.height)
     }
 
     /// A photo laid on top: its frame (with a drop shadow) and the whole photo inside, turned by its tilt.
@@ -433,7 +437,7 @@ struct StageView: View {
                         .shadow(color: .black.opacity(0.38), radius: 11 * unit, y: 7 * unit)
                         .offset(x: g.picture.x - g.outer.x, y: g.picture.y - g.outer.y)
                 }
-                MediaPlacementView(item: item, rect: PxRect(x: 0, y: 0, w: g.picture.w, h: g.picture.h), view: MediaView(), player: nil)
+                MediaPlacementView(item: item, rect: PxRect(x: 0, y: 0, w: g.picture.w, h: g.picture.h), view: o.view, player: nil)
                     .frame(width: g.picture.w, height: g.picture.h)
                     .clipShape(RoundedRectangle(cornerRadius: pr, style: .continuous))
                     .offset(x: g.picture.x - g.outer.x, y: g.picture.y - g.outer.y)
@@ -657,79 +661,89 @@ struct StageView: View {
         store.openPicture()
     }
 
+    // Editing rule: only the selected thing (a caption, a photo on top, or a picture in a cell) moves, zooms or turns.
+    // Nothing is picked up by accident: a drag, pinch or twist with nothing selected leaves every layer alone, and a
+    // tap outside the selected thing only clears the selection (it doesn't select or change what is underneath).
+
+    /// Whatever is selected, and whether a touch at `p` is on it.
+    private func onSelection(_ p: CGPoint, _ size: CGSize) -> Bool {
+        if let c = store.caption(store.selectedCaption), !c.text.isEmpty {
+            return CaptionRenderer.layout(c, project: store.project, W: size.width, H: size.height).contains(p, slack: 12)
+        }
+        if let o = store.overlay(store.selectedOverlay) {
+            return overlayGeometry(o, size)?.outer.contains(p.x, p.y) ?? false
+        }
+        if let s = store.selectedCell {
+            let r = rects(size)
+            return r.indices.contains(s) && r[s].contains(p.x, p.y)
+        }
+        return false
+    }
+
+    private var hasSelection: Bool {
+        store.selectedCaption != nil || store.selectedOverlay != nil || store.selectedCell != nil
+    }
+
     private func tap(_ p: CGPoint, _ size: CGSize) {
         let cell = hitCell(rects(size), x: p.x, y: p.y)
         if let from = store.swapFrom {
             if cell >= 0 && cell != from { store.swapCells(from, cell) } else { withAnimation { store.swapFrom = nil } }
             return
         }
-        // Captions sit on top of the pictures: tap one to select it, tap it again to change the words.
-        if let c = captionAt(p, size) {
-            if store.selectedCaption == c.id { store.editingCaption = c.id } else { store.selectCaption(c.id) }
-            return
-        }
-        if store.selectedCaption != nil {
-            store.selectCaption(nil)
-            return
-        }
-        // photos on top sit above the cells: tap one to select it
-        if let o = overlayAt(p, size) {
-            if store.selectedOverlay != o.id {
-                store.selectOverlay(o.id)
+        if hasSelection {
+            if onSelection(p, size) {
+                // tap the selected caption again to change its words; an empty selected cell asks for a picture
+                if let id = store.selectedCaption {
+                    store.editingCaption = id
+                } else if let s = store.selectedCell, store.project.cells.indices.contains(s), store.project.cells[s].mediaId == nil {
+                    store.openAdd(cell: s)
+                }
+            } else {
+                withAnimation(.smooth) { store.deselectAll() }
                 UISelectionFeedbackGenerator().selectionChanged()
             }
             return
         }
-        if store.selectedOverlay != nil {
-            store.selectOverlay(nil)
-            return
-        }
-        if cell < 0 {
-            store.selectCell(nil)
-        } else if store.project.cells[cell].mediaId == nil {
+        // Nothing selected: select the top-most thing under the finger (captions, then photos on top, then cells).
+        if let c = captionAt(p, size) {
+            store.selectCaption(c.id)
+        } else if let o = overlayAt(p, size) {
+            store.selectOverlay(o.id)
+            UISelectionFeedbackGenerator().selectionChanged()
+        } else if cell >= 0 {
             selectAndOpen(cell)
-            store.openAdd(cell: cell)
-        } else {
-            selectAndOpen(cell)
+            if store.project.cells[cell].mediaId == nil { store.openAdd(cell: cell) }
         }
     }
 
     private func panBegin(_ p: CGPoint, from start: CGPoint, moved: CGSize, _ size: CGSize, carousel: Bool) {
         captionDrag = nil
         dividerDrag = nil
-        if store.swapFrom == nil, let c = captionAt(p, size) {
-            store.selectCaption(c.id)
-            captionDrag = CaptionDrag(id: c.id, x: c.x, y: c.y)
-            gestureCell = -1
-            swiping = false
-            return
-        }
         overlayDrag = nil
-        if store.swapFrom == nil, let o = overlayAt(p, size) {
-            if store.selectedOverlay != o.id { store.selectOverlay(o.id) }
-            overlayDrag = (o.id, o.cx, o.cy)
-            gestureCell = -1
-            swiping = false
+        gestureCell = -1
+        swiping = false
+        let onIt = store.swapFrom == nil && (onSelection(start, size) || onSelection(p, size))
+        if onIt, let c = store.caption(store.selectedCaption) {
+            captionDrag = CaptionDrag(id: c.id, x: c.x, y: c.y)
             return
         }
-        if !carousel, captionAt(start, size) == nil, let d = dividerAt(start, moving: moved, size), let grid = store.project.resizableGrid {
-            gestureCell = -1
-            swiping = false
+        if onIt, let o = store.overlay(store.selectedOverlay) {
+            overlayDrag = (o.id, o.cx, o.cy)
+            return
+        }
+        if onIt, let s = store.selectedCell, store.project.cells[s].mediaId != nil {
+            gestureCell = s
+            return
+        }
+        // The borders between cells can be dragged while nothing is selected.
+        if !carousel, !hasSelection, store.swapFrom == nil, captionAt(start, size) == nil, overlayAt(start, size) == nil,
+           let d = dividerAt(start, moving: moved, size), let grid = store.project.resizableGrid {
             dividerDrag = DividerDrag(divider: d, start: grid, base: layout(byId: store.project.layoutId).grid)
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             return
         }
-        let cell = hitCell(rects(size), x: p.x, y: p.y)
-        gestureCell = cell
-        if carousel {
-            // In a carousel a drag moves a picture only if it is already selected; anywhere else it swipes the slides,
-            // like swiping the finished post.
-            swiping = !(cell >= 0 && cell == store.selectedCell && store.project.cells[cell].mediaId != nil && store.swapFrom == nil)
-            return
-        }
-        if cell >= 0, store.swapFrom == nil, store.project.cells[cell].mediaId != nil, cell != store.selectedCell {
-            selectAndOpen(cell)
-        }
+        // A carousel swipes between slides, like swiping the finished post.
+        swiping = carousel
     }
 
     private func panEnd(_ velocity: CGSize, frame: CarouselFrame?) {
@@ -841,33 +855,35 @@ struct StageView: View {
         store.project.cellSizes = moved.grid
     }
 
+    /// A pinch anywhere sizes the selected thing (its edges are often too small a target for two fingers).
+    /// With nothing selected it does nothing.
     private func pinchBegin(_ p: CGPoint, _ size: CGSize) {
-        // while a caption is selected, a pinch anywhere resizes it (its letters are too small a target for two fingers)
         captionPinch = store.caption(store.selectedCaption).map { ($0.id, $0.size) }
-        if captionPinch != nil {
-            pinchCell = -1
-            return
+        overlayPinch = captionPinch == nil ? store.overlay(store.selectedOverlay).map { ($0.id, $0.w) } : nil
+        pinchCell = -1
+        if captionPinch == nil, overlayPinch == nil, let s = store.selectedCell, store.swapFrom == nil,
+           store.project.cells.indices.contains(s), store.project.cells[s].mediaId != nil {
+            pinchCell = s
+            pinchBase = store.project.cells[s].zoom
         }
-        // a selected photo on top is resized by a pinch anywhere; otherwise the one under the fingers
-        overlayPinch = (store.overlay(store.selectedOverlay) ?? overlayAt(p, size)).map { ($0.id, $0.w) }
-        if overlayPinch != nil {
-            pinchCell = -1
-            return
-        }
-
-        pinchCell = store.selectedCell ?? hitCell(rects(size), x: p.x, y: p.y)
-        pinchBase = store.project.cells.indices.contains(pinchCell) ? store.project.cells[pinchCell].zoom : 1
     }
 
+    /// A two-finger twist turns the selected caption or photo on top, or straightens the selected picture in its cell.
     private func turnBegin() {
         captionTurn = store.caption(store.selectedCaption).map { ($0.id, $0.rotation) }
         overlayTurn = captionTurn == nil ? store.overlay(store.selectedOverlay).map { ($0.id, $0.tilt) } : nil
+        cellTurn = nil
+        if captionTurn == nil, overlayTurn == nil, let s = store.selectedCell, store.swapFrom == nil,
+           store.project.cells.indices.contains(s), store.project.cells[s].mediaId != nil {
+            cellTurn = (s, store.project.cells[s].angle)
+        }
         turnLock = nil
     }
 
     private func turnEnd() {
         captionTurn = nil
         overlayTurn = nil
+        cellTurn = nil
         turnLock = nil
     }
 
@@ -889,6 +905,11 @@ struct StageView: View {
     }
 
     private func turn(_ radians: CGFloat) {
+        if let t = cellTurn {
+            let deg = clamp(lockedAngle(t.angle + Double(radians) / RAD), -45, 45)
+            store.setCellView(t.cell) { $0.angle = deg }
+            return
+        }
         if let t = overlayTurn {
             let deg = lockedAngle(t.tilt + Double(radians) / RAD)
             store.updateOverlay(t.id) { $0.tilt = deg }
@@ -912,10 +933,14 @@ struct StageView: View {
         store.setCellView(pinchCell) { $0.zoom = clamp(pinchBase * Double(scale), 1, 4) }
     }
 
+    /// Press and hold a picture to pick it up and drop it on another cell. Only the selected picture can be picked up,
+    /// or any picture while nothing is selected (and no caption or photo on top is in the way).
     private func liftBegin(_ p: CGPoint, _ size: CGSize) {
+        guard store.selectedCaption == nil, store.selectedOverlay == nil else { return }
         guard captionAt(p, size) == nil, overlayAt(p, size) == nil else { return }
         let cell = hitCell(rects(size), x: p.x, y: p.y)
         guard cell >= 0, store.swapFrom == nil, store.project.cells[cell].mediaId != nil else { return }
+        if let s = store.selectedCell, s != cell { return }
         selectAndOpen(cell)
         UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
         lift = Lift(from: cell, point: p, over: -1)

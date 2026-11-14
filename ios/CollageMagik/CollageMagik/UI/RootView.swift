@@ -16,6 +16,7 @@ struct RootView: View {
 
     /// Replacing a picture takes one item; adding to the collage (or filling an empty cell) takes as many as there is room for.
     private var pickLimit: Int {
+        if store.pickOverlay != nil { return 1 }
         if let t = store.pickTarget, store.project.cells.indices.contains(t), store.project.cells[t].mediaId != nil { return 1 }
         return max(1, maxTrayItems - store.items.count)
     }
@@ -40,7 +41,8 @@ struct RootView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     if store.isCarousel {
                         SlideBar()
-                    } else if store.hasPlacedVideo && !(store.tab == .video && store.videoSection == .timeline) {
+                    } else if store.hasPlacedVideo && store.tab != .video {
+                        // always there while the collage has a video: play, scrub, and the way into the timeline
                         TransportBar()
                     }
                     PanelCard()
@@ -73,7 +75,7 @@ struct RootView: View {
             selection: $store.pickedItems,
             maxSelectionCount: pickLimit,
             selectionBehavior: .ordered,
-            matching: store.isCarousel ? .images : .any(of: [.images, .videos])
+            matching: store.isCarousel || store.pickOverlay != nil ? .images : .any(of: [.images, .videos])
         )
         .onChange(of: store.pickedItems) { _, picked in
             guard !picked.isEmpty else { return }
@@ -82,8 +84,8 @@ struct RootView: View {
         }
         .fileImporter(
             isPresented: $store.showFileImporter,
-            allowedContentTypes: store.importerIsMusic ? [.audio] : (store.isCarousel ? [.image] : [.image, .movie, .video]),
-            allowsMultipleSelection: !store.importerIsMusic
+            allowedContentTypes: store.importerIsMusic ? [.audio] : (store.isCarousel || store.pickOverlay != nil ? [.image] : [.image, .movie, .video]),
+            allowsMultipleSelection: !store.importerIsMusic && store.pickOverlay == nil
         ) { result in
             guard case .success(let urls) = result else { return }
             if store.importerIsMusic, let u = urls.first {
@@ -113,10 +115,10 @@ struct RootView: View {
         .proPaywallHost(active: !store.exportOpen && !store.aboutOpen)
         .fullScreenCover(isPresented: $store.previewOpen) { FullScreenPreview() }
         .fullScreenCover(item: Binding(
-            get: { store.cropCell.map(CropTarget.init) },
-            set: { store.cropCell = $0?.id }
+            get: { store.cropCell.map(CropTarget.cell) ?? store.cropOverlay.map(CropTarget.overlay) },
+            set: { if $0 == nil { store.cropCell = nil; store.cropOverlay = nil } }
         )) { target in
-            CropEditor(cellIndex: target.id)
+            CropEditor(target: target)
         }
         .fullScreenCover(item: $store.partClip) { ref in
             ChoosePartEditor(ref: ref)
@@ -135,8 +137,11 @@ struct RootView: View {
         // leaving the app: save at once, iOS may close it in the background
         .onChange(of: scenePhase) { _, phase in if phase != .active { store.saveDraftNow() } }
         .task { await store.restoreLastDraft() }
-        // a caption stays selected only while its tools are showing
-        .onChange(of: store.tab) { _, tab in if tab != .text { store.selectedCaption = nil } }
+        // a selection lasts only while its own tools are showing: a dock tab edits the whole design
+        .onChange(of: store.tab) { _, tab in
+            if tab != .text { store.selectedCaption = nil }
+            store.dockTabChanged(tab)
+        }
         #if DEBUG
         .task { await DebugHarness.run(store) }
         #endif
@@ -177,7 +182,7 @@ struct PanelCard: View {
         case .style:
             let frame: CGFloat = store.project.frame == .none ? 40 : store.project.frame.hasEdge ? 92 : 58
             return (store.project.format == .story ? 156 : 124) + frame + pad
-        case .text: return (store.caption(store.selectedCaption) == nil ? 66 : 226) + pad
+        case .text: return (store.caption(store.selectedCaption) == nil ? 66 : 264) + pad
         case .video:
             let n = placedLanes(store.project).count
             if n == 0 { return 44 + pad }
@@ -188,11 +193,12 @@ struct PanelCard: View {
             }
         case .overlay:
             guard let o = store.overlay(store.selectedOverlay) else { return 44 + pad }
-            return (o.frame.hasEdge ? 168 : 136) + pad
+            return (o.frame.hasEdge ? 254 : 222) + pad
         case .picture:
             guard let s = store.selectedCell, store.project.cells.indices.contains(s) else { return 44 + pad }
             if store.swapFrom != nil { return 36 + pad }
-            return store.project.cells[s].mediaId == nil ? 40 + pad : 108 + pad
+            guard let id = store.project.cells[s].mediaId else { return 40 + pad }
+            return (store.item(id)?.kind == .video ? 150 : 108) + pad
         }
     }
 

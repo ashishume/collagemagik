@@ -264,6 +264,46 @@ struct Caption: Identifiable, Equatable, Codable {
     var mix: CaptionMix = .none
     /// Lettering of the small lines when `mix` is on.
     var accentFont: CaptionFont = .diary
+    /// Basic text formatting, on top of the lettering style. Lettering without a bold or italic face gets a drawn one.
+    var bold: Bool = false
+    var italic: Bool = false
+    var underline: Bool = false
+    var strikethrough: Bool = false
+    /// Shown in capital letters (the words keep the case they were typed in).
+    var allCaps: Bool = false
+}
+
+/// The formatting toggles of a caption, in the order they are shown.
+enum CaptionFormat: String, CaseIterable, Identifiable {
+    case bold, italic, underline, strikethrough, allCaps
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .bold: "Bold"
+        case .italic: "Italic"
+        case .underline: "Underline"
+        case .strikethrough: "Strikethrough"
+        case .allCaps: "All caps"
+        }
+    }
+    var symbol: String {
+        switch self {
+        case .bold: "bold"
+        case .italic: "italic"
+        case .underline: "underline"
+        case .strikethrough: "strikethrough"
+        case .allCaps: "textformat.alt"
+        }
+    }
+    var keyPath: WritableKeyPath<Caption, Bool> {
+        switch self {
+        case .bold: \.bold
+        case .italic: \.italic
+        case .underline: \.underline
+        case .strikethrough: \.strikethrough
+        case .allCaps: \.allCaps
+        }
+    }
 }
 
 let captionSwatches = ["#ffffff", "#101016", "#ffd84d", "#ff5fa2", "#ff6b4a", "#8b6cff", "#4cc7ff", "#52d98c", "#f4e9d8"]
@@ -339,14 +379,33 @@ enum CaptionRenderer {
     }
 
     private static func lines(_ c: Caption) -> [String] {
-        (c.text.isEmpty ? " " : c.text).components(separatedBy: "\n")
+        let text = c.allCaps ? c.text.uppercased() : c.text
+        return (text.isEmpty ? " " : text).components(separatedBy: "\n")
+    }
+
+    /// The font with the caption's bold / italic asked for. Returns which of the two the typeface couldn't give,
+    /// so they can be drawn instead (a thicker edge for bold, a slant for italic).
+    private static func formatted(_ f: UIFont, _ c: Caption) -> (font: UIFont, fakeBold: Bool, fakeItalic: Bool) {
+        guard c.bold || c.italic else { return (f, false, false) }
+        var want = f.fontDescriptor.symbolicTraits
+        if c.bold { want.insert(.traitBold) }
+        if c.italic { want.insert(.traitItalic) }
+        var out = f
+        if let d = f.fontDescriptor.withSymbolicTraits(want) {
+            let g = UIFont(descriptor: d, size: f.pointSize)
+            // keep the lettering: a face from another family is no good (scripts would turn into the system font)
+            if g.familyName == f.familyName { out = g }
+        }
+        let has = out.fontDescriptor.symbolicTraits
+        return (out, c.bold && !has.contains(.traitBold), c.italic && !has.contains(.traitItalic))
     }
 
     /// The font of line `i` of `count` (small lines of a mixed caption use the accent lettering).
     private static func lineFont(_ c: Caption, _ i: Int, _ count: Int, fontPx: Double) -> (font: UIFont, spacing: Double) {
-        c.mix.isSmall(i, of: count)
+        let (base, spacing) = c.mix.isSmall(i, of: count)
             ? (c.accentFont.uiFont(size: fontPx * captionAccentScale), c.accentFont.lineSpacing)
             : (c.font.uiFont(size: fontPx), c.font.lineSpacing)
+        return (formatted(base, c).font, spacing)
     }
 
     /// Index of the last big line when the small last line follows it (that's where a divider goes).
@@ -371,11 +430,18 @@ enum CaptionRenderer {
             if i + 1 < ls.count, c.mix.isSmall(i, of: ls.count), !c.mix.isSmall(i + 1, of: ls.count) {
                 para.paragraphSpacing = max(para.paragraphSpacing, fontPx * (c.font.isScript ? 0.45 : 0.12))
             }
-            out.append(NSAttributedString(string: line + (i < ls.count - 1 ? "\n" : ""), attributes: [
+            var attrs: [NSAttributedString.Key: Any] = [
                 .font: font,
                 .foregroundColor: letterColor(c),
                 .paragraphStyle: para,
-            ]))
+            ]
+            let fake = formatted(font, c)
+            // negative stroke width = fill and edge, which thickens the letters
+            if fake.fakeBold { attrs[.strokeWidth] = -4.0; attrs[.strokeColor] = letterColor(c) }
+            if fake.fakeItalic { attrs[.obliqueness] = 0.2 }
+            if c.underline { attrs[.underlineStyle] = NSUnderlineStyle.single.rawValue; attrs[.underlineColor] = letterColor(c) }
+            if c.strikethrough { attrs[.strikethroughStyle] = NSUnderlineStyle.single.rawValue; attrs[.strikethroughColor] = letterColor(c) }
+            out.append(NSAttributedString(string: line + (i < ls.count - 1 ? "\n" : ""), attributes: attrs))
         }
         return out
     }
@@ -640,7 +706,7 @@ enum CaptionRenderer {
     /// One caption as a picture for the live preview (upright; the view turns and places it). `scale` is the screen scale.
     static func image(_ l: CaptionLayout, scale: Double) -> UIImage? {
         let c = l.caption
-        let key = "\(c.text)|\(c.font.rawValue)|\(c.color)|\(c.look.rawValue)|\(c.align.rawValue)|\(c.ornament.rawValue)|\(c.mix.rawValue)|\(c.accentFont.rawValue)|\(Int((l.fontPx * 100).rounded()))|\(Int(l.box.width.rounded()))|\(Int(l.box.height.rounded()))|\(scale)" as NSString
+        let key = "\(c.text)|\(c.font.rawValue)|\(c.color)|\(c.look.rawValue)|\(c.align.rawValue)|\(c.ornament.rawValue)|\(c.mix.rawValue)|\(c.accentFont.rawValue)|\(c.bold)\(c.italic)\(c.underline)\(c.strikethrough)\(c.allCaps)|\(Int((l.fontPx * 100).rounded()))|\(Int(l.box.width.rounded()))|\(Int(l.box.height.rounded()))|\(scale)" as NSString
         if let hit = imageCache.object(forKey: key) { return hit }
         let w = Int(((l.box.width + l.bleed * 2) * scale).rounded(.up))
         let h = Int(((l.box.height + l.bleed * 2) * scale).rounded(.up))

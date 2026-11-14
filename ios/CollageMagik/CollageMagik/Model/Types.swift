@@ -196,8 +196,9 @@ struct Project: Equatable, Codable {
     var overlays: [PhotoOverlay] = []
 }
 
-/// The editor's bottom tabs. Picture and On top are not among them: they open by themselves while a picture in a cell,
-/// or a photo laid on top, is selected.
+/// The editor's tools. Only Media, Layout, Style and Text are in the bottom dock. Picture and On top open by themselves
+/// while a picture in a cell, or a photo laid on top, is selected; Video opens from the bar under the preview (shown
+/// whenever the collage has a video) or from a selected video.
 enum Tab: String, CaseIterable, Identifiable {
     case media, layout, style, text, video, picture, overlay
     var id: String { rawValue }
@@ -224,13 +225,14 @@ enum Tab: String, CaseIterable, Identifiable {
         }
     }
 
-    /// The tabs shown in the dock. Carousels are photos only, so they have no Video tab.
-    static func dock(for mode: EditMode) -> [Tab] {
-        mode == .carousel ? [.media, .layout, .style, .text] : [.media, .layout, .style, .text, .video]
-    }
+    /// The tabs shown in the dock.
+    static func dock(for mode: EditMode) -> [Tab] { [.media, .layout, .style, .text] }
+
+    /// Tabs that edit the whole design (in the dock), as opposed to the panels for one selected thing.
+    var inDock: Bool { self == .media || self == .layout || self == .style || self == .text }
 }
 
-/// Inside the Video tab: cutting clips, or sound.
+/// Inside the video panel: cutting clips, or sound.
 enum VideoSection: String, CaseIterable, Identifiable {
     case timeline, sound
     var id: String { rawValue }

@@ -95,10 +95,19 @@ struct VideoPanel: View {
             HintRow(symbol: "film", text: "Add a video to cut it here, control its sound and add background music.")
         } else {
             VStack(spacing: 8) {
-                Picker("Video tools", selection: $store.videoSection) {
-                    ForEach(VideoSection.allCases) { Text($0.label).tag($0) }
+                HStack(spacing: 8) {
+                    Picker("Video tools", selection: $store.videoSection) {
+                        ForEach(VideoSection.allCases) { Text($0.label).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    Button { store.closeVideo() } label: {
+                        Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).frame(width: 30, height: 30)
+                    }
+                    .buttonStyle(.glassProminent)
+                    .buttonBorderShape(.circle)
+                    .controlSize(.small)
+                    .accessibilityLabel("Done with video")
                 }
-                .pickerStyle(.segmented)
                 switch store.videoSection {
                 case .timeline: TimelinePanel()
                 case .sound: AudioPanel()

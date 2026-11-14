@@ -35,7 +35,12 @@ struct MediaPanel: View {
             }
             .scrollClipDisabled()
             if !store.items.isEmpty {
-                Label("Tap to fill a cell · hold and drag onto the design to put it on top", systemImage: "square.on.square")
+                Label(
+                    store.selectedOverlay != nil ? "Tap a photo to put it in the selected photo on top"
+                        : store.selectedCell != nil ? "Tap to put it in the selected cell · hold and drag onto the design to put it on top"
+                        : "Tap to fill a cell · hold and drag onto the design to put it on top",
+                    systemImage: "square.on.square"
+                )
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -85,7 +90,11 @@ struct MediaPanel: View {
 
     private func thumb(_ m: MediaItem, used: Bool) -> some View {
         Button {
-            store.placeMedia(m.id, cell: store.selectedCell)
+            if let o = store.selectedOverlay {
+                withAnimation(.smooth) { store.replaceOverlayMedia(o, with: m.id) }
+            } else {
+                store.placeMedia(m.id, cell: store.selectedCell)
+            }
         } label: {
             ZStack(alignment: .bottomLeading) {
                 Image(uiImage: m.thumbnail)
@@ -514,6 +523,13 @@ struct PicturePanel: View {
                             CompactTool(title: "Delete", symbol: "xmark", role: .destructive) { store.clearCell(sel) }
                         }
                     }
+                    if let id = cell.mediaId, store.item(id)?.kind == .video {
+                        HStack(spacing: 6) {
+                            ChipButton(title: "Edit timeline", symbol: "film.stack") { store.openVideo(.timeline) }
+                            ChipButton(title: "Sound", symbol: "speaker.wave.2") { store.openVideo(.sound) }
+                            Spacer(minLength: 0)
+                        }
+                    }
                     HStack(spacing: 8) {
                         Image(systemName: "minus.magnifyingglass").font(.footnote).foregroundStyle(.secondary)
                         Slider(value: Binding(
@@ -547,13 +563,37 @@ struct PicturePanel: View {
 
 // MARK: - Photo on top
 
-/// Opens by itself while a photo laid on top is selected: its frame, size, tilt, place in the pile.
+/// Opens by itself while a photo laid on top is selected: the same picture tools as a cell (change, rotate, flip, crop,
+/// zoom), then its frame, size, tilt and place in the pile.
 struct OverlayPanel: View {
     @Environment(CollageStore.self) private var store
 
     var body: some View {
         if let o = store.overlay(store.selectedOverlay) {
             VStack(spacing: 7) {
+                // the picture itself, edited exactly like a picture in a cell
+                GlassEffectContainer(spacing: 6) {
+                    HStack(spacing: 6) {
+                        CompactTool(title: "Change", symbol: "photo.badge.plus") { store.openAdd(overlay: o.id) }
+                        CompactTool(title: "Rotate", symbol: "rotate.right") { withAnimation(.smooth) { store.rotateOverlay(o.id) } }
+                        CompactTool(title: "Flip", symbol: "arrow.left.and.right.righttriangle.left.righttriangle.right", isOn: o.flip) {
+                            withAnimation(.smooth) { store.flipOverlay(o.id) }
+                        }
+                        CompactTool(title: "Crop", symbol: "crop") { store.cropOverlay = o.id }
+                        CompactTool(title: "Delete", symbol: "trash", role: .destructive) {
+                            withAnimation(.smooth) { store.removeOverlay(o.id) }
+                        }
+                    }
+                }
+                HStack(spacing: 8) {
+                    Image(systemName: "minus.magnifyingglass").font(.footnote).foregroundStyle(.secondary)
+                    Slider(value: Binding(get: { o.zoom }, set: { v in store.updateOverlay(o.id) { $0.zoom = v } }), in: 1...4)
+                        .accessibilityLabel("Zoom")
+                    Image(systemName: "plus.magnifyingglass").font(.footnote).foregroundStyle(.secondary)
+                    GlassIconButton(symbol: "arrow.counterclockwise", label: "Reset zoom, position, rotation and flip", size: 30) {
+                        withAnimation(.smooth) { store.resetOverlayView(o.id) }
+                    }
+                }
                 ScrollView(.horizontal, showsIndicators: false) {
                     GlassEffectContainer(spacing: 6) {
                         HStack(spacing: 6) {
@@ -614,9 +654,6 @@ struct OverlayPanel: View {
                             }
                             CompactTool(title: "Duplicate", symbol: "plus.square.on.square") {
                                 withAnimation(.smooth) { store.duplicateOverlay(o.id) }
-                            }
-                            CompactTool(title: "Delete", symbol: "trash", role: .destructive) {
-                                withAnimation(.smooth) { store.removeOverlay(o.id) }
                             }
                         }
                     }

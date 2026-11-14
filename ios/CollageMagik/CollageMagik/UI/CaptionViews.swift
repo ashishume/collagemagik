@@ -85,6 +85,32 @@ struct CaptionColorStrip: View {
     }
 }
 
+/// Bold, italic, underline, strikethrough and all caps, plus how the lines line up.
+struct CaptionFormatRow: View {
+    let caption: Caption
+    var size: CGFloat = 30
+    let update: ((inout Caption) -> Void) -> Void
+
+    var body: some View {
+        GlassEffectContainer(spacing: 6) {
+            HStack(spacing: 6) {
+                ForEach(CaptionFormat.allCases) { f in
+                    let on = caption[keyPath: f.keyPath]
+                    GlassIconButton(symbol: f.symbol, label: f.title, isOn: on, size: size) {
+                        update { $0[keyPath: f.keyPath].toggle() }
+                    }
+                    .accessibilityAddTraits(on ? .isSelected : [])
+                }
+                GlassIconButton(symbol: caption.align.symbol, label: "Line up the words: \(caption.align.rawValue)", size: size) {
+                    update { $0.align = $0.align.next }
+                }
+                Spacer(minLength: 0)
+            }
+        }
+        .sensoryFeedback(.selection, trigger: [caption.bold, caption.italic, caption.underline, caption.strikethrough, caption.allCaps])
+    }
+}
+
 /// Shadow, Label, Plate or Outline.
 struct CaptionLookPicker: View {
     let selection: CaptionLook
@@ -192,13 +218,9 @@ struct TextPanel: View {
         VStack(spacing: 7) {
             CaptionFontStrip(selection: c.font) { f in store.updateCaption(c.id) { $0.font = f } }
             CaptionColorStrip(selection: c.color) { hex in store.updateCaption(c.id) { $0.color = hex } }
+            CaptionFormatRow(caption: c) { patch in store.updateCaption(c.id, patch) }
             CaptionExtrasRow(caption: c) { patch in store.updateCaption(c.id, patch) }
-            HStack(spacing: 8) {
-                CaptionLookPicker(selection: c.look) { l in store.updateCaption(c.id) { $0.look = l } }
-                GlassIconButton(symbol: c.align.symbol, label: "Line up the words: \(c.align.rawValue)", size: 30) {
-                    store.updateCaption(c.id) { $0.align = $0.align.next }
-                }
-            }
+            CaptionLookPicker(selection: c.look) { l in store.updateCaption(c.id) { $0.look = l } }
             HStack(spacing: 8) {
                 Image(systemName: "textformat.size.smaller").font(.footnote).foregroundStyle(.secondary)
                 Slider(value: Binding(
@@ -261,9 +283,7 @@ struct CaptionEditor: View {
 
             VStack(spacing: 10) {
                 HStack {
-                    GlassIconButton(symbol: c.align.symbol, label: "Line up the words: \(c.align.rawValue)", size: 40) {
-                        store.updateCaption(id) { $0.align = $0.align.next }
-                    }
+                    CaptionFormatRow(caption: c, size: 32) { patch in store.updateCaption(id, patch) }
                     Spacer()
                     Text("\(c.text.count)/\(maxCaptionLength)")
                         .font(.caption.monospacedDigit())
@@ -282,6 +302,11 @@ struct CaptionEditor: View {
                     set: { v in store.updateCaption(id) { $0.text = v } }
                 ), axis: .vertical)
                 .font(c.font.font(size: 32))
+                .bold(c.bold)
+                .italic(c.italic)
+                .underline(c.underline)
+                .strikethrough(c.strikethrough)
+                .textCase(c.allCaps ? .uppercase : nil)
                 .multilineTextAlignment(c.align.swiftUI)
                 .foregroundStyle(letters)
                 .tint(letters)
