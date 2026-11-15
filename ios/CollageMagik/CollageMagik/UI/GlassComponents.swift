@@ -228,3 +228,121 @@ struct ImportProgressOverlay: View {
         }
     }
 }
+
+// MARK: - Grouped tool panels
+
+/// A group of tools inside a selection panel (photo on top, caption): only one group shows at a time.
+protocol PanelSection: CaseIterable, Identifiable, Hashable where AllCases: RandomAccessCollection {
+    var title: String { get }
+    var symbol: String { get }
+}
+
+/// Height of the tools under the group tabs: the same for every group, so the card doesn't jump when switching.
+let panelSectionHeight: CGFloat = 94
+/// Height of the group tabs row.
+let panelTabsHeight: CGFloat = 34
+
+/// The row of group tabs at the top of a selection panel. The chosen tab is glass that slides to the next one.
+struct SectionTabs<S: PanelSection>: View {
+    @Binding var selection: S
+    @Namespace private var glass
+
+    var body: some View {
+        GlassEffectContainer(spacing: 4) {
+            HStack(spacing: 0) {
+                ForEach(S.allCases) { s in
+                    let on = s == selection
+                    Button {
+                        withAnimation(.bouncy(duration: 0.4)) { selection = s }
+                    } label: {
+                        Label(s.title, systemImage: s.symbol)
+                            .labelStyle(.titleAndIcon)
+                            .font(.system(size: 12, weight: .semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
+                            .foregroundStyle(on ? Color.white : Color.white.opacity(0.7))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 30)
+                            .contentShape(Capsule())
+                            .background {
+                                if on {
+                                    Capsule().fill(.clear)
+                                        .glassEffect(.regular.tint(Color.brand.opacity(0.75)).interactive(), in: .capsule)
+                                        .glassEffectID("section", in: glass)
+                                }
+                            }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(s.title)
+                    .accessibilityAddTraits(on ? .isSelected : [])
+                }
+            }
+            .padding(2)
+            .glassEffect(.regular, in: .capsule)
+        }
+        .sensoryFeedback(.selection, trigger: selection)
+    }
+}
+
+/// The round check that closes a selection panel.
+struct PanelDoneButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).frame(width: 30, height: 30)
+        }
+        .buttonStyle(.glassProminent)
+        .buttonBorderShape(.circle)
+        .controlSize(.small)
+        .accessibilityLabel("Done")
+    }
+}
+
+/// Group tabs and a Done button over one group of tools, at a fixed height.
+struct SectionedPanel<S: PanelSection, Content: View>: View {
+    @Binding var section: S
+    let done: () -> Void
+    @ViewBuilder let content: (S) -> Content
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 8) {
+                SectionTabs(selection: $section)
+                PanelDoneButton(action: done)
+            }
+            content(section)
+                .frame(maxWidth: .infinity)
+                .frame(height: panelSectionHeight)
+                .transition(.opacity)
+        }
+        .animation(.smooth(duration: 0.25), value: section)
+    }
+}
+
+/// Stands in for the tab bar while one picture, photo or caption is being edited, so its tools get the room.
+/// Tap it (or swipe it up) to bring the tabs back.
+struct DockHandle: View {
+    let show: () -> Void
+
+    var body: some View {
+        Button(action: show) {
+            HStack(spacing: 6) {
+                Image(systemName: "chevron.up").font(.system(size: 11, weight: .bold))
+                Image(systemName: "square.grid.2x2").font(.system(size: 12, weight: .semibold))
+                Text("Tabs").font(.system(size: 12, weight: .semibold))
+            }
+            .foregroundStyle(.white.opacity(0.85))
+            .padding(.horizontal, 16)
+            .frame(height: 28)
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .glassEffect(.regular.interactive(), in: .capsule)
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
+        .gesture(DragGesture(minimumDistance: 12).onEnded { v in if v.translation.height < -8 { show() } })
+        .accessibilityLabel("Show tabs")
+        .accessibilityHint("Shows Media, Layout, Style and Text")
+    }
+}

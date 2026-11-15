@@ -168,6 +168,7 @@ struct CaptionExtrasRow: View {
 
 struct TextPanel: View {
     @Environment(CollageStore.self) private var store
+    @State private var section: CaptionSection = .font
 
     var body: some View {
         if let c = store.caption(store.selectedCaption) {
@@ -215,42 +216,66 @@ struct TextPanel: View {
     }
 
     private func styling(_ c: Caption) -> some View {
-        VStack(spacing: 7) {
-            CaptionFontStrip(selection: c.font) { f in store.updateCaption(c.id) { $0.font = f } }
-            CaptionColorStrip(selection: c.color) { hex in store.updateCaption(c.id) { $0.color = hex } }
-            CaptionFormatRow(caption: c) { patch in store.updateCaption(c.id, patch) }
-            CaptionExtrasRow(caption: c) { patch in store.updateCaption(c.id, patch) }
-            CaptionLookPicker(selection: c.look) { l in store.updateCaption(c.id) { $0.look = l } }
-            HStack(spacing: 8) {
-                Image(systemName: "textformat.size.smaller").font(.footnote).foregroundStyle(.secondary)
-                Slider(value: Binding(
-                    get: { c.size },
-                    set: { v in store.updateCaption(c.id) { $0.size = v } }
-                ), in: captionSizeRange)
-                .accessibilityLabel("Caption size")
-                Image(systemName: "textformat.size.larger").font(.footnote).foregroundStyle(.secondary)
-                GlassIconButton(symbol: "pencil", label: "Change the words", size: 30) { store.editingCaption = c.id }
-                GlassIconButton(symbol: "plus.square.on.square", label: "Duplicate caption", size: 30) {
-                    withAnimation(.smooth) { store.duplicateCaption(c.id) }
+        SectionedPanel(section: $section, done: { store.selectCaption(nil) }) { s in
+            switch s {
+            case .font:
+                VStack(spacing: 8) {
+                    CaptionFontStrip(selection: c.font) { f in store.updateCaption(c.id) { $0.font = f } }
+                    HStack(spacing: 8) {
+                        Image(systemName: "textformat.size.smaller").font(.footnote).foregroundStyle(.secondary)
+                        Slider(value: Binding(
+                            get: { c.size },
+                            set: { v in store.updateCaption(c.id) { $0.size = v } }
+                        ), in: captionSizeRange)
+                        .accessibilityLabel("Caption size")
+                        Image(systemName: "textformat.size.larger").font(.footnote).foregroundStyle(.secondary)
+                    }
                 }
-                Button(role: .destructive) {
-                    withAnimation(.smooth) { store.removeCaption(c.id) }
-                } label: {
-                    Image(systemName: "trash").font(.system(size: 12.5, weight: .semibold)).frame(width: 30, height: 30)
+            case .colour:
+                VStack(spacing: 10) {
+                    CaptionColorStrip(selection: c.color) { hex in store.updateCaption(c.id) { $0.color = hex } }
+                    CaptionLookPicker(selection: c.look) { l in store.updateCaption(c.id) { $0.look = l } }
                 }
-                .buttonStyle(.glass)
-                .buttonBorderShape(.circle)
-                .controlSize(.small)
-                .tint(.red)
-                .accessibilityLabel("Delete caption")
-                Button { store.selectCaption(nil) } label: {
-                    Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).frame(width: 30, height: 30)
+            case .style:
+                VStack(spacing: 10) {
+                    CaptionFormatRow(caption: c) { patch in store.updateCaption(c.id, patch) }
+                    CaptionExtrasRow(caption: c) { patch in store.updateCaption(c.id, patch) }
                 }
-                .buttonStyle(.glassProminent)
-                .buttonBorderShape(.circle)
-                .controlSize(.small)
-                .accessibilityLabel("Done")
+            case .edit:
+                GlassEffectContainer(spacing: 6) {
+                    HStack(spacing: 6) {
+                        CompactTool(title: "Edit words", symbol: "pencil") { store.editingCaption = c.id }
+                        CompactTool(title: "Duplicate", symbol: "plus.square.on.square") {
+                            withAnimation(.smooth) { store.duplicateCaption(c.id) }
+                        }
+                        CompactTool(title: "Delete", symbol: "trash", role: .destructive) {
+                            withAnimation(.smooth) { store.removeCaption(c.id) }
+                        }
+                    }
+                }
             }
+        }
+    }
+}
+
+/// The groups a selected caption's tools are sorted into.
+enum CaptionSection: String, PanelSection {
+    case font, colour, style, edit
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .font: "Font"
+        case .colour: "Colour"
+        case .style: "Style"
+        case .edit: "Edit"
+        }
+    }
+    var symbol: String {
+        switch self {
+        case .font: "textformat"
+        case .colour: "paintpalette"
+        case .style: "bold.italic.underline"
+        case .edit: "pencil"
         }
     }
 }

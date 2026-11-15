@@ -47,7 +47,7 @@ struct RootView: View {
                     }
                     PanelCard()
                     AdBannerSlot()
-                    ToolDock()
+                    BottomDock()
                 }
                 .padding(.horizontal, 12)
                 .padding(.top, 2)
@@ -167,6 +167,35 @@ struct RootView: View {
     }
 }
 
+/// The tab bar, or, while one picture, photo on top, caption or the video tools are being edited, a slim handle in its
+/// place so that panel gets the room. The handle brings the tabs back.
+struct BottomDock: View {
+    @Environment(CollageStore.self) private var store
+    @State private var peek = false
+
+    private var editingSelection: Bool {
+        !store.tab.inDock || (store.tab == .text && store.selectedCaption != nil)
+    }
+
+    var body: some View {
+        Group {
+            if editingSelection && !peek {
+                DockHandle { withAnimation(.smooth) { peek = true } }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else {
+                ToolDock()
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.smooth(duration: 0.3), value: editingSelection)
+        // a new selection hides the tabs again
+        .onChange(of: editingSelection) { peek = false }
+        .onChange(of: store.selectedCell) { peek = false }
+        .onChange(of: store.selectedOverlay) { peek = false }
+        .onChange(of: store.selectedCaption) { peek = false }
+    }
+}
+
 /// The glass card that holds whichever tool is selected.
 struct PanelCard: View {
     @Environment(CollageStore.self) private var store
@@ -182,7 +211,7 @@ struct PanelCard: View {
         case .style:
             let frame: CGFloat = store.project.frame == .none ? 40 : store.project.frame.hasEdge ? 92 : 58
             return (store.project.format == .story ? 156 : 124) + frame + pad
-        case .text: return (store.caption(store.selectedCaption) == nil ? 66 : 264) + pad
+        case .text: return (store.caption(store.selectedCaption) == nil ? 66 : panelTabsHeight + 8 + panelSectionHeight) + pad
         case .video:
             let n = placedLanes(store.project).count
             if n == 0 { return 44 + pad }
@@ -192,8 +221,9 @@ struct PanelCard: View {
             case .sound: return picker + CGFloat(n) * 36 + (store.project.music == nil ? 34 : 3 * 36) + pad + 4
             }
         case .overlay:
-            guard let o = store.overlay(store.selectedOverlay) else { return 44 + pad }
-            return (o.frame.hasEdge ? 254 : 222) + pad
+            guard store.overlay(store.selectedOverlay) != nil else { return 44 + pad }
+            // group tabs, then one group of tools
+            return panelTabsHeight + 8 + panelSectionHeight + pad
         case .picture:
             guard let s = store.selectedCell, store.project.cells.indices.contains(s) else { return 44 + pad }
             if store.swapFrom != nil { return 36 + pad }
@@ -209,7 +239,8 @@ struct PanelCard: View {
                 case .media: MediaPanel()
                 case .layout: LayoutPanel()
                 case .style: StylePanel()
-                case .text: TextPanel()
+                // a caption picked on the canvas switches tab and selects in one go: a fresh panel always shows its tools
+                case .text: TextPanel().id(store.selectedCaption)
                 case .video: VideoPanel()
                 case .picture: PicturePanel()
                 case .overlay: OverlayPanel()

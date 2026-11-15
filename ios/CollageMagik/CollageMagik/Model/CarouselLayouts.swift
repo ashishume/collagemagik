@@ -8,7 +8,7 @@ extension Project {
 
     /// How many slides the carousel spans. Nobody picks this: it follows the pictures and the style, so the more pictures
     /// (or the roomier the style), the more slides.
-    var slides: Int { mode == .carousel ? autoSlides(count: cellCount, style: carouselStyleInUse) : 1 }
+    var slides: Int { mode == .carousel ? autoSlides(count: cellCount, style: carouselStyleInUse, format: format) : 1 }
 
     /// The whole design, in "1080 wide" pixels: one slide for a collage, `slides` side by side for a carousel.
     var canvasWidth: Double { mode == .carousel ? format.width * Double(slides) : format.width }
@@ -62,14 +62,16 @@ extension Project {
 
 /// How the pictures are arranged across the slides. Every style is built so slide seams run through pictures:
 /// half of a picture is on one slide, half on the next, which is what makes people swipe.
+/// Flow and Square flow are one strip of joined pictures that are all the same shape (portrait 4:5, or square).
 /// Scatter, Wave and Wall are random galleries: pictures of different sizes placed here and there. "Shuffle" deals a new arrangement.
 enum CarouselStyle: String, CaseIterable, Identifiable {
-    case panorama, flow, duo, stagger, mosaic, scatter, wave, wall
+    case panorama, flow, squareFlow, duo, stagger, mosaic, scatter, wave, wall
     var id: String { rawValue }
     var title: String {
         switch self {
         case .panorama: "Panorama"
         case .flow: "Flow"
+        case .squareFlow: "Square flow"
         case .duo: "Two rows"
         case .stagger: "Stagger"
         case .mosaic: "Mosaic"
@@ -81,11 +83,21 @@ enum CarouselStyle: String, CaseIterable, Identifiable {
     /// Styles whose arrangement is dealt at random (and can be re-dealt).
     var isRandom: Bool { self == .scatter || self == .wave || self == .wall }
 
+    /// The width ÷ height every picture keeps, for the styles whose pictures all share one shape.
+    var stripAspect: Double? {
+        switch self {
+        case .flow: 4.0 / 5.0
+        case .squareFlow: 1
+        default: nil
+        }
+    }
+
     /// How many pictures share one slide on average. Roomy styles give each picture more width, so they need more slides.
     var photosPerSlide: Double {
         switch self {
         case .panorama: 0.5
         case .flow: 1.3
+        case .squareFlow: 1.0
         case .duo: 2.6
         case .stagger: 2.6
         case .mosaic: 2.2
@@ -117,15 +129,75 @@ func carouselLayoutId(_ style: CarouselStyle, seed: Int = 0) -> String {
 /// One picture can only be a panorama; two or more can't. A wall needs a few pictures to fill its three rows.
 func carouselStyles(for count: Int) -> [CarouselStyle] {
     if count <= 1 { return [.panorama] }
-    var styles: [CarouselStyle] = [.flow, .duo, .stagger, .mosaic, .scatter, .wave]
+    var styles: [CarouselStyle] = [.flow, .squareFlow, .duo, .stagger, .mosaic, .scatter, .wave]
     if count >= 4 { styles.append(.wall) }
     return styles
 }
 
 /// Slides for a number of pictures in a style: nobody chooses this.
-func autoSlides(count n: Int, style: CarouselStyle) -> Int {
+func autoSlides(count n: Int, style: CarouselStyle, format: FormatId) -> Int {
+    if let aspect = style.stripAspect { return stripPlan(count: n, aspect: aspect, format: format).slides }
     let raw = Int((Double(max(n, 1)) / style.photosPerSlide - 0.001).rounded(.up))
     return min(maxSlides, max(minSlides, raw))
+}
+
+/// One strip of joined pictures that all keep the same shape: how tall they are (a share of the slide height), how wide
+/// each one is and where the strip starts (both in slides), and how many slides it spans.
+struct StripPlan: Equatable {
+    var slides: Int
+    var height: Double
+    var width: Double
+    var start: Double
+}
+
+/// Plans a strip of `n` pictures, each `aspect` wide for 1 tall. Pictures are as tall as the slide when they can be; they
+/// shrink a little, never below 85% (and the strip slides along) when that would put a slide seam on the join between two pictures,
+/// because a seam that cuts through a picture is what makes people swipe.
+func stripPlan(count n: Int, aspect: Double, format: FormatId) -> StripPlan {
+    let n = max(1, n)
+    let ratio = format.height / format.width
+    let clearance = 0.15
+    var best: (plan: StripPlan, score: Double)?
+    var h = 1.0
+    // pictures stay at least this tall (unless there are so many that the slide limit makes them smaller)
+    while h >= 0.85 - 0.0001 {
+        var height = h
+        var w = aspect * height * ratio
+        // never more slides than allowed: shrink the pictures to fit
+        if Double(n) * w > Double(maxSlides) {
+            w = Double(maxSlides) / Double(n)
+            height = w / (aspect * ratio)
+        }
+        let total = Double(n) * w
+        let slides = min(maxSlides, max(minSlides, Int((total - 0.0001).rounded(.up))))
+        let slack = Double(slides) - total
+        // try the strip centred first, then shifted towards either end
+        for shift in [0.5, 0.35, 0.65, 0.2, 0.8, 0.05, 0.95] {
+            let start = slack * shift
+            var score = Double.infinity
+            for i in 1..<max(n, 2) where i < n {
+                let edge = start + Double(i) * w
+                let seam = edge.rounded()
+                if seam >= 1, seam <= Double(slides - 1) { score = min(score, abs(edge - seam)) }
+            }
+            let plan = StripPlan(slides: slides, height: height, width: w, start: start)
+            if score >= clearance { return plan }
+            // a taller picture wins a near tie: a seam a little close to a join beats a lot of empty space
+            if best == nil || score > best!.score + 0.03 { best = (plan, score) }
+        }
+        if height < h { break }
+        h -= 0.01
+    }
+    return best!.plan
+}
+
+/// The pictures of a strip, in reading order, in layout units (0...1 across all the slides).
+func stripRects(_ plan: StripPlan, count n: Int) -> [LayoutRect] {
+    let total = Double(plan.slides)
+    let y = (1 - plan.height) / 2
+    return (0..<max(1, n)).map { i in
+        LayoutRect(x: (plan.start + Double(i) * plan.width) / total, y: y, w: plan.width / total, h: plan.height)
+    }
 }
 
 /// The style a project starts in for its number of pictures.
@@ -228,15 +300,16 @@ private func readingOrder(_ rects: [LayoutRect]) -> [LayoutRect] {
     }
 }
 
-func carouselLayout(_ style: CarouselStyle, count n: Int, slides S: Int, seed: Int = 0) -> CollageLayout {
+func carouselLayout(_ style: CarouselStyle, count n: Int, slides S: Int, format: FormatId, seed: Int = 0) -> CollageLayout {
     let n = max(1, n)
     let id = carouselLayoutId(style, seed: seed)
     var rects: [LayoutRect]
     switch style {
     case .panorama:
         rects = [LayoutRect(x: 0, y: 0, w: 1, h: 1)]
-    case .flow:
-        rects = row(seamSafeEdges(columns: n, slides: S, shift: 0), slides: S, y: 0, h: 1)
+    case .flow, .squareFlow:
+        // one strip of joined pictures, all the same size and shape
+        rects = stripRects(stripPlan(count: n, aspect: style.stripAspect ?? 1, format: format), count: n)
     case .duo:
         let top = (n + 1) / 2, bottom = n - top
         rects = row(seamSafeEdges(columns: top, slides: S, shift: 0), slides: S, y: 0, h: 0.5)
@@ -329,7 +402,7 @@ func carouselLayout(_ style: CarouselStyle, count n: Int, slides S: Int, seed: I
 func layout(for project: Project) -> CollageLayout {
     if project.mode == .carousel {
         let style = project.carouselStyleInUse
-        return carouselLayout(style, count: project.cellCount, slides: project.slides, seed: carouselSeed(of: project.layoutId))
+        return carouselLayout(style, count: project.cellCount, slides: project.slides, format: project.format, seed: carouselSeed(of: project.layoutId))
     }
     let base = layout(byId: project.layoutId)
     if let sizes = project.cellSizes, let grid = base.grid, grid.sameShape(sizes) {
@@ -342,7 +415,7 @@ func layout(for project: Project) -> CollageLayout {
 func layoutOptions(for project: Project) -> [CollageLayout] {
     if project.mode == .carousel {
         return carouselStyles(for: project.cellCount).map {
-            carouselLayout($0, count: project.cellCount, slides: autoSlides(count: project.cellCount, style: $0), seed: carouselSeed(of: project.layoutId))
+            carouselLayout($0, count: project.cellCount, slides: autoSlides(count: project.cellCount, style: $0, format: project.format), format: project.format, seed: carouselSeed(of: project.layoutId))
         }
     }
     return layouts(for: project.cellCount)

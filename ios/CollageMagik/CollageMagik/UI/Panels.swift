@@ -241,7 +241,7 @@ struct LayoutPanel: View {
                                 // a random style keeps its current arrangement when you tap it again
                                 withAnimation(.smooth) { store.setLayout(on ? store.project.layoutId : l.id) }
                             } label: {
-                                LayoutThumb(layout: l, isOn: on, slides: carousel ? carouselStyle(of: l.id).map { autoSlides(count: store.project.cellCount, style: $0) } : nil)
+                                LayoutThumb(layout: l, isOn: on, slides: carousel ? carouselStyle(of: l.id).map { autoSlides(count: store.project.cellCount, style: $0, format: store.project.format) } : nil)
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel(l.name)
@@ -563,112 +563,164 @@ struct PicturePanel: View {
 
 // MARK: - Photo on top
 
-/// Opens by itself while a photo laid on top is selected: the same picture tools as a cell (change, rotate, flip, crop,
-/// zoom), then its frame, size, tilt and place in the pile.
+/// The groups a photo on top's tools are sorted into. Only one group shows at a time, so the card stays short and calm.
+enum OverlaySection: String, PanelSection {
+    case photo, frame, size, layer
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .photo: "Photo"
+        case .frame: "Frame"
+        case .size: "Size"
+        case .layer: "Layer"
+        }
+    }
+    var symbol: String {
+        switch self {
+        case .photo: "photo"
+        case .frame: "square.dashed"
+        case .size: "arrow.up.left.and.arrow.down.right"
+        case .layer: "square.3.layers.3d"
+        }
+    }
+}
+
+/// Opens by itself while a photo laid on top is selected. Its tools are grouped: the picture itself (change, crop,
+/// rotate, flip, zoom), its frame, its size and tilt, and its place in the pile.
 struct OverlayPanel: View {
     @Environment(CollageStore.self) private var store
+    @State private var section: OverlaySection = .photo
 
     var body: some View {
         if let o = store.overlay(store.selectedOverlay) {
-            VStack(spacing: 7) {
-                // the picture itself, edited exactly like a picture in a cell
-                GlassEffectContainer(spacing: 6) {
-                    HStack(spacing: 6) {
-                        CompactTool(title: "Change", symbol: "photo.badge.plus") { store.openAdd(overlay: o.id) }
-                        CompactTool(title: "Rotate", symbol: "rotate.right") { withAnimation(.smooth) { store.rotateOverlay(o.id) } }
-                        CompactTool(title: "Flip", symbol: "arrow.left.and.right.righttriangle.left.righttriangle.right", isOn: o.flip) {
-                            withAnimation(.smooth) { store.flipOverlay(o.id) }
-                        }
-                        CompactTool(title: "Crop", symbol: "crop") { store.cropOverlay = o.id }
-                        CompactTool(title: "Delete", symbol: "trash", role: .destructive) {
-                            withAnimation(.smooth) { store.removeOverlay(o.id) }
-                        }
-                    }
-                }
-                HStack(spacing: 8) {
-                    Image(systemName: "minus.magnifyingglass").font(.footnote).foregroundStyle(.secondary)
-                    Slider(value: Binding(get: { o.zoom }, set: { v in store.updateOverlay(o.id) { $0.zoom = v } }), in: 1...4)
-                        .accessibilityLabel("Zoom")
-                    Image(systemName: "plus.magnifyingglass").font(.footnote).foregroundStyle(.secondary)
-                    GlassIconButton(symbol: "arrow.counterclockwise", label: "Reset zoom, position, rotation and flip", size: 30) {
-                        withAnimation(.smooth) { store.resetOverlayView(o.id) }
-                    }
-                }
-                ScrollView(.horizontal, showsIndicators: false) {
-                    GlassEffectContainer(spacing: 6) {
-                        HStack(spacing: 6) {
-                            ForEach(PhotoFrame.allCases) { f in
-                                ChipButton(title: f.title, symbol: f.symbol, isOn: f == o.frame) {
-                                    withAnimation(.smooth) { store.updateOverlay(o.id) { $0.frame = f } }
-                                }
-                                .accessibilityAddTraits(f == o.frame ? .isSelected : [])
-                            }
-                        }
-                        .padding(.vertical, 2)
-                    }
-                }
-                .scrollClipDisabled()
-                if o.frame.hasEdge {
-                    HStack(spacing: 9) {
-                        ForEach(frameSwatches, id: \.self) { c in
-                            let on = o.frameColor.lowercased() == c
-                            Button { store.updateOverlay(o.id) { $0.frameColor = c } } label: {
-                                Circle().fill(Color(hex: c))
-                                    .frame(width: 22, height: 22)
-                                    .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
-                                    .overlay(Circle().strokeBorder(Color.brand, lineWidth: on ? 3 : 0).padding(-4))
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("Frame colour \(c)")
-                            .accessibilityAddTraits(on ? .isSelected : [])
-                        }
-                        ColorPicker("Custom frame colour", selection: Binding(
-                            get: { Color(hex: o.frameColor) },
-                            set: { v in store.updateOverlay(o.id) { $0.frameColor = v.hexString } }
-                        ), supportsOpacity: false)
-                        .labelsHidden()
-                        Spacer(minLength: 0)
-                    }
-                    .padding(.leading, 4)
-                }
-                HStack(spacing: 10) {
-                    Image(systemName: "arrow.up.left.and.arrow.down.right").font(.footnote).foregroundStyle(.secondary)
-                    Slider(value: Binding(get: { o.w }, set: { v in store.updateOverlay(o.id) { $0.w = v } }), in: overlayWidthRange)
-                        .accessibilityLabel("Size")
-                    Image(systemName: "rotate.right").font(.footnote).foregroundStyle(.secondary)
-                    Slider(value: Binding(
-                        get: { clamp(o.tilt, -45, 45) },
-                        // level holds on a little, so a straight photo is easy to get back
-                        set: { v in store.updateOverlay(o.id) { $0.tilt = abs(v) < 1.5 ? 0 : v } }
-                    ), in: -45...45)
-                    .accessibilityLabel("Tilt")
-                }
-                HStack(spacing: 6) {
-                    GlassEffectContainer(spacing: 6) {
-                        HStack(spacing: 6) {
-                            CompactTool(title: "Forward", symbol: "square.2.layers.3d.top.filled") {
-                                withAnimation(.smooth) { store.restackOverlay(o.id, up: true) }
-                            }
-                            CompactTool(title: "Back", symbol: "square.2.layers.3d.bottom.filled") {
-                                withAnimation(.smooth) { store.restackOverlay(o.id, up: false) }
-                            }
-                            CompactTool(title: "Duplicate", symbol: "plus.square.on.square") {
-                                withAnimation(.smooth) { store.duplicateOverlay(o.id) }
-                            }
-                        }
-                    }
-                    Spacer(minLength: 0)
-                    Button { store.selectOverlay(nil) } label: {
-                        Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).frame(width: 30, height: 30)
-                    }
-                    .buttonStyle(.glassProminent)
-                    .buttonBorderShape(.circle)
-                    .controlSize(.small)
-                    .accessibilityLabel("Done")
+            SectionedPanel(section: $section, done: { store.selectOverlay(nil) }) { s in
+                switch s {
+                case .photo: photoTools(o)
+                case .frame: frameTools(o)
+                case .size: sizeTools(o)
+                case .layer: layerTools(o)
                 }
             }
         } else {
             HintRow(symbol: "hand.draw", text: "Hold a photo in the tray and drag it onto the design to lay it on top.")
+        }
+    }
+
+    /// The picture itself, edited exactly like a picture in a cell.
+    private func photoTools(_ o: PhotoOverlay) -> some View {
+        VStack(spacing: 8) {
+            GlassEffectContainer(spacing: 6) {
+                HStack(spacing: 6) {
+                    CompactTool(title: "Change", symbol: "photo.badge.plus") { store.openAdd(overlay: o.id) }
+                    CompactTool(title: "Crop", symbol: "crop") { store.cropOverlay = o.id }
+                    CompactTool(title: "Rotate", symbol: "rotate.right") { withAnimation(.smooth) { store.rotateOverlay(o.id) } }
+                    CompactTool(title: "Flip", symbol: "arrow.left.and.right.righttriangle.left.righttriangle.right", isOn: o.flip) {
+                        withAnimation(.smooth) { store.flipOverlay(o.id) }
+                    }
+                }
+            }
+            HStack(spacing: 8) {
+                Image(systemName: "minus.magnifyingglass").font(.footnote).foregroundStyle(.secondary)
+                Slider(value: Binding(get: { o.zoom }, set: { v in store.updateOverlay(o.id) { $0.zoom = v } }), in: 1...4)
+                    .accessibilityLabel("Zoom")
+                Image(systemName: "plus.magnifyingglass").font(.footnote).foregroundStyle(.secondary)
+                GlassIconButton(symbol: "arrow.counterclockwise", label: "Reset zoom, position, rotation and flip", size: 30) {
+                    withAnimation(.smooth) { store.resetOverlayView(o.id) }
+                }
+            }
+        }
+    }
+
+    private func frameTools(_ o: PhotoOverlay) -> some View {
+        VStack(spacing: 10) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                GlassEffectContainer(spacing: 6) {
+                    HStack(spacing: 6) {
+                        ForEach(PhotoFrame.allCases) { f in
+                            ChipButton(title: f.title, symbol: f.symbol, isOn: f == o.frame) {
+                                withAnimation(.smooth) { store.updateOverlay(o.id) { $0.frame = f } }
+                            }
+                            .accessibilityAddTraits(f == o.frame ? .isSelected : [])
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+            .scrollClipDisabled()
+            if o.frame.hasEdge {
+                HStack(spacing: 9) {
+                    ForEach(frameSwatches, id: \.self) { c in
+                        let on = o.frameColor.lowercased() == c
+                        Button { store.updateOverlay(o.id) { $0.frameColor = c } } label: {
+                            Circle().fill(Color(hex: c))
+                                .frame(width: 22, height: 22)
+                                .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
+                                .overlay(Circle().strokeBorder(Color.brand, lineWidth: on ? 3 : 0).padding(-4))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Frame colour \(c)")
+                        .accessibilityAddTraits(on ? .isSelected : [])
+                    }
+                    ColorPicker("Custom frame colour", selection: Binding(
+                        get: { Color(hex: o.frameColor) },
+                        set: { v in store.updateOverlay(o.id) { $0.frameColor = v.hexString } }
+                    ), supportsOpacity: false)
+                    .labelsHidden()
+                    Spacer(minLength: 0)
+                }
+                .padding(.leading, 4)
+            } else {
+                Text(o.frame == .none ? "Pick a frame to give this photo an edge." : "This frame has no colour to pick.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.leading, 4)
+            }
+        }
+    }
+
+    private func sizeTools(_ o: PhotoOverlay) -> some View {
+        VStack(spacing: 6) {
+            labeledSlider("Size", symbol: "arrow.up.left.and.arrow.down.right",
+                          value: Binding(get: { o.w }, set: { v in store.updateOverlay(o.id) { $0.w = v } }),
+                          range: overlayWidthRange)
+            labeledSlider("Tilt", symbol: "rotate.right",
+                          value: Binding(
+                              get: { clamp(o.tilt, -45, 45) },
+                              // level holds on a little, so a straight photo is easy to get back
+                              set: { v in store.updateOverlay(o.id) { $0.tilt = abs(v) < 1.5 ? 0 : v } }
+                          ),
+                          range: -45...45)
+        }
+    }
+
+    private func labeledSlider(_ title: String, symbol: String, value: Binding<Double>, range: ClosedRange<Double>) -> some View {
+        HStack(spacing: 8) {
+            Label(title, systemImage: symbol)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .frame(width: 66, alignment: .leading)
+            Slider(value: value, in: range)
+                .accessibilityLabel(title)
+        }
+    }
+
+    private func layerTools(_ o: PhotoOverlay) -> some View {
+        GlassEffectContainer(spacing: 6) {
+            HStack(spacing: 6) {
+                CompactTool(title: "Forward", symbol: "square.2.layers.3d.top.filled") {
+                    withAnimation(.smooth) { store.restackOverlay(o.id, up: true) }
+                }
+                CompactTool(title: "Back", symbol: "square.2.layers.3d.bottom.filled") {
+                    withAnimation(.smooth) { store.restackOverlay(o.id, up: false) }
+                }
+                CompactTool(title: "Duplicate", symbol: "plus.square.on.square") {
+                    withAnimation(.smooth) { store.duplicateOverlay(o.id) }
+                }
+                CompactTool(title: "Delete", symbol: "trash", role: .destructive) {
+                    withAnimation(.smooth) { store.removeOverlay(o.id) }
+                }
+            }
         }
     }
 }
