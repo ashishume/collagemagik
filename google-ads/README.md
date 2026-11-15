@@ -3,6 +3,7 @@
 ```
 google-ads/
 ├── source/      Remotion project that makes every video and image (code, voiceover, music, app screenshots)
+├── html5/       Animated HTML5 display ads, one folder per version (zips/ is what you upload)
 ├── output/      Videos, one folder per version
 │   ├── v1/
 │   ├── v2/
@@ -13,6 +14,25 @@ google-ads/
         ├── display-banners/  Fixed-size Display image ads (all under 150 KB)
         └── logos/            Square 1:1 and landscape 4:1 logos
 ```
+
+## v4 HTML5 display ads (15 Nov 2026)
+
+`html5/v4/zips/collagemagik-editor-html5-<size>.zip`: animated banners for Display campaigns ("Upload display ads"), in
+the same 13 sizes as the image banners. Each tells the v4 story in 10 seconds: a pile of trip photos drops into a
+collage, a photo lands on top in an instant frame and twists straight (yellow guides and a 0° badge, as in the app), a
+"golden hour" caption appears, and the headline goes "Back from your trip?" → "Make it a collage." → "Same trip. Way
+better post." It plays twice (20 s, under Google's 30 s limit) and stops on the last frame, with the CTA ("Free on the
+App Store", or "Get it free" where space is short) always on screen.
+
+- Built by `python3 scripts/build-html5.py v4` from `source/` (needs ImageMagick and `zip`). Layout is worked out per
+  size in that script; photos are cropped to each cell at 2x, so every zip is small (largest: 300x1050, about 116 KB;
+  Google's limit is 150 KB). The script stops if any zip goes over.
+- Each `index.html` has `<meta name="ad.size">` and a `clickTag` that Google Ads replaces with the ad's final URL on
+  upload (the `apps.apple.com` link in the file is only a placeholder). No external files, fonts or scripts.
+- Preview every size side by side: `python3 -m http.server 8765 --directory google-ads/html5/v4` from the repo root,
+  then open `http://localhost:8765/preview.html`.
+- Google Ads only accepts HTML5 uploads from accounts that meet its HTML5 policy (account history and spend). If the
+  upload is refused, use the image banners in `photos/v3/display-banners/` instead.
 
 ## v4 videos: the editor ad (14 Nov 2026)
 
