@@ -585,8 +585,7 @@ final class CollageStore {
     /// would look as if it were being edited). The Media tray keeps the selection: tapping a tray photo replaces it.
     func dockTabChanged(_ t: Tab) {
         guard t.inDock else { return }
-        if t != .text { selectedCaption = nil }
-        if t != .sticker { selectedSticker = nil }
+        if t != .text { selectedCaption = nil; selectedSticker = nil }
         if t != .media {
             selectedCell = nil
             swapFrom = nil

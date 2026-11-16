@@ -1,33 +1,11 @@
 import SwiftUI
 
-/// The Stickers tab: pick an emoji or shape to lay on the design; with a sticker selected, its colour, size and layer.
-struct StickerPanel: View {
+/// The Text tab's sticker groups: tap an emoji or shape to lay it on the design.
+struct StickerGrid: View {
     @Environment(CollageStore.self) private var store
-    @State private var group: StickerGroup = .faces
-    @State private var section: StickerSection = .size
+    let group: StickerGroup
 
     var body: some View {
-        if let st = store.sticker(store.selectedSticker) {
-            SectionedPanel(section: $section, done: { withAnimation(.smooth) { store.selectSticker(nil) } }) { s in
-                switch s {
-                case .size: sizeTools(st)
-                case .colour: colourTools(st)
-                case .layer: layerTools(st)
-                }
-            }
-        } else {
-            VStack(spacing: 8) {
-                SectionTabs(selection: $group)
-                    .frame(height: panelTabsHeight)
-                picker
-                    .frame(height: panelSectionHeight)
-            }
-        }
-    }
-
-    // MARK: Picker
-
-    private var picker: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHGrid(rows: [GridItem(.fixed(42), spacing: 6), GridItem(.fixed(42), spacing: 6)], spacing: 6) {
                 ForEach(group.items, id: \.self) { item in
@@ -52,7 +30,33 @@ struct StickerPanel: View {
             .padding(.horizontal, 2)
         }
         .id(group) // a new group starts at its first item
-        .transition(.opacity)
+    }
+}
+
+/// Tabs on the Text tab while nothing is selected: captions, then the sticker groups.
+enum TextHomeSection: String, PanelSection {
+    case text, faces, love, fun, shapes
+    var id: String { rawValue }
+    var stickerGroup: StickerGroup? { StickerGroup(rawValue: rawValue) }
+    var title: String { stickerGroup?.title ?? "Text" }
+    var symbol: String { stickerGroup?.symbol ?? "textformat" }
+}
+
+/// The selected sticker's tools: size and tilt, colour, layer.
+struct StickerTools: View {
+    @Environment(CollageStore.self) private var store
+    @State private var section: StickerSection = .size
+
+    var body: some View {
+        if let st = store.sticker(store.selectedSticker) {
+            SectionedPanel(section: $section, done: { withAnimation(.smooth) { store.selectSticker(nil) } }) { s in
+                switch s {
+                case .size: sizeTools(st)
+                case .colour: colourTools(st)
+                case .layer: layerTools(st)
+                }
+            }
+        }
     }
 
     // MARK: Selected sticker

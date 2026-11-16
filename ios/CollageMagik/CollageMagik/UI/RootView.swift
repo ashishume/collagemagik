@@ -191,7 +191,7 @@ struct BottomDock: View {
     @State private var peek = false
 
     private var editingSelection: Bool {
-        !store.tab.inDock || (store.tab == .text && store.selectedCaption != nil) || (store.tab == .sticker && store.selectedSticker != nil)
+        !store.tab.inDock || (store.tab == .text && (store.selectedCaption != nil || store.selectedSticker != nil))
     }
 
     var body: some View {
@@ -231,8 +231,8 @@ struct PanelCard: View {
             // the background picker: kind, then one row (colour and pattern have two)
             let backdrop: CGFloat = store.project.backdrop.kind == .pattern ? 34 : 0
             return (store.project.format == .story ? 190 : 158) + frame + backdrop + pad
-        case .sticker: return panelTabsHeight + 8 + panelSectionHeight + pad
-        case .text: return (store.caption(store.selectedCaption) == nil ? 66 : panelTabsHeight + 8 + panelSectionHeight) + pad
+        // captions and stickers share the tab: group tabs over one row of tools, whatever is selected
+        case .text: return panelTabsHeight + 8 + panelSectionHeight + pad
         case .video:
             let n = placedLanes(store.project).count
             if n == 0 { return 44 + pad }
@@ -261,8 +261,7 @@ struct PanelCard: View {
                 case .layout: LayoutPanel()
                 case .style: StylePanel()
                 // a caption picked on the canvas switches tab and selects in one go: a fresh panel always shows its tools
-                case .text: TextPanel().id(store.selectedCaption)
-                case .sticker: StickerPanel()
+                case .text: TextPanel().id(store.selectedCaption ?? store.selectedSticker)
                 case .video: VideoPanel()
                 case .picture: PicturePanel()
                 case .overlay: OverlayPanel()

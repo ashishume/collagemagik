@@ -25,7 +25,7 @@ struct ToolDock: View {
                         }
                         .foregroundStyle(selected ? Color.white : Color.white.opacity(0.7))
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 5)
+                        .padding(.vertical, 9)
                         .contentShape(Capsule())
                         .background {
                             if selected {

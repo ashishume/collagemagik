@@ -64,8 +64,8 @@ open by themselves while a picture is selected.
   preview moved into More •••, and the Collage | Carousel switch shows icons only when the bar is narrow.
 - **Backgrounds** (Style tab; `Model/Backdrop.swift`): Colour, 12 gradients, a blurred copy of any picture in the tray, or a
   pattern (dots, grid, stripes, checks, confetti, hearts) over the colour. One renderer draws the preview and every export.
-- **Stickers** (new Stickers tab; `Model/Stickers.swift`, `UI/StickerPanel.swift`): emoji (Faces, Love, Fun) and colourable
-  shapes, up to 30. Drag, pinch and twist like captions; size, tilt, colour, flip, layer order, copy, delete.
+- **Stickers** (in the Text tab, next to captions; `Model/Stickers.swift`, `UI/StickerPanel.swift`): emoji (Faces, Love, Fun)
+  and colourable shapes, up to 30. Drag, pinch and twist like captions; size, tilt, colour, flip, layer order, copy, delete.
 - **Clip speed** (timeline): 0.25× to 3×. The clip keeps its start; sound keeps its pitch in the preview and the export.
 - **Export**: HD (1080 wide) or 4K (2160 × 3840 for a Story), at 30 or 60 fps.
 

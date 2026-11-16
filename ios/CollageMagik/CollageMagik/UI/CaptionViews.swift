@@ -170,11 +170,29 @@ struct TextPanel: View {
     @Environment(CollageStore.self) private var store
     @State private var section: CaptionSection = .font
 
+    /// Kept across selections, so after placing a sticker the same group is still open.
+    @AppStorage("cm.text.home") private var home: TextHomeSection = .text
+
     var body: some View {
         if let c = store.caption(store.selectedCaption) {
             styling(c)
+        } else if store.sticker(store.selectedSticker) != nil {
+            StickerTools()
         } else {
-            overview
+            // nothing selected: captions and the sticker groups, one tab each
+            VStack(spacing: 8) {
+                SectionTabs(selection: $home)
+                    .frame(height: panelTabsHeight)
+                Group {
+                    if let group = home.stickerGroup {
+                        StickerGrid(group: group)
+                    } else {
+                        overview.frame(maxHeight: .infinity, alignment: .top)
+                    }
+                }
+                .frame(height: panelSectionHeight)
+            }
+            .animation(.smooth(duration: 0.25), value: home)
         }
     }
 

@@ -146,7 +146,7 @@ extension CollageStore {
             swapFrom = nil
             selectedCaption = nil
             if selectedOverlay != nil { selectOverlay(nil) }
-            if tab != .sticker { withAnimation(.smooth) { tab = .sticker } }
+            if tab != .text { withAnimation(.smooth) { tab = .text } }
         }
         if id != selectedSticker {
             selectedSticker = id

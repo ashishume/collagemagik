@@ -207,7 +207,7 @@ struct Project: Equatable, Codable {
 /// while a picture in a cell, or a photo laid on top, is selected; Video opens from the bar under the preview (shown
 /// whenever the collage has a video) or from a selected video.
 enum Tab: String, CaseIterable, Identifiable {
-    case media, layout, style, text, sticker, video, picture, overlay
+    case media, layout, style, text, video, picture, overlay
     var id: String { rawValue }
     var label: String {
         switch self {
@@ -215,7 +215,6 @@ enum Tab: String, CaseIterable, Identifiable {
         case .layout: "Layout"
         case .style: "Style"
         case .text: "Text"
-        case .sticker: "Stickers"
         case .video: "Video"
         case .picture: "Picture"
         case .overlay: "On top"
@@ -227,7 +226,6 @@ enum Tab: String, CaseIterable, Identifiable {
         case .layout: "square.grid.2x2"
         case .style: "paintpalette"
         case .text: "textformat"
-        case .sticker: "face.smiling"
         case .video: "film.stack"
         case .picture: "slider.horizontal.3"
         case .overlay: "square.on.square"
@@ -235,10 +233,10 @@ enum Tab: String, CaseIterable, Identifiable {
     }
 
     /// The tabs shown in the dock.
-    static func dock(for mode: EditMode) -> [Tab] { [.media, .layout, .style, .text, .sticker] }
+    static func dock(for mode: EditMode) -> [Tab] { [.media, .layout, .style, .text] }
 
     /// Tabs that edit the whole design (in the dock), as opposed to the panels for one selected thing.
-    var inDock: Bool { self == .media || self == .layout || self == .style || self == .text || self == .sticker }
+    var inDock: Bool { self == .media || self == .layout || self == .style || self == .text }
 }
 
 /// Inside the video panel: cutting clips, or sound.
