@@ -159,6 +159,7 @@ struct ExportSheet: View {
             default: finished = false
             }
             AdManager.shared.exportSheetClosed(finished: finished)
+            if finished { PushNotifications.shared.exportFinished() }
         }
         .task {
             ultraAvailable = CollageExporter.canEncode(format: project.format, quality: .ultra)

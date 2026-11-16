@@ -223,5 +223,20 @@
 			<string>3qcr597p9d.skadnetwork</string>
 		</dict>
 	</array>
+	<!-- Firebase starts at launch for push notifications (PushNotifications.swift); analytics stay off until the consent
+	     step switches them on (InstallTracking.startIfAllowed). -->
+	<key>FIREBASE_ANALYTICS_COLLECTION_ENABLED</key>
+	<false/>
+	<!-- Lets Firebase Cloud Messaging deliver data with a notification. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<!-- The launch screen takes the splash's dark purple, so there is no white flash before the animation. -->
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchBackground</string>
+	</dict>
 </dict>
 </plist>

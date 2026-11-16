@@ -27,8 +27,10 @@ enum InstallTracking {
         #if DEBUG
         guard ProcessInfo.processInfo.environment["CM_ANALYTICS"] == "1" else { return }
         #endif
+        // Firebase may already be running for push notifications, with analytics collection off (AdInfo.plist).
+        guard FirebaseBoot.configure() else { return }
         started = true
-        FirebaseApp.configure()
+        Analytics.setAnalyticsCollectionEnabled(true)
         NSLog("CM_INSTALL tracking started")
     }
 }

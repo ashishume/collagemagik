@@ -11,6 +11,7 @@
 		A10000111 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = A10000112 /* GoogleMobileAds */; };
 		A10000121 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = A10000122 /* FirebaseAnalytics */; };
 		A10000131 /* FacebookCore in Frameworks */ = {isa = PBXBuildFile; productRef = A10000132 /* FacebookCore */; };
+		A10000141 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = A10000142 /* FirebaseMessaging */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,6 +40,7 @@
 				A10000111 /* GoogleMobileAds in Frameworks */,
 				A10000121 /* FirebaseAnalytics in Frameworks */,
 				A10000131 /* FacebookCore in Frameworks */,
+				A10000141 /* FirebaseMessaging in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -87,6 +89,7 @@
 				A10000112 /* GoogleMobileAds */,
 				A10000122 /* FirebaseAnalytics */,
 				A10000132 /* FacebookCore */,
+				A10000142 /* FirebaseMessaging */,
 			);
 			productName = CollageMagik;
 			productReference = A10000001 /* CollageMagik.app */;
@@ -201,6 +204,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = CollageMagik.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 83FYPW267R;
@@ -239,6 +243,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = CollageMagik.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 83FYPW267R;
@@ -350,6 +355,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A10000133 /* XCRemoteSwiftPackageReference "facebook-ios-sdk" */;
 			productName = FacebookCore;
+		};
+		A10000142 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000123 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

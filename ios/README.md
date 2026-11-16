@@ -136,6 +136,20 @@ yield a picture. Supported: iPhone `.mov` / `.mp4` / `.m4v` in H.264 or HEVC, in
 portrait or rotated clips, with or without sound. During export HDR is converted to SDR (BT.709) so colours stay
 right. AVI, MKV, WebM, MPEG-1/2 can't be decoded by iOS: the app says so and asks for MP4 or MOV.
 
+## Push notifications, app updates and the splash
+
+* **Splash** (`UI/SplashView.swift`): the logo tiles fly in, the icon lights up, the name writes itself in (about 2.4 s;
+  a plain fade with Reduce Motion). The consent and tracking questions wait until it has finished.
+* **Push** (`System/PushNotifications.swift`) uses Firebase Cloud Messaging, so campaigns are sent from the Firebase console
+  with no server. One-time setup: Firebase console → Project settings → Cloud Messaging → *APNs Authentication Key* → upload
+  the `.p8` key with its Key ID and the Team ID (`83FYPW267R`). The key stays out of the app and out of git.
+  At launch the app gets *provisional* permission (no dialog, quiet delivery); after the first finished export it asks once for
+  full permission. Every device is subscribed to the `all` topic. Add custom data `link` = an https URL to open it on tap.
+  Debug builds log the device's token as `CM_PUSH FCM token:` for "Send test message".
+* **Updates** (`System/UpdateChecker.swift`): Apple's public lookup API (`itunes.apple.com/lookup?id=6832640005`) gives the
+  live version. When it is newer, a strip under the top bar offers "Update" (opens the App Store); closing it leaves a dot on
+  "More" and an "Update to …" item in its menu. Never a popup. `CM_FAKE_UPDATE=1` shows it in Debug builds.
+
 ## Layout of the code
 
 | Path | What |

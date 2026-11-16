@@ -6,6 +6,8 @@ struct RootView: View {
     @Environment(CollageStore.self) private var store
     @Environment(LibraryStore.self) private var library
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.splashDone) private var splashDone
+    @State private var launched = false
     /// "New collage" / "New carousel" waiting for the user to confirm (their current work would be cleared).
     @State private var pendingNew: EditMode?
     @State private var libraryOpen = false
@@ -37,6 +39,7 @@ struct RootView: View {
                             if mode == .carousel && store.videoCount > 0 { confirmCarousel = true } else { store.setMode(mode) }
                         }
                     )
+                    UpdateBanner()
                     StageView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     if store.isCarousel {
@@ -52,6 +55,7 @@ struct RootView: View {
                 .padding(.horizontal, 12)
                 .padding(.top, 2)
                 .padding(.bottom, 4)
+                .animation(.smooth(duration: 0.35), value: UpdateChecker.shared.availableVersion)
                 // the caption keyboard opens over the editor; it must not squeeze the preview behind it
                 .ignoresSafeArea(.keyboard, edges: .bottom)
 
@@ -105,11 +109,15 @@ struct RootView: View {
         .sheet(isPresented: $libraryOpen) { LibrarySheet() }
         .sheet(isPresented: $store.aboutOpen) { AboutSheet() }
         .sheet(isPresented: $ads.showNotice) { AdNoticeSheet() }
-        .onAppear {
+        // The consent and tracking questions wait until the splash has gone, so they never pop up over the animation.
+        .onChange(of: splashDone, initial: true) { _, done in
+            guard done, !launched else { return }
+            launched = true
             ProStore.shared.start()
             ProStore.shared.appDidLaunch()
             AdManager.shared.appDidLaunch()
             GoogleAdsManager.shared.appDidLaunch()
+            UpdateChecker.shared.checkIfDue()
         }
         // the Pro page opens here only when no other sheet is up (those host it themselves)
         .proPaywallHost(active: !store.exportOpen && !store.aboutOpen)
@@ -135,7 +143,10 @@ struct RootView: View {
         }
         .onChange(of: store.items.map(\.id)) { store.scheduleDraftSave() }
         // leaving the app: save at once, iOS may close it in the background
-        .onChange(of: scenePhase) { _, phase in if phase != .active { store.saveDraftNow() } }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { store.saveDraftNow() }
+            if phase == .active && launched { UpdateChecker.shared.checkIfDue() }
+        }
         .task { await store.restoreLastDraft() }
         // a selection lasts only while its own tools are showing: a dock tab edits the whole design
         .onChange(of: store.tab) { _, tab in

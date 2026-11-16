@@ -67,6 +67,7 @@ struct TopBar: View {
                 .accessibilityLabel("New")
             }
 
+
             Spacer(minLength: 0)
 
             ModeSwitch(request: requestMode)
@@ -97,6 +98,10 @@ struct TopBar: View {
                 .accessibilityLabel("Export")
 
                 Menu {
+                    if let version = updates.availableVersion {
+                        Link(destination: AppLinks.appStore) { Label("Update to \(version)", systemImage: "arrow.down.app") }
+                        Divider()
+                    }
                     Button { store.openAdd() } label: { Label("Add from Photos", systemImage: "photo.on.rectangle") }
                     Button { store.openFiles() } label: { Label("Add from Files", systemImage: "folder") }
                     Divider()
@@ -109,10 +114,84 @@ struct TopBar: View {
                     }
                 } label: {
                     BarIcon(symbol: "ellipsis")
+                        .overlay(alignment: .topTrailing) {
+                            if updates.updateAvailable { UpdateDot().offset(x: -3, y: 3) }
+                        }
                 }
                 .accessibilityLabel("More")
             }
         }
         .frame(height: 40)
+        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: updates.updateAvailable)
+    }
+
+    private var updates: UpdateChecker { .shared }
+}
+
+/// The small pink dot on "More" while an App Store update is waiting.
+private struct UpdateDot: View {
+    var body: some View {
+        Circle().fill(Color.laneA).frame(width: 9, height: 9)
+            .overlay(Circle().stroke(.white, lineWidth: 1.5))
+            .accessibilityHidden(true)
+    }
+}
+
+/// A slim strip under the top bar when the App Store has a newer version. Not a popup: the editor keeps working,
+/// "Update" opens the App Store page, and the cross hides the strip for that version (the dot on "More" stays).
+struct UpdateBanner: View {
+    @AppStorage("cm.update.dismissedVersion") private var dismissedVersion = ""
+    @State private var glow = false
+    private var updates: UpdateChecker { .shared }
+
+    var body: some View {
+        if let version = updates.availableVersion, version != dismissedVersion {
+            HStack(spacing: 10) {
+                Image(systemName: "arrow.down.app.fill")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 28, height: 28)
+                    .background {
+                        Circle()
+                            .fill(LinearGradient(colors: [Color.brand, Color.laneA], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .shadow(color: Color.laneA.opacity(glow ? 0.8 : 0.2), radius: glow ? 8 : 2)
+                    }
+                Text("A new version (\(version)) is ready")
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(.white.opacity(0.9))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                Spacer(minLength: 4)
+                Link(destination: AppLinks.appStore) {
+                    Text("Update")
+                        .font(.footnote.weight(.bold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .frame(height: 28)
+                        .background(Color.brand, in: Capsule())
+                }
+                Button {
+                    withAnimation(.smooth) { dismissedVersion = version }
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.7))
+                        .frame(width: 26, height: 28)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Hide")
+            }
+            .padding(.leading, 5)
+            .padding(.trailing, 4)
+            .padding(.vertical, 4)
+            .glassEffect(.regular, in: .capsule)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) { glow = true }
+            }
+            .transition(.move(edge: .top).combined(with: .opacity))
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Update available, version \(version)")
+        }
     }
 }
