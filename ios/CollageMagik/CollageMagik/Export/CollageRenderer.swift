@@ -21,8 +21,9 @@ enum CollageRenderer {
         let project = snapshot.project
         ctx.saveGState()
         ctx.interpolationQuality = .high
-        ctx.setFillColor(UIColor(hex: project.bg).cgColor)
-        ctx.fill(CGRect(x: 0, y: 0, width: W, height: H))
+        BackdropRenderer.draw(ctx: ctx, W: W, H: H, project: project) { id in
+            snapshot.items[id].map { $0.preview ?? $0.thumbnail }
+        }
 
         let rects = project.cellRects(W: W, H: H)
         let outers = project.frameRects(W: W, H: H)
@@ -52,6 +53,8 @@ enum CollageRenderer {
                 drawMedia(ctx, img, item: item, rect: g.picture, view: o.view)
             }
         }
+        // Emoji and shapes, over the photos and under the captions.
+        StickerRenderer.drawAll(ctx: ctx, project: project, W: W, H: H)
         // Captions go on top. A video hands in a ready-made layer so the words aren't laid out again for every frame.
         if let captionLayer {
             ctx.saveGState()
@@ -213,10 +216,11 @@ final class LaneFrameFeeder {
     private var current: CGImage?
     private var pending: (image: CGImage, pts: Double)?
     private var holdCache: [Int: CGImage] = [:]
-    private let halfFrame = 1.0 / 60.0
+    private let halfFrame: Double
 
-    init(lane: Lane, url: URL, hdr: Bool = false, maxPixels: Int = 0) {
+    init(lane: Lane, url: URL, hdr: Bool = false, maxPixels: Int = 0, fps: Int = 30) {
         self.lane = lane
+        halfFrame = 0.5 / Double(max(1, fps))
         self.hdr = hdr
         self.maxPixels = maxPixels
         asset = AVURLAsset(url: url)

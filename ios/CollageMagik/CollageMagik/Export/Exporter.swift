@@ -10,7 +10,8 @@ enum ExportQuality: String, CaseIterable, Identifiable {
     case standard, ultra
     var id: String { rawValue }
     var scale: Double { self == .ultra ? 2 : 1 }
-    var title: String { self == .ultra ? "Ultra" : "Standard" }
+    /// Ultra is 2160 pixels wide: 4K (2160 × 3840) for a Story.
+    var title: String { self == .ultra ? "4K" : "HD" }
 }
 
 struct ExportFailure: LocalizedError {
@@ -23,7 +24,7 @@ struct ExportFailure: LocalizedError {
 final class CollageExporter: @unchecked Sendable {
     private let snapshot: ExportSnapshot
     private let total: Double
-    private let fps = 30
+    private var fps = 30
     private var cancelled = false
     private let lock = NSLock()
 
@@ -49,10 +50,12 @@ final class CollageExporter: @unchecked Sendable {
         return writer.canApply(outputSettings: videoSettings(w, h, hdr: hdr), forMediaType: .video)
     }
 
-    private static func videoSettings(_ w: Int, _ h: Int, hdr: Bool = false) -> [String: Any] {
+    private static func videoSettings(_ w: Int, _ h: Int, hdr: Bool = false, fps: Int = 30) -> [String: Any] {
+        // more frames need more bits: about 1.5× at 60 fps
+        let rateBoost = fps > 30 ? 1.5 : 1.0
         if hdr {
             // HDR: 10-bit HEVC tagged BT.2020 / HLG, the format iPhone records and Instagram and TikTok accept.
-            let bitrate = Int(20_000_000.0 * Double(w * h) / (1080.0 * 1920.0))
+            let bitrate = Int(20_000_000.0 * rateBoost * Double(w * h) / (1080.0 * 1920.0))
             return [
                 AVVideoCodecKey: AVVideoCodecType.hevc,
                 AVVideoWidthKey: w,
@@ -65,13 +68,13 @@ final class CollageExporter: @unchecked Sendable {
                 AVVideoCompressionPropertiesKey: [
                     AVVideoAverageBitRateKey: max(bitrate, 6_000_000),
                     AVVideoProfileLevelKey: kVTProfileLevel_HEVC_Main10_AutoLevel as String,
-                    AVVideoExpectedSourceFrameRateKey: 30,
-                    AVVideoMaxKeyFrameIntervalKey: 60,
+                    AVVideoExpectedSourceFrameRateKey: fps,
+                    AVVideoMaxKeyFrameIntervalKey: fps * 2,
                 ],
             ]
         }
         // about 16 Mbps at 1080×1920, scaled with the picture size
-        let bitrate = Int(16_000_000.0 * Double(w * h) / (1080.0 * 1920.0))
+        let bitrate = Int(16_000_000.0 * rateBoost * Double(w * h) / (1080.0 * 1920.0))
         return [
             AVVideoCodecKey: AVVideoCodecType.h264,
             AVVideoWidthKey: w,
@@ -84,8 +87,8 @@ final class CollageExporter: @unchecked Sendable {
             AVVideoCompressionPropertiesKey: [
                 AVVideoAverageBitRateKey: max(bitrate, 4_000_000),
                 AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
-                AVVideoExpectedSourceFrameRateKey: 30,
-                AVVideoMaxKeyFrameIntervalKey: 60,
+                AVVideoExpectedSourceFrameRateKey: fps,
+                AVVideoMaxKeyFrameIntervalKey: fps * 2,
             ],
         ]
     }
@@ -102,7 +105,7 @@ final class CollageExporter: @unchecked Sendable {
                 let need = neededPhotoSize(srcW: item.width, srcH: item.height, cell: rects[i], view: cell.view)
                 maxPx = max(maxPx, need.w, need.h)
             }
-            out[lane.mediaId] = LaneFrameFeeder(lane: lane, url: item.url, hdr: hdr, maxPixels: maxPx)
+            out[lane.mediaId] = LaneFrameFeeder(lane: lane, url: item.url, hdr: hdr, maxPixels: maxPx, fps: fps)
         }
         return out
     }
@@ -164,14 +167,15 @@ final class CollageExporter: @unchecked Sendable {
 
     // MARK: MP4
 
-    func exportVideo(quality: ExportQuality, hdr: Bool = false, progress: @escaping @Sendable (Double) -> Void) async throws -> URL {
+    func exportVideo(quality: ExportQuality, hdr: Bool = false, fps: Int = 30, progress: @escaping @Sendable (Double) -> Void) async throws -> URL {
+        self.fps = fps == 60 ? 60 : 30
         let (w, h) = size(quality: quality)
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("Collage-\(Int(Date().timeIntervalSince1970)).mp4")
         try? FileManager.default.removeItem(at: url)
 
         let writer = try AVAssetWriter(url: url, fileType: .mp4)
         writer.shouldOptimizeForNetworkUse = true
-        let vSettings = Self.videoSettings(w, h, hdr: hdr)
+        let vSettings = Self.videoSettings(w, h, hdr: hdr, fps: self.fps)
         guard writer.canApply(outputSettings: vSettings, forMediaType: .video) else {
             throw ExportFailure(hdr
                 ? "This iPhone can't encode \(w)×\(h) HDR video. Try Standard quality, or turn HDR off."
@@ -211,6 +215,7 @@ final class CollageExporter: @unchecked Sendable {
                 ]
             )
             out.audioMix = mix
+            out.audioTimePitchAlgorithm = .spectral // sped-up or slowed clips keep their pitch
             reader.timeRange = CMTimeRange(start: .zero, duration: CMTime(seconds: total, preferredTimescale: 600))
             if reader.canAdd(out) {
                 reader.add(out)
@@ -365,11 +370,17 @@ final class CollageExporter: @unchecked Sendable {
                     let dur = min(clip.length, total - at)
                     if dur <= 0.01 { continue }
                     guard let track = comp.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) else { continue }
+                    // the source plays `speed` times faster: take dur × speed of it and squeeze (or stretch) it to dur
+                    let sourceDur = CMTime(seconds: dur * clip.speed, preferredTimescale: 60000)
+                    let atTime = CMTime(seconds: at, preferredTimescale: 60000)
                     do {
                         try track.insertTimeRange(
-                            CMTimeRange(start: CMTime(seconds: clip.inPoint, preferredTimescale: 600), duration: CMTime(seconds: dur, preferredTimescale: 600)),
-                            of: src, at: CMTime(seconds: at, preferredTimescale: 600)
+                            CMTimeRange(start: CMTime(seconds: clip.inPoint, preferredTimescale: 60000), duration: sourceDur),
+                            of: src, at: atTime
                         )
+                        if clip.speed != 1 {
+                            track.scaleTimeRange(CMTimeRange(start: atTime, duration: sourceDur), toDuration: CMTime(seconds: dur, preferredTimescale: 60000))
+                        }
                     } catch { continue }
                     let p = AVMutableAudioMixInputParameters(track: track)
                     p.setVolume(Float(lane.volume), at: .zero)

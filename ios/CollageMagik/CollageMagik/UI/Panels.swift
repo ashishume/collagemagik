@@ -292,34 +292,7 @@ struct StylePanel: View {
                 compactSlider("Corners", value: $store.project.radius, range: 0...80)
             }
 
-            HStack(spacing: 10) {
-                Text("Colour")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .frame(width: 50, alignment: .leading)
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(backgroundSwatches, id: \.self) { c in
-                            let on = store.project.bg.lowercased() == c
-                            Button { store.project.bg = c } label: {
-                                Circle().fill(Color(hex: c))
-                                    .frame(width: 24, height: 24)
-                                    .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
-                                    .overlay(Circle().strokeBorder(Color.brand, lineWidth: on ? 3 : 0).padding(-4))
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("Background \(c)")
-                            .accessibilityAddTraits(on ? .isSelected : [])
-                        }
-                    }
-                    .padding(5)
-                }
-                ColorPicker("Custom colour", selection: Binding(
-                    get: { Color(hex: store.project.bg) },
-                    set: { store.project.bg = $0.hexString }
-                ), supportsOpacity: false)
-                .labelsHidden()
-            }
+            BackdropPicker()
 
             frameSection
 

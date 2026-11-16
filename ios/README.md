@@ -2,7 +2,7 @@
 
 Native SwiftUI port of the web app, built for iOS 26+ with Liquid Glass. Apple ID `6832640005`, bundle ID
 `com.axpo.collagemagik`. On the home screen and inside the app it is **CollageMagik** (renamed from "Insta Collage", since "Insta" is a term
-Meta treats as its brand). Current version: **1.0.1 (build 2)**.
+Meta treats as its brand). Current version: **1.0.3 (build 3)**.
 
 **App Store listing to set with the next version** (App Store Connect → the app → the new version → App Information):
 Name **CollageMagik**, Subtitle **Collage Maker & Editor**. The live listing still says "Insta Collage Maker & Editor" until
@@ -56,6 +56,18 @@ and the whole caption is kept inside the design.
 
 The bottom dock has Media, Layout, Style, Text and (collage only) Video, which holds the Timeline and Sound tools. Picture tools
 open by themselves while a picture is selected.
+
+## New in 1.0.3
+
+- **Undo / Redo** (top bar; `Model/History.swift`): one step per gesture or slider move (recorded when the design has been
+  still for a moment), up to 60 steps. A new, reopened or Collage/Carousel-switched design starts a fresh history. Full screen
+  preview moved into More •••, and the Collage | Carousel switch shows icons only when the bar is narrow.
+- **Backgrounds** (Style tab; `Model/Backdrop.swift`): Colour, 12 gradients, a blurred copy of any picture in the tray, or a
+  pattern (dots, grid, stripes, checks, confetti, hearts) over the colour. One renderer draws the preview and every export.
+- **Stickers** (new Stickers tab; `Model/Stickers.swift`, `UI/StickerPanel.swift`): emoji (Faces, Love, Fun) and colourable
+  shapes, up to 30. Drag, pinch and twist like captions; size, tilt, colour, flip, layer order, copy, delete.
+- **Clip speed** (timeline): 0.25× to 3×. The clip keeps its start; sound keeps its pitch in the preview and the export.
+- **Export**: HD (1080 wide) or 4K (2160 × 3840 for a Story), at 30 or 60 fps.
 
 ## Ads and CollageMagik Pro
 

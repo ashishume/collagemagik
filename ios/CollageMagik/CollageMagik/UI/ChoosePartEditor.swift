@@ -91,7 +91,7 @@ struct ChoosePartEditor: View {
             Label("\(precise(c.inPoint)) – \(precise(c.outPoint))", systemImage: "film")
                 .font(.subheadline.weight(.semibold).monospacedDigit())
             Spacer()
-            Text(String(format: "%.1fs of %.1fs", c.length, mediaDuration))
+            Text(String(format: "%.1fs of %.1fs", c.sourceLength, mediaDuration))
                 .font(.subheadline.monospacedDigit())
                 .foregroundStyle(.secondary)
         }
@@ -190,7 +190,7 @@ struct ChoosePartEditor: View {
                     else {
                         // a tap outside the window moves it there (centred on the finger)
                         let t = Double(x - inset) / pxPerSec
-                        draft = slipClip(d, t - (d.inPoint + d.length / 2), mediaDuration: mediaDuration)
+                        draft = slipClip(d, t - (d.inPoint + d.sourceLength / 2), mediaDuration: mediaDuration)
                         grab = .window
                     }
                     drag = DragState(grab: grab, origin: draft ?? d)
@@ -229,7 +229,7 @@ struct ChoosePartEditor: View {
                 }
                 ChipButton(title: "Start here", symbol: "arrow.right.to.line") {
                     // the chosen part begins at the frame showing now
-                    draft = choosePart(c, inPoint: current, outPoint: current + c.length, mediaDuration: mediaDuration)
+                    draft = choosePart(c, inPoint: current, outPoint: current + c.sourceLength, mediaDuration: mediaDuration)
                     restartLoop()
                 }
             }

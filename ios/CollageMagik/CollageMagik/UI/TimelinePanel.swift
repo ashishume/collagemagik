@@ -90,6 +90,25 @@ struct TimelinePanel: View {
                         .fixedSize()
                         .accessibilityLabel("Choose part of the clip")
                     Menu {
+                        ForEach(clipSpeeds.reversed(), id: \.self) { sp in
+                            Button { withAnimation(.smooth) { store.setClipSpeed(sp) } } label: {
+                                if store.targetClipSpeed == sp {
+                                    Label(speedLabel(sp), systemImage: "checkmark")
+                                } else {
+                                    Text(sp == 1 ? "1× Normal" : speedLabel(sp))
+                                }
+                            }
+                        }
+                    } label: {
+                        Label(speedLabel(store.targetClipSpeed ?? 1), systemImage: "gauge.with.dots.needle.67percent")
+                            .font(.footnote.weight(.medium))
+                            .lineLimit(1)
+                    }
+                    .buttonStyle(.glass)
+                    .controlSize(.small)
+                    .fixedSize()
+                    .accessibilityLabel("Clip speed")
+                    Menu {
                         Button { store.openChoosePart() } label: { Label("Choose part…", systemImage: "film.stack") }
                         Button { store.duplicateSelectedClip() } label: { Label("Duplicate", systemImage: "plus.square.on.square") }
                         Button { store.resetSelectedClip() } label: { Label("Use whole video", systemImage: "arrow.left.and.right") }
@@ -373,7 +392,7 @@ private struct TimelineArea: View {
                 .fill(.white.opacity(0.06))
                 .frame(width: width, height: laneHeight)
             ForEach(lane.clips) { clip in
-                clipView(clip: clip, color: color, pxPerSec: pxPerSec, thumbnail: item?.thumbnail, label: formatTime(clip.length))
+                clipView(clip: clip, color: color, pxPerSec: pxPerSec, thumbnail: item?.thumbnail, label: clip.speed == 1 ? formatTime(clip.length) : "\(formatTime(clip.length)) · \(speedLabel(clip.speed))")
             }
         }
         .frame(width: width, height: laneHeight, alignment: .topLeading)

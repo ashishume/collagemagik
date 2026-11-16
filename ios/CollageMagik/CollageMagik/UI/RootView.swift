@@ -42,6 +42,11 @@ struct RootView: View {
                     UpdateBanner()
                     StageView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        // undo / redo float over the preview's top corner, so the top bar keeps its labelled switch
+                        .overlay(alignment: .topLeading) {
+                            UndoRedoPill().padding(.top, 2)
+                        }
+                        .animation(.smooth(duration: 0.25), value: store.canUndo || store.canRedo)
                     if store.isCarousel {
                         SlideBar()
                     } else if store.hasPlacedVideo && store.tab != .video {
@@ -140,6 +145,7 @@ struct RootView: View {
         .onChange(of: store.project) {
             store.playback.projectChanged()
             store.scheduleDraftSave()
+            store.projectChangedForHistory()
         }
         .onChange(of: store.items.map(\.id)) { store.scheduleDraftSave() }
         // leaving the app: save at once, iOS may close it in the background
@@ -185,7 +191,7 @@ struct BottomDock: View {
     @State private var peek = false
 
     private var editingSelection: Bool {
-        !store.tab.inDock || (store.tab == .text && store.selectedCaption != nil)
+        !store.tab.inDock || (store.tab == .text && store.selectedCaption != nil) || (store.tab == .sticker && store.selectedSticker != nil)
     }
 
     var body: some View {
@@ -204,6 +210,7 @@ struct BottomDock: View {
         .onChange(of: store.selectedCell) { peek = false }
         .onChange(of: store.selectedOverlay) { peek = false }
         .onChange(of: store.selectedCaption) { peek = false }
+        .onChange(of: store.selectedSticker) { peek = false }
     }
 }
 
@@ -221,7 +228,10 @@ struct PanelCard: View {
             return (store.project.resizableGrid?.dividers.isEmpty == false ? 138 : 106) + pad
         case .style:
             let frame: CGFloat = store.project.frame == .none ? 40 : store.project.frame.hasEdge ? 92 : 58
-            return (store.project.format == .story ? 156 : 124) + frame + pad
+            // the background picker: kind, then one row (colour and pattern have two)
+            let backdrop: CGFloat = store.project.backdrop.kind == .pattern ? 34 : 0
+            return (store.project.format == .story ? 190 : 158) + frame + backdrop + pad
+        case .sticker: return panelTabsHeight + 8 + panelSectionHeight + pad
         case .text: return (store.caption(store.selectedCaption) == nil ? 66 : panelTabsHeight + 8 + panelSectionHeight) + pad
         case .video:
             let n = placedLanes(store.project).count
@@ -252,6 +262,7 @@ struct PanelCard: View {
                 case .style: StylePanel()
                 // a caption picked on the canvas switches tab and selects in one go: a fresh panel always shows its tools
                 case .text: TextPanel().id(store.selectedCaption)
+                case .sticker: StickerPanel()
                 case .video: VideoPanel()
                 case .picture: PicturePanel()
                 case .overlay: OverlayPanel()

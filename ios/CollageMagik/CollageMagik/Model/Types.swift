@@ -106,6 +106,9 @@ struct Clip: Identifiable, Equatable, Codable {
     /// Trim: first and last second used from the source file.
     var inPoint: Double
     var outPoint: Double
+    /// Playback speed: 0.5 = slow motion, 2 = twice as fast. The clip's place on the timeline is
+    /// (outPoint - inPoint) / speed seconds long.
+    var speed: Double = 1
 }
 
 struct Lane: Equatable, Codable {
@@ -192,15 +195,19 @@ struct Project: Equatable, Codable {
     var frameColor: String = "#ffffff"
     /// Frame edge in pixels at 1080 wide.
     var frameWidth: Double = 22
-    /// Photos laid freely on top of the design (drawn in order, under the captions).
+    /// Photos laid freely on top of the design (drawn in order, under the stickers and captions).
     var overlays: [PhotoOverlay] = []
+    /// Gradient, blurred picture or pattern behind the design (a plain `bg` colour by default).
+    var backdrop = Backdrop()
+    /// Emoji and shapes laid on the design (drawn in order, above the photos on top and under the captions).
+    var stickers: [Sticker] = []
 }
 
 /// The editor's tools. Only Media, Layout, Style and Text are in the bottom dock. Picture and On top open by themselves
 /// while a picture in a cell, or a photo laid on top, is selected; Video opens from the bar under the preview (shown
 /// whenever the collage has a video) or from a selected video.
 enum Tab: String, CaseIterable, Identifiable {
-    case media, layout, style, text, video, picture, overlay
+    case media, layout, style, text, sticker, video, picture, overlay
     var id: String { rawValue }
     var label: String {
         switch self {
@@ -208,6 +215,7 @@ enum Tab: String, CaseIterable, Identifiable {
         case .layout: "Layout"
         case .style: "Style"
         case .text: "Text"
+        case .sticker: "Stickers"
         case .video: "Video"
         case .picture: "Picture"
         case .overlay: "On top"
@@ -219,6 +227,7 @@ enum Tab: String, CaseIterable, Identifiable {
         case .layout: "square.grid.2x2"
         case .style: "paintpalette"
         case .text: "textformat"
+        case .sticker: "face.smiling"
         case .video: "film.stack"
         case .picture: "slider.horizontal.3"
         case .overlay: "square.on.square"
@@ -226,10 +235,10 @@ enum Tab: String, CaseIterable, Identifiable {
     }
 
     /// The tabs shown in the dock.
-    static func dock(for mode: EditMode) -> [Tab] { [.media, .layout, .style, .text] }
+    static func dock(for mode: EditMode) -> [Tab] { [.media, .layout, .style, .text, .sticker] }
 
     /// Tabs that edit the whole design (in the dock), as opposed to the panels for one selected thing.
-    var inDock: Bool { self == .media || self == .layout || self == .style || self == .text }
+    var inDock: Bool { self == .media || self == .layout || self == .style || self == .text || self == .sticker }
 }
 
 /// Inside the video panel: cutting clips, or sound.

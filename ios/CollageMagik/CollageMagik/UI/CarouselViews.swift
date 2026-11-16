@@ -10,6 +10,15 @@ struct ModeSwitch: View {
     private func symbol(_ m: EditMode) -> String { m == .collage ? "square.grid.2x2" : "rectangle.split.3x1" }
 
     var body: some View {
+        // the selected mode's name shows when the bar has room for it; on narrow phones the switch is icons only
+        ViewThatFits(in: .horizontal) {
+            modes(titles: true)
+            modes(titles: false)
+        }
+        .sensoryFeedback(.selection, trigger: store.project.mode)
+    }
+
+    private func modes(titles: Bool) -> some View {
         GlassEffectContainer(spacing: 6) {
             HStack(spacing: 0) {
                 ForEach(EditMode.allCases) { mode in
@@ -18,7 +27,7 @@ struct ModeSwitch: View {
                         withAnimation(.bouncy(duration: 0.45)) { request(mode) }
                     } label: {
                         Label(mode.label, systemImage: symbol(mode))
-                            .labelStyle(CompactModeLabel(showTitle: on))
+                            .labelStyle(CompactModeLabel(showTitle: on && titles))
                             .font(.system(size: 12.5, weight: .semibold))
                             .foregroundStyle(on ? Color.white : Color.white.opacity(0.7))
                             .lineLimit(1)
@@ -42,7 +51,7 @@ struct ModeSwitch: View {
             .padding(2)
             .glassEffect(.regular, in: .capsule)
         }
-        .sensoryFeedback(.selection, trigger: store.project.mode)
+        .fixedSize()
     }
 }
 

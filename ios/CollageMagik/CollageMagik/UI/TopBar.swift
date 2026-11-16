@@ -66,13 +66,11 @@ struct TopBar: View {
                 }
                 .accessibilityLabel("New")
             }
-
-
-            Spacer(minLength: 0)
+            // the two sides are equal-width columns, so the switch is always exactly in the middle
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             ModeSwitch(request: requestMode)
-
-            Spacer(minLength: 0)
+                .layoutPriority(1)
 
             BarGroup {
                 Button {
@@ -120,6 +118,7 @@ struct TopBar: View {
                 }
                 .accessibilityLabel("More")
             }
+            .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .frame(height: 40)
         .animation(.spring(response: 0.4, dampingFraction: 0.7), value: updates.updateAvailable)
@@ -193,5 +192,37 @@ struct UpdateBanner: View {
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Update available, version \(version)")
         }
+    }
+}
+
+
+/// Undo and redo, floating in a small glass pill at the top corner of the preview. Shown once there is something to undo.
+struct UndoRedoPill: View {
+    @Environment(CollageStore.self) private var store
+
+    var body: some View {
+        if store.canUndo || store.canRedo {
+            HStack(spacing: 0) {
+                button("arrow.uturn.backward", label: "Undo", enabled: store.canUndo) { store.undo() }
+                button("arrow.uturn.forward", label: "Redo", enabled: store.canRedo) { store.redo() }
+            }
+            .padding(2)
+            .glassEffect(.regular.interactive(), in: .capsule)
+            .transition(.scale(scale: 0.8).combined(with: .opacity))
+        }
+    }
+
+    private func button(_ symbol: String, label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 32, height: 30)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .opacity(enabled ? 1 : 0.35)
+        .accessibilityLabel(label)
     }
 }

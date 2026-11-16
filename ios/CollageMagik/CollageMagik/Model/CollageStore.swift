@@ -89,6 +89,18 @@ final class CollageStore {
     /// What was last written, so opening a draft (or an edit that changes nothing) doesn't save it again.
     @ObservationIgnored private var lastSaved: (project: Project, items: [String])?
 
+    // Undo / redo (see History.swift)
+    @ObservationIgnored var undoStack: [Project] = []
+    @ObservationIgnored var redoStack: [Project] = []
+    /// The design as of the last recorded step.
+    @ObservationIgnored var committed = Project()
+    @ObservationIgnored var historyTask: Task<Void, Never>?
+    /// Mirrors the stacks' sizes, so the undo / redo buttons update.
+    var undoCount = 0
+    var redoCount = 0
+    /// The selected sticker (emoji or shape) on the design.
+    var selectedSticker: String?
+
     init() {
         playback.store = self
         drafts = DraftDisk.list()
@@ -403,6 +415,7 @@ final class CollageStore {
         project.cells = project.cells.map { $0.mediaId == mediaId ? CellState() : $0 }
         project.lanes.removeAll { $0.mediaId == mediaId }
         project.overlays.removeAll { $0.mediaId == mediaId }
+        if project.backdrop.blurMediaId == mediaId { project.backdrop.blurMediaId = nil; project.backdrop.kind = .color }
         if let s = selectedOverlay, overlay(s) == nil { selectOverlay(nil) }
         selectedClip = nil
     }
@@ -527,6 +540,7 @@ final class CollageStore {
         carouselOffset = 0
         if tab == .picture || (tab == .video && mode == .carousel) { tab = .layout }
         playback.projectChanged()
+        resetHistory()
     }
 
     /// "Try another": a random style has a new arrangement dealt; any other style jumps to a different one.
@@ -547,7 +561,7 @@ final class CollageStore {
 
     func selectCell(_ i: Int?) {
         selectedCell = i
-        if i != nil { selectedCaption = nil; if selectedOverlay != nil { selectOverlay(nil) } }
+        if i != nil { selectedCaption = nil; selectedSticker = nil; if selectedOverlay != nil { selectOverlay(nil) } }
         if i == nil && tab == .picture {
             tab = returnTab
             swapFrom = nil
@@ -563,6 +577,7 @@ final class CollageStore {
     func deselectAll() {
         if selectedCaption != nil { selectCaption(nil) }
         if selectedOverlay != nil { selectOverlay(nil) }
+        if selectedSticker != nil { selectSticker(nil) }
         if selectedCell != nil || swapFrom != nil { swapFrom = nil; selectCell(nil) }
     }
 
@@ -571,6 +586,7 @@ final class CollageStore {
     func dockTabChanged(_ t: Tab) {
         guard t.inDock else { return }
         if t != .text { selectedCaption = nil }
+        if t != .sticker { selectedSticker = nil }
         if t != .media {
             selectedCell = nil
             swapFrom = nil
@@ -605,6 +621,7 @@ final class CollageStore {
             selectedCell = nil
             swapFrom = nil
             selectedCaption = nil
+            selectedSticker = nil
             if tab.inDock { returnTab = tab }
             withAnimation(.smooth) { tab = .overlay }
         } else if tab == .overlay {
@@ -726,6 +743,7 @@ final class CollageStore {
             if tab != .text { withAnimation(.smooth) { tab = .text } }
         }
         if id != nil, selectedOverlay != nil { selectOverlay(nil) }
+        if id != nil { selectedSticker = nil }
         if id != selectedCaption {
             selectedCaption = id
             if id != nil { UISelectionFeedbackGenerator().selectionChanged() }
@@ -879,6 +897,20 @@ final class CollageStore {
         partClip = ref
     }
 
+    /// Speed of the clip the speed menu acts on (the selected one, or the one under the playhead).
+    var targetClipSpeed: Double? { targetClip().flatMap { clip($0)?.speed } }
+
+    /// Sets how fast a clip plays. It keeps its start; a faster clip is shorter on the timeline, a slower one longer.
+    func setClipSpeed(_ speed: Double) {
+        guard let ref = targetClip() else {
+            notify(selectedClip == musicClipId ? "Speed works on video clips." : "Tap a clip on the timeline first.")
+            return
+        }
+        updateClip(mediaId: ref.mediaId, clipId: ref.clipId) { setSpeed($0, speed) }
+        selectedClip = ref.clipId
+        playback.projectChanged()
+    }
+
     func duplicateSelectedClip() {
         guard let ref = targetClip(), let c = clip(ref) else {
             notify("Tap a clip on the timeline first.")
@@ -937,8 +969,10 @@ final class CollageStore {
         selectedCaption = nil
         editingCaption = nil
         selectedOverlay = nil
+        selectedSticker = nil
         tab = .media
         playback.projectChanged()
+        resetHistory()
     }
 }
 
@@ -1034,6 +1068,7 @@ extension CollageStore {
         for i in p.cells.indices where p.cells[i].mediaId.map({ !ids.contains($0) }) ?? false { p.cells[i].mediaId = nil }
         p.lanes.removeAll { !ids.contains($0.mediaId) }
         p.overlays.removeAll { !ids.contains($0.mediaId) }
+        if let b = p.backdrop.blurMediaId, !ids.contains(b) { p.backdrop.blurMediaId = nil; p.backdrop.kind = .color }
         if let mf = file.musicFile, FileManager.default.fileExists(atPath: mediaDir.appendingPathComponent(mf).path) {
             p.music?.url = mediaDir.appendingPathComponent(mf)
         } else {
@@ -1055,7 +1090,9 @@ extension CollageStore {
         tab = .media
         importing = false
         withAnimation(.smooth) { importProgress = nil }
+        selectedSticker = nil
         playback.projectChanged()
+        resetHistory()
         if loaded.count < file.items.count {
             let missing = file.items.count - loaded.count
             notify("\(missing) \(missing == 1 ? "item" : "items") in this draft couldn't be read and \(missing == 1 ? "was" : "were") left out.")

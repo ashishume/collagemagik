@@ -2,6 +2,7 @@
 import SwiftUI
 
 /// Debug-only: lets a script drive the app headlessly (simulator shares the Mac's filesystem).
+/// New: CM_BACKDROP=gradient:3|pattern:1|blur  CM_STICKERS=😍,heart.fill  CM_SPEED=2  CM_FPS=60
 /// Env vars: CM_AUTOLOAD=path1,path2  CM_TAB=timeline  CM_PLAY=1  CM_SELECT=0  CM_EXPORT=video|png|ultra  CM_HDR=1  CM_OUT=/path
 /// Drafts: CM_OPEN=n opens the n-th draft, CM_NEW=1 starts a new collage after the last draft reopens. CM_SHEET=export|help|about.
 @MainActor
@@ -104,6 +105,25 @@ enum DebugHarness {
             }
             if env["CM_CAPTION_EDIT"] != nil { store.editingCaption = store.selectedCaption }
         }
+        // CM_BACKDROP=gradient:3 | pattern:1 | blur
+        if let b = env["CM_BACKDROP"] {
+            let parts = b.split(separator: ":")
+            if let k = BackdropKind(rawValue: String(parts[0])) { store.project.backdrop.kind = k }
+            if parts.count > 1, let n = Int(parts[1]) { store.project.backdrop.gradient = n; store.project.backdrop.pattern = n }
+        }
+        // CM_STICKERS=😍,heart.fill (names with a dot are shapes); CM_STICKER_SELECT=1 keeps the last one selected
+        if let list = env["CM_STICKERS"] {
+            for item in list.split(separator: ",").map(String.init) {
+                store.addSticker(item, kind: item.contains(".") ? .shape : .emoji)
+            }
+            if env["CM_STICKER_SELECT"] == nil { store.selectSticker(nil) }
+        }
+        // CM_SPEED=2: every clip at that speed
+        if let sp = env["CM_SPEED"].flatMap(Double.init) {
+            for li in store.project.lanes.indices {
+                store.project.lanes[li].clips = store.project.lanes[li].clips.map { setSpeed($0, sp) }
+            }
+        }
         if let s = env["CM_SELECT"], let i = Int(s) { store.selectCell(i); store.openPicture() }
         if env["CM_MUSIC"] != nil, let m = env["CM_MUSIC"] { await store.importMusic(URL(fileURLWithPath: m)) }
         if let c = env["CM_CROP"], let i = Int(c) { store.cropCell = i }
@@ -119,7 +139,7 @@ enum DebugHarness {
                     try FileManager.default.copyItem(at: url, to: URL(fileURLWithPath: out + ".png"))
                 } else {
                     let q: ExportQuality = e == "ultra" ? .ultra : .standard
-                    let url = try await exporter.exportVideo(quality: q, hdr: env["CM_HDR"] == "1") { p in
+                    let url = try await exporter.exportVideo(quality: q, hdr: env["CM_HDR"] == "1", fps: Int(env["CM_FPS"] ?? "30") ?? 30) { p in
                         if Int(p * 100) % 25 == 0 { NSLog("CM_DEBUG progress %.2f", p) }
                     }
                     try? FileManager.default.removeItem(atPath: out + ".mp4")

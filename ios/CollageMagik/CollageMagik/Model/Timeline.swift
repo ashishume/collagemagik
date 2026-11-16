@@ -8,9 +8,31 @@ let stillDuration = 6.0
 
 func newId() -> String { UUID().uuidString }
 
+/// Speeds offered for a video clip.
+let clipSpeeds: [Double] = [0.25, 0.5, 0.75, 1, 1.5, 2, 3]
+
 extension Clip {
-    var length: Double { outPoint - inPoint }
+    /// How long the clip lasts on the timeline (after its speed).
+    var length: Double { (outPoint - inPoint) / max(0.01, speed) }
+    /// How much of the source file the clip uses.
+    var sourceLength: Double { outPoint - inPoint }
     var end: Double { start + length }
+    /// The source second shown `dt` timeline seconds into the clip.
+    func sourceTime(at dt: Double) -> Double { inPoint + dt * speed }
+}
+
+/// "2×", "0.5×"
+func speedLabel(_ s: Double) -> String {
+    s == s.rounded() ? "\(Int(s))×" : String(format: "%g×", s)
+}
+
+/// The clip at a new speed, keeping where it starts. If it would now run past 60 seconds, its end is trimmed.
+func setSpeed(_ clip: Clip, _ speed: Double) -> Clip {
+    var c = clip
+    c.speed = clamp(speed, 0.25, 3)
+    let maxSource = (maxDuration - c.start) * c.speed
+    if c.sourceLength > maxSource { c.outPoint = c.inPoint + max(minClip, maxSource) }
+    return c
 }
 
 extension Lane {
@@ -36,7 +58,7 @@ func resolveLane(_ lane: Lane, _ t: Double) -> Resolved? {
         tt = seqStart + (t - seqStart).truncatingRemainder(dividingBy: seqEnd - seqStart)
     }
     for clip in clips where tt >= clip.start && tt < clip.end {
-        return Resolved(clip: clip, time: clip.inPoint + (tt - clip.start), active: true)
+        return Resolved(clip: clip, time: clip.sourceTime(at: tt - clip.start), active: true)
     }
     if tt < seqStart { return Resolved(clip: first, time: first.inPoint, active: false) }
     var prev = first
@@ -65,19 +87,19 @@ func newLane(mediaId: String, duration: Double, volume: Double) -> Lane {
 
 /// Drag the left handle by dt seconds. The picture stays where it is on the timeline.
 func trimLeft(_ clip: Clip, _ dt: Double) -> Clip {
-    let minDt = max(-clip.inPoint, -clip.start)
+    let minDt = max(-clip.inPoint / clip.speed, -clip.start)
     let maxDt = clip.length - minClip
     let d = clamp(dt, minDt, maxDt)
     var c = clip
-    c.inPoint += d
+    c.inPoint += d * clip.speed
     c.start += d
     return c
 }
 
 func trimRight(_ clip: Clip, _ dt: Double, mediaDuration: Double) -> Clip {
-    let maxOut = min(mediaDuration, clip.inPoint + (maxDuration - clip.start))
+    let maxOut = min(mediaDuration, clip.inPoint + (maxDuration - clip.start) * clip.speed)
     var c = clip
-    c.outPoint = clamp(clip.outPoint + dt, clip.inPoint + minClip, maxOut)
+    c.outPoint = clamp(clip.outPoint + dt * clip.speed, clip.inPoint + minClip * clip.speed, maxOut)
     return c
 }
 
@@ -90,10 +112,10 @@ func moveClip(_ clip: Clip, _ dt: Double) -> Clip {
 /// Cut a clip at timeline time t. Returns nil if t is not inside the clip (with some room on both sides).
 func splitClip(_ clip: Clip, _ t: Double) -> (Clip, Clip)? {
     if t <= clip.start + minClip || t >= clip.end - minClip { return nil }
-    let cut = clip.inPoint + (t - clip.start)
+    let cut = clip.sourceTime(at: t - clip.start)
     var a = clip
     a.outPoint = cut
-    let b = Clip(id: newId(), start: t, inPoint: cut, outPoint: clip.outPoint)
+    let b = Clip(id: newId(), start: t, inPoint: cut, outPoint: clip.outPoint, speed: clip.speed)
     return (a, b)
 }
 
@@ -161,7 +183,7 @@ func slipClip(_ clip: Clip, _ dt: Double, mediaDuration: Double) -> Clip {
 /// Set the part of the video a clip plays, keeping where it starts on the timeline. Clamped to the file, a minimum length,
 /// and the 60-second collage limit.
 func choosePart(_ clip: Clip, inPoint: Double, outPoint: Double, mediaDuration: Double) -> Clip {
-    let maxLen = max(minClip, min(mediaDuration, maxDuration - clip.start))
+    let maxLen = max(minClip, min(mediaDuration, (maxDuration - clip.start) * clip.speed))
     var i = clamp(inPoint, 0, max(0, mediaDuration - minClip))
     var o = clamp(outPoint, i + minClip, mediaDuration)
     if o - i > maxLen { o = i + maxLen }
@@ -176,7 +198,7 @@ func choosePart(_ clip: Clip, inPoint: Double, outPoint: Double, mediaDuration: 
 func duplicateClip(_ clip: Clip) -> Clip? {
     let start = min(clip.end, maxDuration - clip.length)
     guard start >= clip.start + minClip else { return nil }
-    return Clip(id: newId(), start: start, inPoint: clip.inPoint, outPoint: clip.outPoint)
+    return Clip(id: newId(), start: start, inPoint: clip.inPoint, outPoint: clip.outPoint, speed: clip.speed)
 }
 
 /// One clip of one video lane.

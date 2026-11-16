@@ -153,6 +153,8 @@ enum DraftDisk {
         each("cells", json(CellState()))
         each("captions", json(Caption()))
         each("overlays", json(PhotoOverlay(mediaId: "", cx: 0.5, cy: 0.5)))
+        each("stickers", json(Sticker(kind: .emoji, content: "", cx: 0.5, cy: 0.5)))
+        if let b = p["backdrop"] as? [String: Any] { p["backdrop"] = fill(b, json(Backdrop())) }
         let clip = json(Clip(id: "", start: 0, inPoint: 0, outPoint: 0))
         each("lanes", json(Lane(mediaId: "", clips: [], loop: false, volume: 1))) { lane in
             if let clips = lane["clips"] as? [[String: Any]] { lane["clips"] = clips.map { fill($0, clip) } }

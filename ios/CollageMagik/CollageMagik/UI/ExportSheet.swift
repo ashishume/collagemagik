@@ -22,7 +22,7 @@ final class ExportJob {
 
     var isRunning: Bool { state == .running }
 
-    func start(snapshot: ExportSnapshot, video: Bool, quality: ExportQuality, hdr: Bool = false, stillTime: Double) {
+    func start(snapshot: ExportSnapshot, video: Bool, quality: ExportQuality, hdr: Bool = false, fps: Int = 30, stillTime: Double) {
         state = .running
         progress = 0
         saved = false
@@ -33,7 +33,7 @@ final class ExportJob {
             defer { UIApplication.shared.isIdleTimerDisabled = false }
             do {
                 if video {
-                    let url = try await exporter.exportVideo(quality: quality, hdr: hdr) { p in
+                    let url = try await exporter.exportVideo(quality: quality, hdr: hdr, fps: fps) { p in
                         Task { @MainActor in self.progress = p }
                     }
                     state = .done(url, isVideo: true)
@@ -101,6 +101,7 @@ struct ExportSheet: View {
 
     @State private var kind: Kind = .video
     @State private var quality: ExportQuality = .standard
+    @AppStorage("cm.export.fps") private var fps = 30
     @State private var ultraAvailable = true
     /// HDR export is offered when a placed video is HDR and this iPhone can encode 10-bit HEVC at that size.
     @State private var hasHDRVideo = false
@@ -281,6 +282,7 @@ struct ExportSheet: View {
                 row("Size", "\(dims.w) × \(dims.h)")
                 if kind == .video {
                     row("Length", formatTime(store.totalDuration))
+                    row("Frame rate", "\(fps) fps")
                     row("Sound", soundSummary)
                     if hasHDRVideo { row("Colour", exportsHDR ? "HDR (HLG)" : "SDR") }
                 } else {
@@ -298,12 +300,19 @@ struct ExportSheet: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 Picker("Quality", selection: $quality) {
-                    Text(verbatim: "Standard · \(Int(project.format.width))×\(Int(project.format.height))").tag(ExportQuality.standard)
+                    Text(verbatim: "HD · \(Int(project.format.width))×\(Int(project.format.height))").tag(ExportQuality.standard)
                     if ultraAvailable {
-                        Text(verbatim: "Ultra · \(Int(project.format.width * 2))×\(Int(project.format.height * 2))").tag(ExportQuality.ultra)
+                        Text(verbatim: "4K · \(Int(project.format.width * 2))×\(Int(project.format.height * 2))").tag(ExportQuality.ultra)
                     }
                 }
                 .pickerStyle(.segmented)
+                if kind == .video {
+                    Picker("Frame rate", selection: $fps) {
+                        Text("30 fps").tag(30)
+                        Text("60 fps · smoother").tag(60)
+                    }
+                    .pickerStyle(.segmented)
+                }
                 if kind == .video && hasHDRVideo {
                     Toggle(isOn: $hdr) {
                         Label("HDR", systemImage: "sun.max.fill")
@@ -344,9 +353,10 @@ struct ExportSheet: View {
             return "This iPhone can't make HDR video at this size, so it exports in SDR. Try Standard quality for HDR."
         }
         if exportsHDR {
-            return "HDR video (10-bit HEVC, HLG) with AAC sound at 30 fps. Your HDR clips keep their bright highlights; photos and captions stay at normal brightness. Keep the screen on until it finishes."
+            return "HDR video (10-bit HEVC, HLG) with AAC sound at \(fps) fps. Your HDR clips keep their bright highlights; photos and captions stay at normal brightness. Keep the screen on until it finishes."
         }
-        return "H.264 video with AAC sound at 30 fps. Your original files are re-read at full quality. Keep the screen on until it finishes."
+        let slower = fps == 60 || quality == .ultra ? " Bigger exports take longer to make." : ""
+        return "H.264 video with AAC sound at \(fps) fps. Your original files are re-read at full quality. Keep the screen on until it finishes.\(slower)"
     }
 
     private var soundSummary: String {
@@ -568,6 +578,6 @@ struct ExportSheet: View {
             project: store.project,
             items: Dictionary(uniqueKeysWithValues: store.items.map { ($0.id, $0) })
         )
-        job.start(snapshot: snapshot, video: kind == .video, quality: quality, hdr: exportsHDR, stillTime: store.playback.playhead)
+        job.start(snapshot: snapshot, video: kind == .video, quality: quality, hdr: exportsHDR, fps: fps, stillTime: store.playback.playhead)
     }
 }

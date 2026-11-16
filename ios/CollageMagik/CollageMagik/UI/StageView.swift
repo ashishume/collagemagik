@@ -160,6 +160,10 @@ struct StageView: View {
     @State private var overlayDrag: (id: String, cx: Double, cy: Double)?
     @State private var overlayPinch: (id: String, w: Double)?
     @State private var overlayTurn: (id: String, tilt: Double)?
+    /// A sticker being moved, sized or turned.
+    @State private var stickerDrag: (id: String, cx: Double, cy: Double)?
+    @State private var stickerPinch: (id: String, w: Double)?
+    @State private var stickerTurn: (id: String, tilt: Double)?
     /// A picture in a cell being straightened with a two-finger twist.
     @State private var cellTurn: (cell: Int, angle: Double)?
     /// The angle, in degrees, a two-finger twist has locked onto (a quarter or eighth turn), shown with guide lines.
@@ -281,7 +285,7 @@ struct StageView: View {
         let radius = project.cornerRadius(W: size.width)
 
         ZStack(alignment: .topLeading) {
-            Rectangle().fill(Color(hex: project.bg))
+            BackdropLayer(project: project, size: size)
 
             ForEach(Array(px.enumerated()), id: \.offset) { i, r in
                 cell(i, r, size: size)
@@ -289,6 +293,10 @@ struct StageView: View {
 
             ForEach(Array(project.overlays.enumerated()), id: \.element.id) { k, o in
                 overlayView(o, index: k, size)
+            }
+
+            ForEach(project.stickers) { st in
+                stickerView(st, size)
             }
 
             ForEach(project.captions) { c in
@@ -307,6 +315,16 @@ struct StageView: View {
                 if let s = store.swapFrom, px.indices.contains(s) {
                     ring(px[s], color: .orange, radius: project.pictureRadius(s, W: size.width))
                 }
+                if let st = store.sticker(store.selectedSticker) {
+                    let r = project.stickerRect(st, W: size.width, H: size.height)
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .strokeBorder(.white, style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
+                        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.brand, lineWidth: 1.5))
+                        .frame(width: r.w + 8, height: r.h + 8)
+                        .rotationEffect(.degrees(r.tilt))
+                        .position(r.center)
+                        .allowsHitTesting(false)
+                }
                 if let o = store.overlay(store.selectedOverlay), let g = overlayGeometry(o, size) {
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
                         .strokeBorder(.white, style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
@@ -320,6 +338,8 @@ struct StageView: View {
 
                 if let t = overlayTurn, let o = store.overlay(t.id), let g = overlayGeometry(o, size) {
                     rotationGuides(center: g.outer.center, degrees: o.tilt, size: size)
+                } else if let t = stickerTurn, let st = store.sticker(t.id) {
+                    rotationGuides(center: project.stickerRect(st, W: size.width, H: size.height).center, degrees: st.tilt, size: size)
                 } else if let t = cellTurn, px.indices.contains(t.cell), project.cells.indices.contains(t.cell) {
                     rotationGuides(center: px[t.cell].center, degrees: project.cells[t.cell].angle, size: size)
                 } else if let t = captionTurn, let c = store.caption(t.id), !c.text.isEmpty {
@@ -462,6 +482,29 @@ struct StageView: View {
         guard let id = ids.first, store.item(id) != nil else { return false }
         let slideW = size.width / Double(max(1, store.project.slides))
         return store.addOverlay(id, cx: p.x / slideW, cy: p.y / size.height)
+    }
+
+    /// An emoji or shape, drawn by the same code as the export.
+    @ViewBuilder
+    private func stickerView(_ st: Sticker, _ size: CGSize) -> some View {
+        let r = store.project.stickerRect(st, W: size.width, H: size.height)
+        if let img = StickerRenderer.image(st, side: r.w * displayScale) {
+            Image(uiImage: img)
+                .resizable()
+                .scaleEffect(x: st.flip ? -1 : 1, y: 1)
+                .frame(width: r.w, height: r.h)
+                .rotationEffect(.degrees(r.tilt))
+                .position(r.center)
+                .allowsHitTesting(false)
+                .accessibilityLabel(st.kind == .emoji ? "Sticker \(st.content)" : "Shape sticker")
+        }
+    }
+
+    /// The sticker under a touch (the top one wins), with a little slack so small ones are easy to grab.
+    private func stickerAt(_ p: CGPoint, _ size: CGSize) -> Sticker? {
+        store.project.stickers.last { st in
+            store.project.stickerRect(st, W: size.width, H: size.height).inset(-10).contains(p.x, p.y)
+        }
     }
 
     /// A caption, drawn by the same code as the export and then turned and placed.
@@ -670,6 +713,9 @@ struct StageView: View {
         if let c = store.caption(store.selectedCaption), !c.text.isEmpty {
             return CaptionRenderer.layout(c, project: store.project, W: size.width, H: size.height).contains(p, slack: 12)
         }
+        if let st = store.sticker(store.selectedSticker) {
+            return store.project.stickerRect(st, W: size.width, H: size.height).inset(-10).contains(p.x, p.y)
+        }
         if let o = store.overlay(store.selectedOverlay) {
             return overlayGeometry(o, size)?.outer.contains(p.x, p.y) ?? false
         }
@@ -681,7 +727,7 @@ struct StageView: View {
     }
 
     private var hasSelection: Bool {
-        store.selectedCaption != nil || store.selectedOverlay != nil || store.selectedCell != nil
+        store.selectedCaption != nil || store.selectedOverlay != nil || store.selectedCell != nil || store.selectedSticker != nil
     }
 
     private func tap(_ p: CGPoint, _ size: CGSize) {
@@ -707,6 +753,8 @@ struct StageView: View {
         // Nothing selected: select the top-most thing under the finger (captions, then photos on top, then cells).
         if let c = captionAt(p, size) {
             store.selectCaption(c.id)
+        } else if let st = stickerAt(p, size) {
+            store.selectSticker(st.id)
         } else if let o = overlayAt(p, size) {
             store.selectOverlay(o.id)
             UISelectionFeedbackGenerator().selectionChanged()
@@ -720,11 +768,16 @@ struct StageView: View {
         captionDrag = nil
         dividerDrag = nil
         overlayDrag = nil
+        stickerDrag = nil
         gestureCell = -1
         swiping = false
         let onIt = store.swapFrom == nil && (onSelection(start, size) || onSelection(p, size))
         if onIt, let c = store.caption(store.selectedCaption) {
             captionDrag = CaptionDrag(id: c.id, x: c.x, y: c.y)
+            return
+        }
+        if onIt, let st = store.sticker(store.selectedSticker) {
+            stickerDrag = (st.id, st.cx, st.cy)
             return
         }
         if onIt, let o = store.overlay(store.selectedOverlay) {
@@ -736,7 +789,7 @@ struct StageView: View {
             return
         }
         // The borders between cells can be dragged while nothing is selected.
-        if !carousel, !hasSelection, store.swapFrom == nil, captionAt(start, size) == nil, overlayAt(start, size) == nil,
+        if !carousel, !hasSelection, store.swapFrom == nil, captionAt(start, size) == nil, overlayAt(start, size) == nil, stickerAt(start, size) == nil,
            let d = dividerAt(start, moving: moved, size), let grid = store.project.resizableGrid {
             dividerDrag = DividerDrag(divider: d, start: grid, base: layout(byId: store.project.layoutId).grid)
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -747,6 +800,10 @@ struct StageView: View {
     }
 
     private func panEnd(_ velocity: CGSize, frame: CarouselFrame?) {
+        if stickerDrag != nil {
+            stickerDrag = nil
+            return
+        }
         if overlayDrag != nil {
             overlayDrag = nil
             return
@@ -791,6 +848,14 @@ struct StageView: View {
                 $0.x = onX ? slide + 0.5 : drag.x
                 $0.y = onY ? 0.5 : drag.y
             }
+            return
+        }
+        if var drag = stickerDrag {
+            let slideW = size.width / Double(max(1, store.project.slides))
+            drag.cx += d.width / slideW
+            drag.cy += d.height / size.height
+            stickerDrag = drag
+            store.updateSticker(drag.id) { $0.cx = drag.cx; $0.cy = drag.cy }
             return
         }
         if var drag = overlayDrag {
@@ -860,8 +925,9 @@ struct StageView: View {
     private func pinchBegin(_ p: CGPoint, _ size: CGSize) {
         captionPinch = store.caption(store.selectedCaption).map { ($0.id, $0.size) }
         overlayPinch = captionPinch == nil ? store.overlay(store.selectedOverlay).map { ($0.id, $0.w) } : nil
+        stickerPinch = store.sticker(store.selectedSticker).map { ($0.id, $0.w) }
         pinchCell = -1
-        if captionPinch == nil, overlayPinch == nil, let s = store.selectedCell, store.swapFrom == nil,
+        if captionPinch == nil, overlayPinch == nil, stickerPinch == nil, let s = store.selectedCell, store.swapFrom == nil,
            store.project.cells.indices.contains(s), store.project.cells[s].mediaId != nil {
             pinchCell = s
             pinchBase = store.project.cells[s].zoom
@@ -872,8 +938,9 @@ struct StageView: View {
     private func turnBegin() {
         captionTurn = store.caption(store.selectedCaption).map { ($0.id, $0.rotation) }
         overlayTurn = captionTurn == nil ? store.overlay(store.selectedOverlay).map { ($0.id, $0.tilt) } : nil
+        stickerTurn = store.sticker(store.selectedSticker).map { ($0.id, $0.tilt) }
         cellTurn = nil
-        if captionTurn == nil, overlayTurn == nil, let s = store.selectedCell, store.swapFrom == nil,
+        if captionTurn == nil, overlayTurn == nil, stickerTurn == nil, let s = store.selectedCell, store.swapFrom == nil,
            store.project.cells.indices.contains(s), store.project.cells[s].mediaId != nil {
             cellTurn = (s, store.project.cells[s].angle)
         }
@@ -883,6 +950,7 @@ struct StageView: View {
     private func turnEnd() {
         captionTurn = nil
         overlayTurn = nil
+        stickerTurn = nil
         cellTurn = nil
         turnLock = nil
     }
@@ -910,6 +978,11 @@ struct StageView: View {
             store.setCellView(t.cell) { $0.angle = deg }
             return
         }
+        if let t = stickerTurn {
+            let deg = lockedAngle(t.tilt + Double(radians) / RAD)
+            store.updateSticker(t.id) { $0.tilt = deg }
+            return
+        }
         if let t = overlayTurn {
             let deg = lockedAngle(t.tilt + Double(radians) / RAD)
             store.updateOverlay(t.id) { $0.tilt = deg }
@@ -921,6 +994,10 @@ struct StageView: View {
     }
 
     private func pinch(_ scale: CGFloat) {
+        if let st = stickerPinch {
+            store.updateSticker(st.id) { $0.w = st.w * Double(scale) }
+            return
+        }
         if let o = overlayPinch {
             store.updateOverlay(o.id) { $0.w = o.w * Double(scale) }
             return
@@ -936,8 +1013,8 @@ struct StageView: View {
     /// Press and hold a picture to pick it up and drop it on another cell. Only the selected picture can be picked up,
     /// or any picture while nothing is selected (and no caption or photo on top is in the way).
     private func liftBegin(_ p: CGPoint, _ size: CGSize) {
-        guard store.selectedCaption == nil, store.selectedOverlay == nil else { return }
-        guard captionAt(p, size) == nil, overlayAt(p, size) == nil else { return }
+        guard store.selectedCaption == nil, store.selectedOverlay == nil, store.selectedSticker == nil else { return }
+        guard captionAt(p, size) == nil, overlayAt(p, size) == nil, stickerAt(p, size) == nil else { return }
         let cell = hitCell(rects(size), x: p.x, y: p.y)
         guard cell >= 0, store.swapFrom == nil, store.project.cells[cell].mediaId != nil else { return }
         if let s = store.selectedCell, s != cell { return }
@@ -993,6 +1070,55 @@ private struct EmptySlot: View {
         .opacity(shown ? 1 : 0)
         .onAppear {
             withAnimation(.spring(duration: 0.5, bounce: 0.3).delay(Double(index) * 0.05)) { shown = true }
+        }
+    }
+}
+
+
+/// The backdrop in the live preview: drawn by `BackdropRenderer` (the same code as the export) and redrawn only when
+/// the backdrop, its colour, its picture or the preview size changes.
+private struct BackdropLayer: View {
+    @Environment(CollageStore.self) private var store
+    @Environment(\.displayScale) private var displayScale
+    let project: Project
+    let size: CGSize
+    @State private var image: CGImage?
+
+    private struct Key: Hashable {
+        var backdrop: Backdrop
+        var bg: String
+        var w: Int
+        var h: Int
+        var canvasWidth: Double
+        var blurId: String?
+    }
+
+    private var key: Key {
+        let scale = min(displayScale, 2)
+        return Key(
+            backdrop: project.backdrop, bg: project.bg,
+            w: Int(size.width * scale), h: Int(size.height * scale), canvasWidth: project.canvasWidth,
+            blurId: project.backdrop.kind == .blur ? BackdropRenderer.blurSource(project) : nil
+        )
+    }
+
+    var body: some View {
+        ZStack {
+            Rectangle().fill(Color(hex: project.bg))
+            if project.backdrop.kind != .color, let image {
+                Image(decorative: image, scale: 1)
+                    .resizable()
+                    .transition(.opacity)
+            }
+        }
+        .frame(width: size.width, height: size.height)
+        .task(id: key) {
+            guard project.backdrop.kind != .color else { image = nil; return }
+            let k = key
+            let made = BackdropRenderer.image(project: project, W: Double(k.w), H: Double(k.h)) { id in
+                store.item(id).map { $0.preview ?? $0.thumbnail }
+            }
+            withAnimation(.easeOut(duration: 0.2)) { image = made }
         }
     }
 }

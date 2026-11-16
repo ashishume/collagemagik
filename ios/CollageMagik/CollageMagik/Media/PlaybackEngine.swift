@@ -19,7 +19,10 @@ final class PlaybackEngine {
 
     func player(for item: MediaItem) -> AVPlayer {
         if let p = players[item.id] { return p }
-        let p = AVPlayer(url: item.url)
+        let playerItem = AVPlayerItem(url: item.url)
+        // slowed or sped-up clips keep their natural pitch
+        playerItem.audioTimePitchAlgorithm = .spectral
+        let p = AVPlayer(playerItem: playerItem)
         p.automaticallyWaitsToMinimizeStalling = false
         p.actionAtItemEnd = .pause
         players[item.id] = p
@@ -112,30 +115,31 @@ final class PlaybackEngine {
             let cur = p.currentTime().seconds
             let drift = abs(cur - r.time)
 
+            let rate = Float(r.clip.speed)
             if isPlaying && r.active {
                 if seeking.contains(item.id) { continue }
-                if !cur.isFinite || drift > 0.35 {
-                    seek(p, id: item.id, to: r.time, thenPlay: true)
-                } else if p.timeControlStatus == .paused {
-                    p.play()
+                if !cur.isFinite || drift > 0.35 * max(1, r.clip.speed) {
+                    seek(p, id: item.id, to: r.time, thenPlay: true, rate: rate)
+                } else if p.timeControlStatus == .paused || abs(p.rate - rate) > 0.01 {
+                    p.playImmediately(atRate: rate)
                 }
             } else {
                 if p.rate != 0 { p.pause() }
                 if (!cur.isFinite || drift > 0.04) && !seeking.contains(item.id) {
-                    seek(p, id: item.id, to: r.time, thenPlay: false)
+                    seek(p, id: item.id, to: r.time, thenPlay: false, rate: rate)
                 }
             }
         }
         syncMusic(project, total: store.totalDuration)
     }
 
-    private func seek(_ p: AVPlayer, id: String, to t: Double, thenPlay: Bool) {
+    private func seek(_ p: AVPlayer, id: String, to t: Double, thenPlay: Bool, rate: Float = 1) {
         seeking.insert(id)
         p.seek(to: CMTime(seconds: t, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero) { [weak self, weak p] _ in
             Task { @MainActor in
                 guard let self else { return }
                 self.seeking.remove(id)
-                if thenPlay, self.isPlaying { p?.play() } else if !self.isPlaying { self.sync() }
+                if thenPlay, self.isPlaying { p?.playImmediately(atRate: rate) } else if !self.isPlaying { self.sync() }
             }
         }
     }
