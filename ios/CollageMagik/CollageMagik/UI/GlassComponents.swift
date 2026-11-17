@@ -62,14 +62,15 @@ struct CompactTool: View {
                 Image(systemName: symbol).font(.system(size: 15, weight: .medium)).frame(height: 18)
                 Text(title).font(.system(size: 10, weight: .medium)).lineLimit(1).minimumScaleFactor(0.8)
             }
+            // the whole tile is room for the title: seven tools fit in a row without cutting words off
+            .padding(.horizontal, 2)
+            .foregroundStyle(role == .destructive ? Color.red : (isOn ? Color.white : Color.primary))
             .frame(maxWidth: .infinity)
             .frame(height: 42)
             .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .glassEffect(isOn ? .regular.tint(Color.brand.opacity(0.7)).interactive() : .regular.interactive(), in: .rect(cornerRadius: 14))
         }
-        .buttonStyle(.glass)
-        .buttonBorderShape(.roundedRectangle(radius: 14))
-        .controlSize(.small)
-        .tint(isOn ? Color.brand : (role == .destructive ? Color.red : nil))
+        .buttonStyle(.plain)
         .accessibilityLabel(title)
     }
 }
@@ -249,38 +250,73 @@ struct SectionTabs<S: PanelSection>: View {
 
     var body: some View {
         GlassEffectContainer(spacing: 4) {
-            HStack(spacing: 0) {
-                ForEach(S.allCases) { s in
-                    let on = s == selection
-                    Button {
-                        withAnimation(.bouncy(duration: 0.4)) { selection = s }
-                    } label: {
-                        Label(s.title, systemImage: s.symbol)
-                            .labelStyle(.titleAndIcon)
-                            .font(.system(size: 12, weight: .semibold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.75)
-                            .foregroundStyle(on ? Color.white : Color.white.opacity(0.7))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 30)
-                            .contentShape(Capsule())
-                            .background {
-                                if on {
-                                    Capsule().fill(.clear)
-                                        .glassEffect(.regular.tint(Color.brand.opacity(0.75)).interactive(), in: .capsule)
-                                        .glassEffectID("section", in: glass)
-                                }
-                            }
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(s.title)
-                    .accessibilityAddTraits(on ? .isSelected : [])
-                }
+            // roomy glass around each title when the row has space for it; with many tabs (Text), a tighter fit
+            ViewThatFits(in: .horizontal) {
+                tabs(padding: 12)
+                tabs(padding: 4)
             }
             .padding(2)
             .glassEffect(.regular, in: .capsule)
         }
         .sensoryFeedback(.selection, trigger: selection)
+    }
+
+    /// Each tab is as wide as its title needs, so a long one ("Background") still has room inside the glass.
+    private func tabs(padding: CGFloat) -> some View {
+        TitleWidthRow {
+            ForEach(S.allCases) { s in
+                let on = s == selection
+                Button {
+                    withAnimation(.bouncy(duration: 0.4)) { selection = s }
+                } label: {
+                    Label(s.title, systemImage: s.symbol)
+                        .labelStyle(.titleAndIcon)
+                        .font(.system(size: 12, weight: .semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                        .padding(.horizontal, padding)
+                        .foregroundStyle(on ? Color.white : Color.white.opacity(0.7))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 30)
+                        .contentShape(Capsule())
+                        .background {
+                            if on {
+                                Capsule().fill(.clear)
+                                    .glassEffect(.regular.tint(Color.brand.opacity(0.75)).interactive(), in: .capsule)
+                                    .glassEffectID("section", in: glass)
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(s.title)
+                .accessibilityAddTraits(on ? .isSelected : [])
+            }
+        }
+    }
+}
+
+/// One row of tabs: each gets the width it needs, then any room left over is shared equally.
+/// When the row is too narrow, every tab gives up the same amount, which comes out of its padding first.
+struct TitleWidthRow: Layout {
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let ideals = subviews.map { $0.sizeThatFits(.unspecified) }
+        return CGSize(
+            width: proposal.width ?? ideals.reduce(0) { $0 + $1.width },
+            height: ideals.map(\.height).max() ?? 0
+        )
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard !subviews.isEmpty else { return }
+        let ideals = subviews.map { $0.sizeThatFits(.unspecified).width }
+        let total = ideals.reduce(0, +)
+        let extra = (bounds.width - total) / CGFloat(subviews.count)
+        var x = bounds.minX
+        for (i, s) in subviews.enumerated() {
+            let w = ideals[i] + extra
+            s.place(at: CGPoint(x: x, y: bounds.midY), anchor: .leading, proposal: ProposedViewSize(width: w, height: bounds.height))
+            x += w
+        }
     }
 }
 

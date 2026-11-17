@@ -206,27 +206,18 @@ struct LayoutPanel: View {
                         .minimumScaleFactor(0.8)
                     Spacer(minLength: 0)
                 } else {
-                    Text("Cells").font(.caption.weight(.medium)).foregroundStyle(.secondary)
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        GlassEffectContainer(spacing: 6) {
-                            HStack(spacing: 6) {
-                                ForEach(Array(1...maxCells), id: \.self) { n in
-                                    let on = store.project.cellCount == n
-                                    Button {
-                                        withAnimation(.smooth) { store.setCellCount(n) }
-                                    } label: {
-                                        Text("\(n)")
-                                            .font(.footnote.weight(.semibold).monospacedDigit())
-                                            .frame(width: 28, height: 28)
-                                            .glassEffect(on ? .regular.tint(Color.brand.opacity(0.8)).interactive() : .regular.interactive(), in: .circle)
-                                    }
-                                    .buttonStyle(.plain)
-                                    .accessibilityLabel("\(n) cells")
-                                    .accessibilityAddTraits(on ? .isSelected : [])
-                                }
-                            }
-                        }
-                    }
+                    // nobody picks the cell count either: one cell per picture, and the layouts follow
+                    let photos = store.project.cells.filter { $0.mediaId != nil }.count
+                    Label(
+                        photos == 0 ? "Add up to \(maxCells) pictures, the layouts fit how many you add"
+                            : "\(photos) \(photos == 1 ? "picture" : "pictures") · up to \(maxCells) fit in a collage",
+                        systemImage: "info.circle"
+                    )
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                    Spacer(minLength: 0)
                 }
                 GlassIconButton(symbol: "shuffle", label: "Try another arrangement", size: 30) {
                     withAnimation(.smooth) { store.shuffleLayout() }
@@ -276,110 +267,225 @@ struct LayoutPanel: View {
 
 // MARK: - Style
 
-struct StylePanel: View {
-    @Environment(CollageStore.self) private var store
-
-    var body: some View {
-        @Bindable var store = store
-        VStack(spacing: 6) {
-            Picker("Format", selection: $store.project.format) {
-                ForEach(store.isCarousel ? FormatId.carouselFormats : FormatId.allCases) { f in Text(f.label).tag(f) }
-            }
-            .pickerStyle(.segmented)
-
-            HStack(spacing: 14) {
-                compactSlider("Gap", value: $store.project.gap, range: 0...48)
-                compactSlider("Corners", value: $store.project.radius, range: 0...80)
-            }
-
-            BackdropPicker()
-
-            frameSection
-
-            if store.project.format == .story {
-                Toggle(isOn: $store.project.safeZone) {
-                    Label("Show the area Instagram covers", systemImage: store.project.safeZone ? "eye.slash" : "eye")
-                        .font(.footnote)
-                }
-            }
+/// The Style tab's groups: one shows at a time, under a row of tabs.
+enum StyleSection: String, PanelSection {
+    case size, spacing, background, frame
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .size: "Size"
+        case .spacing: "Spacing"
+        case .background: "Background"
+        case .frame: "Frame"
+        }
+    }
+    var symbol: String {
+        switch self {
+        case .size: "aspectratio"
+        case .spacing: "square.split.2x2"
+        case .background: "paintpalette"
+        case .frame: "photo.artframe"
+        }
+    }
+    /// One line under the tabs that says what the group changes.
+    var hint: String {
+        switch self {
+        case .size: "The shape of the picture you'll post"
+        case .spacing: "Space between pictures, and how round their corners are"
+        case .background: "What shows behind and between your pictures"
+        case .frame: "A frame around every photo in the layout"
         }
     }
 }
 
-extension StylePanel {
-    /// Frame: the style, then its colour and thickness.
-    @ViewBuilder
-    var frameSection: some View {
+struct StylePanel: View {
+    @Environment(CollageStore.self) private var store
+
+    /// Space between the rows inside a group: roomy, so each control reads on its own.
+    static let rowSpacing: CGFloat = 12
+    static let hintHeight: CGFloat = 16
+
+    var body: some View {
         @Bindable var store = store
-        let frame = store.project.frame
-        VStack(spacing: 4) {
-            HStack(spacing: 10) {
-                Text("Frame")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .frame(width: 50, alignment: .leading)
-                ScrollView(.horizontal, showsIndicators: false) {
-                    GlassEffectContainer(spacing: 6) {
-                        HStack(spacing: 6) {
-                            ForEach(PhotoFrame.allCases) { f in
-                                ChipButton(title: f.title, symbol: f.symbol, isOn: f == frame) {
-                                    withAnimation(.smooth) { store.project.frame = f }
-                                }
-                                .accessibilityAddTraits(f == frame ? .isSelected : [])
-                            }
-                        }
-                        .padding(.vertical, 2)
-                    }
-                }
-                .scrollClipDisabled()
-            }
-            if frame.hasEdge {
-                HStack(spacing: 8) {
-                    ForEach(frameSwatches, id: \.self) { c in
-                        let on = store.project.frameColor.lowercased() == c
-                        Button { store.project.frameColor = c } label: {
-                            Circle().fill(Color(hex: c))
-                                .frame(width: 22, height: 22)
-                                .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
-                                .overlay(Circle().strokeBorder(Color.brand, lineWidth: on ? 3 : 0).padding(-4))
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Frame colour \(c)")
-                        .accessibilityAddTraits(on ? .isSelected : [])
-                    }
-                    ColorPicker("Custom frame colour", selection: Binding(
-                        get: { Color(hex: store.project.frameColor) },
-                        set: { store.project.frameColor = $0.hexString }
-                    ), supportsOpacity: false)
-                    .labelsHidden()
-                    Slider(value: $store.project.frameWidth, in: 6...60)
-                        .accessibilityLabel("Frame thickness")
-                }
-                .padding(.leading, 4)
-            }
-            if frame != .none {
-                // one line: the card's height leaves room for exactly one
-                Text("Frames every photo in the layout. Photos on top have their own.")
-                    .font(.caption2)
+        VStack(spacing: 12) {
+            SectionTabs(selection: $store.styleSection)
+                .frame(height: panelTabsHeight)
+            VStack(alignment: .leading, spacing: Self.rowSpacing) {
+                Text(store.styleSection.hint)
+                    .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(height: Self.hintHeight)
+                switch store.styleSection {
+                case .size: sizeSection
+                case .spacing: spacingSection
+                case .background: BackdropPicker()
+                case .frame: frameSection
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .transition(.opacity)
+        }
+        .animation(.smooth(duration: 0.25), value: store.styleSection)
+    }
+
+    /// Height of the whole panel for the open group, so the card fits it without scrolling.
+    static func height(for store: CollageStore) -> CGFloat {
+        let p = store.project
+        let content: CGFloat
+        switch store.styleSection {
+        case .size: content = formatCardHeight + (p.format == .story ? rowSpacing + 31 : 0)
+        case .spacing: content = 2 * sliderRowHeight + rowSpacing
+        case .background: content = 32 + 6 + (p.backdrop.kind == .pattern ? 26 + 4 + 44 : 44)
+        case .frame: content = 34 + (p.frame.hasEdge ? 2 * (rowSpacing + sliderRowHeight) : 0)
+        }
+        return panelTabsHeight + 12 + hintHeight + rowSpacing + content
+    }
+}
+
+extension StylePanel {
+    static let formatCardHeight: CGFloat = 70
+    static let sliderRowHeight: CGFloat = 32
+
+    // MARK: Size
+
+    @ViewBuilder
+    var sizeSection: some View {
+        @Bindable var store = store
+        let formats = store.isCarousel ? FormatId.carouselFormats : FormatId.allCases
+        GlassEffectContainer(spacing: 8) {
+            HStack(spacing: 8) {
+                ForEach(formats) { f in
+                    let on = f == store.project.format
+                    Button { withAnimation(.smooth) { store.project.format = f } } label: {
+                        formatCard(f, on: on)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(f.label)
+                    .accessibilityAddTraits(on ? .isSelected : [])
+                }
+            }
+        }
+        if store.project.format == .story {
+            Toggle(isOn: $store.project.safeZone) {
+                Label("Show the area Instagram covers", systemImage: store.project.safeZone ? "eye.slash" : "eye")
+                    .font(.footnote)
             }
         }
     }
 
-    func compactSlider(_ title: String, value: Binding<Double>, range: ClosedRange<Double>) -> some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text(title).font(.footnote).foregroundStyle(.secondary)
-                Spacer()
-                Text("\(Int(value.wrappedValue.rounded()))").font(.footnote.monospacedDigit()).foregroundStyle(.secondary)
+    private func formatCard(_ f: FormatId, on: Bool) -> some View {
+        HStack(spacing: 10) {
+            // the shape itself, drawn to its ratio
+            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                .strokeBorder(on ? Color.white : Color.white.opacity(0.6), lineWidth: 1.6)
+                .frame(width: 30 * f.width / f.height * (f == .story ? 1.0 : 0.85), height: f == .story ? 30 : 30 * 0.85)
+                .frame(width: 30, height: 32)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(f.name).font(.footnote.weight(.semibold))
+                Text(f.short).font(.caption2.monospacedDigit()).foregroundStyle(on ? .primary : .secondary)
             }
-            Slider(value: value, in: range)
-                .accessibilityLabel(title)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+        }
+        .foregroundStyle(on ? Color.white : Color.white.opacity(0.75))
+        .frame(maxWidth: .infinity)
+        .frame(height: Self.formatCardHeight)
+        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .glassEffect(on ? .regular.tint(Color.brand.opacity(0.7)).interactive() : .regular.interactive(), in: .rect(cornerRadius: 16))
+    }
+
+    // MARK: Spacing
+
+    @ViewBuilder
+    var spacingSection: some View {
+        @Bindable var store = store
+        labeledSlider("Gap", symbol: "arrow.left.and.right", value: $store.project.gap, range: 0...48)
+        labeledSlider("Corners", symbol: "square.on.circle", value: $store.project.radius, range: 0...80)
+    }
+
+    // MARK: Frame
+
+    /// The style, then its colour and thickness.
+    @ViewBuilder
+    var frameSection: some View {
+        @Bindable var store = store
+        let frame = store.project.frame
+        ScrollView(.horizontal, showsIndicators: false) {
+            GlassEffectContainer(spacing: 6) {
+                HStack(spacing: 6) {
+                    ForEach(PhotoFrame.allCases) { f in
+                        ChipButton(title: f.title, symbol: f.symbol, isOn: f == frame) {
+                            withAnimation(.smooth) { store.project.frame = f }
+                        }
+                        .accessibilityAddTraits(f == frame ? .isSelected : [])
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+        }
+        .scrollClipDisabled()
+        .frame(height: 34)
+        if frame.hasEdge {
+            HStack(spacing: 10) {
+                rowLabel("Colour", symbol: "paintbrush")
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(frameSwatches, id: \.self) { c in
+                            let on = store.project.frameColor.lowercased() == c
+                            Button { store.project.frameColor = c } label: {
+                                Circle().fill(Color(hex: c))
+                                    .frame(width: 22, height: 22)
+                                    .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
+                                    .overlay(Circle().strokeBorder(Color.brand, lineWidth: on ? 3 : 0).padding(-4))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Frame colour \(c)")
+                            .accessibilityAddTraits(on ? .isSelected : [])
+                        }
+                    }
+                    .padding(5)
+                }
+                ColorPicker("Custom frame colour", selection: Binding(
+                    get: { Color(hex: store.project.frameColor) },
+                    set: { store.project.frameColor = $0.hexString }
+                ), supportsOpacity: false)
+                .labelsHidden()
+            }
+            .frame(height: Self.sliderRowHeight)
+            labeledSlider("Thickness", symbol: "lineweight", value: $store.project.frameWidth, range: 6...60)
         }
     }
+
+    // MARK: Rows
+
+    private func rowLabel(_ title: String, symbol: String) -> some View {
+        Label(title, systemImage: symbol)
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .frame(width: 96, alignment: .leading)
+    }
+
+    /// Name on the left, the slider, then its value: one line per setting.
+    func labeledSlider(_ title: String, symbol: String, value: Binding<Double>, range: ClosedRange<Double>) -> some View {
+        HStack(spacing: 10) {
+            rowLabel(title, symbol: symbol)
+            Slider(value: value, in: range)
+                .accessibilityLabel(title)
+            Text("\(Int(value.wrappedValue.rounded()))")
+                .font(.footnote.monospacedDigit())
+                .foregroundStyle(.secondary)
+                .frame(width: 26, alignment: .trailing)
+        }
+        .frame(height: Self.sliderRowHeight)
+    }
+}
+
+private extension FormatId {
+    /// "Story", "Post", "Square": the label without its ratio.
+    var name: String { label.replacingOccurrences(of: " " + short, with: "") }
 }
 
 // MARK: - Audio
@@ -488,6 +594,9 @@ struct PicturePanel: View {
                         HStack(spacing: 6) {
                             CompactTool(title: "Change", symbol: "photo.badge.plus") { store.openAdd(cell: sel) }
                             CompactTool(title: "Swap", symbol: "arrow.left.arrow.right") { withAnimation { store.swapFrom = sel } }
+                            CompactTool(title: "Resize", symbol: "arrow.up.left.and.arrow.down.right", isOn: store.resizeOpen || cell.fit) {
+                                withAnimation(.smooth) { store.resizeOpen.toggle() }
+                            }
                             CompactTool(title: "Rotate", symbol: "rotate.right") { withAnimation(.smooth) { store.rotateCell(sel) } }
                             CompactTool(title: "Flip", symbol: "arrow.left.and.right.righttriangle.left.righttriangle.right", isOn: cell.flip) {
                                 withAnimation(.smooth) { store.flipCell(sel) }
@@ -496,6 +605,9 @@ struct PicturePanel: View {
                             CompactTool(title: "Delete", symbol: "xmark", role: .destructive) { store.clearCell(sel) }
                         }
                     }
+                    if store.resizeOpen {
+                        resizeTools(sel, cell)
+                    } else {
                     if let id = cell.mediaId, store.item(id)?.kind == .video {
                         HStack(spacing: 6) {
                             ChipButton(title: "Edit timeline", symbol: "film.stack") { store.openVideo(.timeline) }
@@ -516,10 +628,82 @@ struct PicturePanel: View {
                         }
                         doneButton
                     }
+                    }
                 }
             }
         } else {
             HintRow(symbol: "hand.tap", text: "Tap a picture in the preview to replace, swap, rotate, flip, crop and zoom it.")
+        }
+    }
+
+    /// Resize: fill the cell (cropping), or fit the whole picture in it; a fitted picture's sides are blurred or a colour.
+    @ViewBuilder
+    private func resizeTools(_ sel: Int, _ cell: CellState) -> some View {
+        HStack(spacing: 8) {
+            GlassEffectContainer(spacing: 6) {
+                HStack(spacing: 6) {
+                    ChipButton(title: "Fill cell", symbol: "rectangle.fill", isOn: !cell.fit) {
+                        withAnimation(.smooth) { store.setCellView(sel) { $0.fit = false } }
+                    }
+                    .accessibilityHint("Fills the cell; the edges of the picture may be cut off")
+                    ChipButton(title: "Fit whole picture", symbol: "rectangle.portrait.inset.filled", isOn: cell.fit) {
+                        withAnimation(.smooth) { store.setCellView(sel) { $0.fit = true; $0.zoom = 1; $0.panX = 0; $0.panY = 0 } }
+                    }
+                    .accessibilityHint("Shows the whole picture, with blurred or coloured sides")
+                }
+            }
+            Spacer(minLength: 0)
+            Button { withAnimation(.smooth) { store.resizeOpen = false } } label: {
+                Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).frame(width: 30, height: 30)
+            }
+            .buttonStyle(.glassProminent)
+            .buttonBorderShape(.circle)
+            .controlSize(.small)
+            .accessibilityLabel("Done resizing")
+        }
+        if cell.fit {
+            HStack(spacing: 10) {
+                Text("Sides").font(.footnote).foregroundStyle(.secondary)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        let blurOn = cell.fitBars == fitBlur
+                        Button { store.setCellView(sel) { $0.fitBars = fitBlur } } label: {
+                            Group {
+                                if let id = cell.mediaId, let item = store.item(id) {
+                                    Image(uiImage: item.thumbnail).resizable().scaledToFill().blur(radius: 3)
+                                } else {
+                                    Color.gray
+                                }
+                            }
+                            .frame(width: 26, height: 26)
+                            .clipShape(Circle())
+                            .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
+                            .overlay(Circle().strokeBorder(Color.brand, lineWidth: blurOn ? 3 : 0).padding(-4))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Blurred picture")
+                        .accessibilityAddTraits(blurOn ? .isSelected : [])
+                        ForEach(fitBarSwatches, id: \.self) { c in
+                            let on = cell.fitBars.lowercased() == c
+                            Button { store.setCellView(sel) { $0.fitBars = c } } label: {
+                                Circle().fill(Color(hex: c))
+                                    .frame(width: 26, height: 26)
+                                    .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
+                                    .overlay(Circle().strokeBorder(Color.brand, lineWidth: on ? 3 : 0).padding(-4))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Sides colour \(c)")
+                            .accessibilityAddTraits(on ? .isSelected : [])
+                        }
+                    }
+                    .padding(5)
+                }
+                ColorPicker("Custom sides colour", selection: Binding(
+                    get: { Color(hex: cell.fitBars == fitBlur ? "#ffffff" : cell.fitBars) },
+                    set: { c in store.setCellView(sel) { $0.fitBars = c.hexString } }
+                ), supportsOpacity: false)
+                .labelsHidden()
+            }
         }
     }
 

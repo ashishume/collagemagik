@@ -38,6 +38,7 @@ enum CollageRenderer {
                 edge: project.frameEdges(i, outers[i], W: W).side, seed: i, unit: unit
             ) {
                 if let id = cell.mediaId, let item = snapshot.items[id], let img = image(id) {
+                    BackdropRenderer.drawFitBars(ctx: ctx, rect: r, cell: cell, item: item)
                     drawMedia(ctx, img, item: item, rect: r, view: cell.view)
                 }
             }

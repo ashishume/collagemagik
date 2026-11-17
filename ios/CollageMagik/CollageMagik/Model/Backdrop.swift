@@ -98,6 +98,24 @@ enum BackdropRenderer {
         }
     }
 
+    /// The sides around a picture resized to fit its cell: a blurred copy of the picture, or a plain colour.
+    /// Drawn in `rect` of a top-left-origin context, before the picture itself.
+    static func drawFitBars(ctx: CGContext, rect: PxRect, cell: CellState, item: MediaItem) {
+        guard cell.fit else { return }
+        ctx.saveGState()
+        defer { ctx.restoreGState() }
+        if cell.fitBars == fitBlur {
+            guard let id = cell.mediaId,
+                  let blurred = blurredImage(item.preview ?? item.thumbnail, key: id, W: rect.w, H: rect.h) else { return }
+            ctx.translateBy(x: rect.x, y: rect.y + rect.h)
+            ctx.scaleBy(x: 1, y: -1)
+            ctx.draw(blurred, in: CGRect(x: 0, y: 0, width: rect.w, height: rect.h))
+        } else {
+            ctx.setFillColor(UIColor(hex: cell.fitBars).cgColor)
+            ctx.fill(rect.cgRect)
+        }
+    }
+
     /// The picture behind a blur backdrop: the chosen one, or the first picture in the layout.
     static func blurSource(_ project: Project) -> String? {
         project.backdrop.blurMediaId ?? project.cells.prefix(project.cellCount).compactMap(\.mediaId).first
@@ -226,7 +244,7 @@ enum BackdropRenderer {
 
     /// The picture covering W × H, heavily blurred and a little darkened so the pictures on it stand out.
     /// Made at a modest size (it is blurred anyway) and kept, so a video export makes it once.
-    private static func blurredImage(_ img: UIImage, key id: String, W: Double, H: Double) -> CGImage? {
+    static func blurredImage(_ img: UIImage, key id: String, W: Double, H: Double) -> CGImage? {
         let scale = min(1, 720 / max(W, H))
         let w = max(1, Int(W * scale)), h = max(1, Int(H * scale))
         let key = "\(id)-\(w)x\(h)" as NSString

@@ -226,11 +226,8 @@ struct PanelCard: View {
         case .layout:
             if store.isCarousel { return 100 + pad }
             return (store.project.resizableGrid?.dividers.isEmpty == false ? 138 : 106) + pad
-        case .style:
-            let frame: CGFloat = store.project.frame == .none ? 40 : store.project.frame.hasEdge ? 92 : 58
-            // the background picker: kind, then one row (colour and pattern have two)
-            let backdrop: CGFloat = store.project.backdrop.kind == .pattern ? 34 : 0
-            return (store.project.format == .story ? 190 : 158) + frame + backdrop + pad
+        // group tabs over the open group of style tools
+        case .style: return StylePanel.height(for: store) + pad
         // captions and stickers share the tab: group tabs over one row of tools, whatever is selected
         case .text: return panelTabsHeight + 8 + panelSectionHeight + pad
         case .video:
@@ -249,6 +246,8 @@ struct PanelCard: View {
             guard let s = store.selectedCell, store.project.cells.indices.contains(s) else { return 44 + pad }
             if store.swapFrom != nil { return 36 + pad }
             guard let id = store.project.cells[s].mediaId else { return 40 + pad }
+            // Resize open: Fill / Fit, then (when fitted) what fills the sides
+            if store.resizeOpen { return (store.project.cells[s].fit ? 132 : 92) + pad }
             return (store.item(id)?.kind == .video ? 150 : 108) + pad
         }
     }

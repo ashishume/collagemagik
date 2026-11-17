@@ -72,6 +72,24 @@ struct MediaView: Equatable {
     var rotation: Double = 0
     var flip: Bool = false
     var angle: Double = 0
+    /// Show the whole picture inside the cell (empty sides) instead of covering it.
+    var fit: Bool = false
+}
+
+/// Scale at which a (rotated, straightened) source just fits inside the cell, whole.
+func containScale(srcW: Double, srcH: Double, cellW: Double, cellH: Double, rotation: Double = 0, angle: Double = 0) -> Double {
+    let q = quarterDims(srcW, srcH, rotation: rotation)
+    let t = angle * RAD
+    let c = abs(cos(t))
+    let s = abs(sin(t))
+    return min(cellW / (q.w * c + q.h * s), cellH / (q.w * s + q.h * c))
+}
+
+/// The picture's size at zoom 1: covering the cell, or fitting inside it whole.
+func baseScale(srcW: Double, srcH: Double, cell: PxRect, view v: MediaView) -> Double {
+    v.fit
+        ? containScale(srcW: srcW, srcH: srcH, cellW: cell.w, cellH: cell.h, rotation: v.rotation, angle: v.angle)
+        : coverScale(srcW: srcW, srcH: srcH, cellW: cell.w, cellH: cell.h, rotation: v.rotation, angle: v.angle)
 }
 
 /// Scale at which a (rotated, straightened) source just covers the cell.
@@ -120,9 +138,9 @@ struct Placement {
     var fit: Double
 }
 
-/// Where and how to draw a source in a cell: covers the cell, then zoom, rotation, flip, straighten and pan.
+/// Where and how to draw a source in a cell: covers the cell (or fits inside it, whole), then zoom, rotation, flip, straighten and pan.
 func placeMedia(srcW: Double, srcH: Double, cell: PxRect, view v: MediaView) -> Placement {
-    let scale = coverScale(srcW: srcW, srcH: srcH, cellW: cell.w, cellH: cell.h, rotation: v.rotation, angle: v.angle) * max(1, v.zoom)
+    let scale = baseScale(srcW: srcW, srcH: srcH, cell: cell, view: v) * max(1, v.zoom)
     let q = quarterDims(srcW, srcH, rotation: v.rotation)
     let dw = q.w * scale
     let dh = q.h * scale
@@ -136,7 +154,8 @@ func placeMedia(srcW: Double, srcH: Double, cell: PxRect, view v: MediaView) -> 
     var ox = clamp(v.panX, -1, 1) * overflowX / 2
     var oy = clamp(v.panY, -1, 1) * overflowY / 2
     var fit = 1.0
-    if v.angle != 0 && (ox != 0 || oy != 0) {
+    // a fitted picture has sides showing anyway, so a tilted one needn't be pulled back
+    if v.angle != 0 && !v.fit && (ox != 0 || oy != 0) {
         fit = min(1, maxShiftFraction(dw: dw, dh: dh, cellW: cell.w, cellH: cell.h, angle: v.angle, ox: ox, oy: oy))
         ox *= fit
         oy *= fit
@@ -156,7 +175,7 @@ func placeMedia(srcW: Double, srcH: Double, cell: PxRect, view v: MediaView) -> 
 
 /// Size to decode a photo at so a cell shows it at full sharpness without ever upscaling.
 func neededPhotoSize(srcW: Double, srcH: Double, cell: PxRect, view v: MediaView) -> (w: Int, h: Int) {
-    let scale = min(1, coverScale(srcW: srcW, srcH: srcH, cellW: cell.w, cellH: cell.h, rotation: v.rotation, angle: v.angle) * max(1, v.zoom))
+    let scale = min(1, baseScale(srcW: srcW, srcH: srcH, cell: cell, view: v) * max(1, v.zoom))
     return (max(1, Int((srcW * scale).rounded())), max(1, Int((srcH * scale).rounded())))
 }
 

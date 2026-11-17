@@ -80,6 +80,11 @@ struct CollageLayout: Identifiable, Hashable {
     var count: Int { rects.count }
 }
 
+/// `CellState.fitBars` for a blurred copy of the picture behind it.
+let fitBlur = "blur"
+/// Colours offered for the sides around a fitted picture.
+let fitBarSwatches = ["#ffffff", "#101016", "#f4ecdc", "#ffd6e7", "#c9e4ff", "#d4f5dc"]
+
 struct CellState: Equatable, Codable {
     var mediaId: String? = nil
     /// 1 = the photo or video just covers the cell.
@@ -92,9 +97,13 @@ struct CellState: Equatable, Codable {
     var flip: Bool = false
     /// Straighten: extra tilt in degrees, -45...45.
     var angle: Double = 0
+    /// Resize: true shows the whole picture inside the cell instead of filling it (and cropping).
+    var fit: Bool = false
+    /// What fills the sides around a fitted picture: `fitBlur` (a blurred copy of the picture) or a hex colour.
+    var fitBars: String = fitBlur
 
     var view: MediaView {
-        MediaView(zoom: zoom, panX: panX, panY: panY, rotation: rotation, flip: flip, angle: angle)
+        MediaView(zoom: zoom, panX: panX, panY: panY, rotation: rotation, flip: flip, angle: angle, fit: fit)
     }
 }
 

@@ -52,3 +52,22 @@ struct MediaPlacementView: View {
         }
     }
 }
+
+/// The sides around a picture resized to fit its cell: a blurred copy of the picture, or a plain colour.
+/// The export draws the same thing (`BackdropRenderer.drawFitBars`).
+struct FitBars: View {
+    let cell: CellState
+    let item: MediaItem
+    let size: CGSize
+
+    var body: some View {
+        if cell.fitBars == fitBlur {
+            if let id = cell.mediaId,
+               let blurred = BackdropRenderer.blurredImage(item.preview ?? item.thumbnail, key: id, W: size.width, H: size.height) {
+                Image(decorative: blurred, scale: 1).resizable().frame(width: size.width, height: size.height)
+            }
+        } else {
+            Color(hex: cell.fitBars).frame(width: size.width, height: size.height)
+        }
+    }
+}

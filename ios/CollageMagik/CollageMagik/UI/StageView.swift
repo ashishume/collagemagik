@@ -412,6 +412,7 @@ struct StageView: View {
             }
             ZStack {
                 if let item {
+                    if state.fit { FitBars(cell: state, item: item, size: CGSize(width: r.w, height: r.h)) }
                     MediaPlacementView(
                         item: item,
                         rect: PxRect(x: 0, y: 0, w: r.w, h: r.h),

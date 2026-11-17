@@ -44,6 +44,10 @@ final class CollageStore {
     var tab: Tab = .media
     var returnTab: Tab = .media
     var videoSection: VideoSection = .timeline
+    /// The selected picture's Resize options (fill or fit, and what fills the sides) are open instead of its zoom.
+    var resizeOpen = false
+    /// The open group in the Style tab: size, spacing, background or frame.
+    var styleSection: StyleSection = .size
     /// Carousel preview: the slide position at the left edge of the visible area (0 = first slide), and how many slides fit on screen.
     var aboutOpen = false
     var carouselOffset: Double = 0
@@ -418,11 +422,23 @@ final class CollageStore {
         if project.backdrop.blurMediaId == mediaId { project.backdrop.blurMediaId = nil; project.backdrop.kind = .color }
         if let s = selectedOverlay, overlay(s) == nil { selectOverlay(nil) }
         selectedClip = nil
+        dropEmptyCells()
     }
 
     func clearCell(_ cell: Int) {
         guard project.cells.indices.contains(cell) else { return }
         project.cells[cell] = CellState()
+        dropEmptyCells()
+    }
+
+    /// One cell per picture: a picture taken out takes its cell with it, and the layout follows the new count.
+    /// A design with no pictures at all keeps its empty cells, so there is something to tap and fill.
+    private func dropEmptyCells() {
+        let filled = project.cells.filter { $0.mediaId != nil }
+        guard !filled.isEmpty, filled.count < project.cells.count else { return }
+        project.cells = filled
+        selectCell(nil)
+        setCellCount(filled.count)
     }
 
     func swapCells(_ a: Int, _ b: Int) {
@@ -560,6 +576,7 @@ final class CollageStore {
     // MARK: Selection
 
     func selectCell(_ i: Int?) {
+        if i != selectedCell { resizeOpen = false }
         selectedCell = i
         if i != nil { selectedCaption = nil; selectedSticker = nil; if selectedOverlay != nil { selectOverlay(nil) } }
         if i == nil && tab == .picture {

@@ -81,6 +81,8 @@ enum DebugHarness {
             default: if let tab = Tab(rawValue: t) { store.tab = tab }
             }
         }
+        // CM_STYLE_SECTION=size|spacing|background|frame opens that group of the Style tab
+        if let sec = env["CM_STYLE_SECTION"].flatMap(StyleSection.init(rawValue:)) { store.styleSection = sec }
         if let st = env["CM_STYLE"] { store.setLayout(st.hasPrefix(carouselLayoutPrefix) ? st : carouselLayoutPrefix + st) }
         NSLog("CM_DEBUG slides=%d photos=%d layout=%@", store.project.slides, store.project.cellCount, store.project.layoutId)
         if let o = env["CM_OFFSET"], let v = Double(o) { store.carouselOffset = v }
@@ -124,7 +126,13 @@ enum DebugHarness {
                 store.project.lanes[li].clips = store.project.lanes[li].clips.map { setSpeed($0, sp) }
             }
         }
+        // CM_FIT=blur|#hex fits every picture whole in its cell with those sides
+        if let bars = env["CM_FIT"] {
+            for i in store.project.cells.indices { store.setCellView(i) { $0.fit = true; $0.fitBars = bars } }
+        }
         if let s = env["CM_SELECT"], let i = Int(s) { store.selectCell(i); store.openPicture() }
+        // CM_RESIZE=1 opens the selected picture's Resize options
+        if env["CM_RESIZE"] != nil { store.resizeOpen = true }
         if env["CM_MUSIC"] != nil, let m = env["CM_MUSIC"] { await store.importMusic(URL(fileURLWithPath: m)) }
         if let c = env["CM_CROP"], let i = Int(c) { store.cropCell = i }
         if let e = env["CM_EXPORT"] {
