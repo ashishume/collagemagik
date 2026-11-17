@@ -17,6 +17,21 @@ google-ads/
         └── logos/            Square 1:1 and landscape 4:1 logos
 ```
 
+## v5 HTML5 display ads (17 Nov 2026)
+
+`html5/v5/zips/collagemagik-<size>.zip` for 300x250, 300x600 and 320x480, in the same format as the HTML5 ads Google
+already accepted for another app: one `index.html` with inline CSS and CSS-only animation, `logo.png`, a `clickTag`
+and `<meta name="ad.size">`. Six small Unsplash photos are included (each zip is about 107 KB; the limit is 150 KB).
+
+Four scenes and an end card in about 13 seconds, then it stops: "Half photos, half videos?" (camera roll), "One
+collage. Side by side." (MOVING / STILL), "Trim clips. Add a song." (a clip trimmed, the wind muted, a song added),
+"Portrait shot? Fit it whole." (the new Resize tool fitting a photo with blurred sides), then "Photos + videos, one
+collage." with "Free on the App Store". Scene 1 is complete on the first frame, and reduced-motion viewers see the
+end card. The `clickTag` defaults to https://apps.apple.com/app/id6832640005 (Google Ads swaps in the ad's final URL).
+
+- Build: `python3 scripts/build-html5-v5.py` from `source/` (uses macOS `sips` and `zip`; stops if a zip is over 150 KB).
+- Preview: open `html5/v5/preview.html` (all three side by side); add `#t=8` to freeze them at 8 seconds.
+
 ## v5 videos: photos + videos in one collage (17 Nov 2026)
 
 `output/v5/collagemagik-mix-ad-*.mp4` (vertical 9:16, square 1:1, landscape 16:9, about 47.7 s). The first ad that says

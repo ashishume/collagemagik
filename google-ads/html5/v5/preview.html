@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CollageMagik HTML5 v5 preview</title>
+<style>
+  body { margin: 0; padding: 20px; background: #EEEAF5; font-family: -apple-system, sans-serif; color: #1E1438; }
+  .row { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+  figure { margin: 0; }
+  figcaption { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+  iframe { border: 0; display: block; box-shadow: 0 6px 18px rgba(40, 20, 90, .18); }
+  .bar { margin-bottom: 16px; font-size: 13px; }
+</style>
+</head>
+<body>
+<!-- Plays all three sizes side by side. Add #t=5 to the URL to freeze every banner at 5 seconds. -->
+<div class="bar">CollageMagik HTML5 v5 · <a href="#" onclick="location.hash='';location.reload()">replay</a></div>
+<div class="row">
+  <figure><figcaption>300x600</figcaption><iframe src="300x600/index.html" width="300" height="600"></iframe></figure>
+  <figure><figcaption>320x480</figcaption><iframe src="320x480/index.html" width="320" height="480"></iframe></figure>
+  <figure><figcaption>300x250</figcaption><iframe src="300x250/index.html" width="300" height="250"></iframe></figure>
+</div>
+<script>
+  function seek(t) {
+    document.querySelectorAll("iframe").forEach(function (f) {
+      f.contentDocument.getAnimations().forEach(function (a) { a.pause(); a.currentTime = t * 1000; });
+    });
+  }
+  window.addEventListener("load", function () {
+    var m = location.hash.match(/t=([\d.]+)/);
+    if (m) seek(parseFloat(m[1]));
+  });
+</script>
+</body>
+</html>

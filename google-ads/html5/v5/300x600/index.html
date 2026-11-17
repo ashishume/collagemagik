@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="ad.size" content="width=300,height=600">
+<title>CollageMagik</title>
+<script type="text/javascript">
+  // Google Ads replaces clickTag with the ad's final URL at serve time.
+  var clickTag = "https://apps.apple.com/app/id6832640005";
+</script>
+<style>
+  :root {
+    --w: 300px; --h: 600px; --pad: 20px; --head: 30px; --eyebrow: 11px; --headline: 29px;
+    --body: 13px; --card-top: 214px; --card-h: 262px; --gap: 12px; --end-headline: 36px;
+    --ink: #1E1438; --muted: #6B6584; --purple: #6D4FD6; --pink: #E0457B; --gold: #F4B23C; --teal: #1FA58F;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: var(--w); height: var(--h); overflow: hidden; background: #FFFFFF; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  img { display: block; }
+  #ad { position: relative; width: var(--w); height: var(--h); overflow: hidden; cursor: pointer;
+    background: linear-gradient(160deg, #FBF8FF 0%, #F5EEFD 50%, #FDEEF4 100%); border: 1px solid #E3D6FA; }
+  .glow { position: absolute; border-radius: 50%; filter: blur(30px); opacity: .7; animation: drift 13s ease-in-out both; }
+  .g1 { width: 60%; height: 50%; left: -20%; top: -18%; background: #E4D8FF; }
+  .g2 { width: 55%; height: 45%; right: -18%; bottom: -10%; background: #FFDCE8; animation-direction: reverse; }
+  @keyframes drift { 50% { transform: translate(12%, 8%) scale(1.1); } }
+  .brand { position: absolute; left: var(--pad); top: var(--pad); z-index: 2; display: flex; align-items: center; gap: 7px;
+    font-weight: 800; font-size: calc(var(--head) * .66); letter-spacing: -.2px; }
+  .brand img { width: var(--head); height: var(--head); border-radius: 24%; box-shadow: 0 3px 8px rgba(80, 30, 180, .3); }
+  .brand b { color: var(--purple); }
+
+  .scene { position: absolute; inset: 0; opacity: 0; animation: scene 3s ease both; }
+  /* Scene 1 is complete on the first frame, so a static capture never shows an empty ad. */
+  .s1 { animation: first 3.2s ease both; }
+  .s2 { animation-delay: 3.2s; } .s3 { animation-delay: 6.2s; } .s4 { animation-delay: 9.2s; }
+  @keyframes scene { 0% { opacity: 0; transform: translateX(14px); } 10%, 90% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateX(-14px); } }
+  @keyframes first { 0%, 90% { opacity: 1; } 100% { opacity: 0; transform: translateX(-14px); } }
+  .copy { position: absolute; left: var(--pad); right: var(--pad); top: calc(var(--pad) + var(--head) + 16px); }
+  .eyebrow { display: inline-block; font-size: var(--eyebrow); font-weight: 700; letter-spacing: 1.2px; color: var(--purple);
+    background: #ECE4FF; border-radius: 99px; padding: 2px 8px; }
+  .eyebrow.new { background: var(--gold); color: var(--ink); }
+  .headline { margin-top: 8px; font-size: var(--headline); line-height: 1.05; font-weight: 850; letter-spacing: -.04em; }
+  .headline em { font-style: normal; display: block; background: linear-gradient(90deg, var(--purple), var(--pink)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  .card { position: absolute; left: var(--pad); right: var(--pad); top: var(--card-top); height: var(--card-h); font-size: var(--body);
+    background: #FFFFFF; border-radius: 14px; box-shadow: 0 10px 24px -8px rgba(50, 25, 110, .25), 0 0 0 1px rgba(109, 79, 214, .06);
+    padding: 16px 16px; display: flex; flex-direction: column; justify-content: center; gap: var(--gap);
+    animation: rise .6s cubic-bezier(.2, .9, .3, 1.2) both; animation-delay: inherit; }
+  .s1 .card { animation: none; }
+  @keyframes rise { from { transform: translateY(16px) scale(.96); } to { transform: none; } }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .muted { color: var(--muted); }
+  .pop { animation: pop .45s cubic-bezier(.2, .9, .3, 1.4) both; }
+  @keyframes pop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+
+  /* pictures: photos stay still, videos drift like a clip playing */
+  .pic { position: relative; border-radius: 8px; overflow: hidden; background: #2A2440; }
+  .pic > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .vid > img { animation: play 3s ease-in-out 4 alternate both; }
+  @keyframes play { from { transform: scale(1.12) translate(-3%, 1%); } to { transform: scale(1.28) translate(3%, -2%); } }
+  .badge { position: absolute; left: 4px; bottom: 4px; z-index: 1; padding: 1px 5px; border-radius: 6px; background: rgba(0, 0, 0, .58); color: #FFFFFF; font-size: .72em; font-weight: 800; }
+  .tag { position: absolute; left: 50%; top: 50%; z-index: 1; margin: -.8em 0 0 -2.8em; width: 5.6em; text-align: center; padding: 2px 0; border-radius: 99px; color: #FFFFFF; font-size: .74em; font-weight: 800; letter-spacing: .5px; box-shadow: 0 3px 8px rgba(0, 0, 0, .3); }
+  .tag.p { background: var(--purple); } .tag.v { background: var(--pink); }
+
+  /* 1: camera roll */
+  .roll { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr 1fr; gap: 6px; height: 100%; }
+  .roll .vid { box-shadow: 0 0 0 2px var(--pink); }
+  .s1 .tag { animation: pop .45s cubic-bezier(.2, .9, .3, 1.4) both; }
+  .s1 .tag.p { animation-delay: .9s; } .s1 .tag.v { animation-delay: 1.6s; }
+  /* 2: one collage */
+  .collage { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 4px; height: 100%; padding: 4px; border-radius: 10px; background: #1B1527; }
+  .collage .pic { border-radius: 6px; }
+  .s2 .c1 { animation-delay: 3.4s; } .s2 .c2 { animation-delay: 3.55s; } .s2 .c3 { animation-delay: 3.7s; } .s2 .c4 { animation-delay: 3.85s; }
+  .s2 .tag { animation: pop .45s cubic-bezier(.2, .9, .3, 1.4) 4.5s both; }
+  .bar { position: absolute; left: 5px; right: 5px; bottom: 4px; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, .3); z-index: 1; }
+  .bar i { display: block; height: 100%; border-radius: 2px; background: #FFFFFF; transform-origin: left; animation: prog 2.8s linear 3.4s both; }
+  @keyframes prog { from { transform: scaleX(0); } to { transform: none; } }
+  /* 3: trim + sound */
+  .lane { position: relative; height: 34px; border-radius: 7px; overflow: hidden; background: url(golden-wave.jpg) center / auto 100% repeat-x; }
+  .cut { position: absolute; top: 0; bottom: 0; width: 0; background: rgba(27, 21, 39, .72); }
+  .cut.l { left: 0; animation: cutl .6s ease 6.8s both; } .cut.r { right: 0; animation: cutr .6s ease 7.0s both; }
+  @keyframes cutl { to { width: 16%; } } @keyframes cutr { to { width: 22%; } }
+  .clip { position: absolute; top: 0; bottom: 0; left: 0; right: 0; border: 2.5px solid var(--pink); border-left-width: 7px; border-right-width: 7px; border-radius: 7px; animation: clip .6s ease 6.8s both; }
+  @keyframes clip { to { left: 16%; right: 22%; } }
+  .vol { flex: 1; height: 4px; margin: 0 8px; border-radius: 2px; background: #ECE6F7; overflow: hidden; }
+  .vol i { display: block; height: 100%; border-radius: 2px; }
+  .wind i { background: #4CC3FF; width: 70%; animation: mute .4s ease 7.6s both; }
+  @keyframes mute { to { width: 0; } }
+  .ico { width: 1.4em; text-align: center; }
+  .wind .off { display: none; }
+  .song { animation-delay: 8.0s; color: var(--teal); font-weight: 800; }
+  /* 4: fit the whole picture */
+  .fit { display: flex; gap: 10px; height: 100%; align-items: stretch; }
+  .cell { position: relative; flex: none; height: 100%; aspect-ratio: 1 / 1; border-radius: 8px; overflow: hidden; box-shadow: 0 0 0 2.5px var(--gold); }
+  .cell .blur { position: absolute; inset: -12%; width: 124%; height: 124%; object-fit: cover; filter: blur(7px) brightness(.8) saturate(1.3); opacity: 0; animation: show .6s ease 10.15s both; }
+  .cell .fg { position: absolute; top: 0; bottom: 0; left: 50%; width: 100%; height: 100%; object-fit: cover; transform: translateX(-50%); animation: fitin .7s cubic-bezier(.3, .8, .3, 1) 10.0s both; box-shadow: 0 0 10px rgba(0, 0, 0, .35); }
+  @keyframes fitin { to { width: 66.7%; } }
+  @keyframes show { to { opacity: 1; } }
+  .chips { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: var(--gap); min-width: 0; }
+  .fit { flex-direction: column; align-items: center; } .cell { height: 64%; } .chips { flex: none; flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; }
+  .chip { border-radius: 99px; padding: 5px 9px; font-weight: 700; white-space: nowrap; background: #F3EEFB; color: var(--muted); }
+  .chip.go { animation: on .3s ease 9.9s both; }
+  @keyframes on { to { background: var(--purple); color: #FFFFFF; } }
+  .sw { display: flex; gap: 5px; align-items: center; }
+  .sw i { width: 1.25em; height: 1.25em; border-radius: 50%; border: 1px solid #DDD5EA; }
+  .sw .b { background: url(positano.jpg) center / cover; box-shadow: 0 0 0 2px var(--purple); }
+  .tap { position: absolute; width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid var(--ink); background: rgba(255, 255, 255, .85); right: 14%; top: 50%; margin-top: -9px; opacity: 0;
+    animation: tap 1.1s ease 9.3s both; }
+  @keyframes tap { 0% { opacity: 0; transform: translate(26px, 24px); } 50% { opacity: 1; transform: none; } 65% { transform: scale(.8); } 80% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+
+  .cta-bar { position: absolute; left: var(--pad); right: var(--pad); bottom: 22px; z-index: 2; display: flex; justify-content: space-between; align-items: center;
+    font-size: calc(var(--body) * .92); color: var(--muted); font-weight: 600; animation: hide .4s ease 12s both; }
+  @keyframes hide { to { opacity: 0; visibility: hidden; } }
+  .btn { background: linear-gradient(90deg, var(--purple), var(--pink)); color: #FFFFFF; font-weight: 750; border-radius: 999px; padding: 8px 16px;
+    font-size: var(--body); box-shadow: 0 6px 14px -4px rgba(109, 79, 214, .5); white-space: nowrap; }
+
+  .end { position: absolute; inset: 0; z-index: 3; opacity: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    background: radial-gradient(80% 60% at 50% 35%, #8B6CF0 0%, #6D4FD6 55%, #B33C78 100%); color: #FFFFFF; animation: enter .6s ease 12.2s both; }
+  @keyframes enter { from { opacity: 0; transform: scale(1.05); } to { opacity: 1; transform: none; } }
+  .end img { width: calc(var(--head) * 2.1); height: calc(var(--head) * 2.1); border-radius: 24%; box-shadow: 0 8px 20px rgba(0, 0, 0, .3); animation: pop .5s cubic-bezier(.2, .9, .3, 1.4) 12.4s both; }
+  .end h1 { margin-top: 16px; font-size: var(--end-headline); line-height: 1.05; font-weight: 850; letter-spacing: -.04em; }
+  .end p { margin-top: 6px; font-size: var(--body); opacity: .9; padding: 0 var(--pad); line-height: 1.35; }
+  .end .btn { margin-top: 18px; background: #FFFFFF; color: var(--purple); box-shadow: 0 8px 18px rgba(0, 0, 0, .2); animation: pulse 1.6s ease-in-out 13s 2; }
+  @keyframes pulse { 50% { transform: scale(1.06); } }
+
+  @media (prefers-reduced-motion: reduce) { .scene, .cta-bar { display: none; } .end { animation: none; opacity: 1; } .end * { animation: none !important; } }
+</style>
+</head>
+<body>
+<div id="ad" role="link" aria-label="Get CollageMagik on the App Store">
+  <div class="glow g1"></div><div class="glow g2"></div>
+  <div class="brand"><img src="logo.png" alt=""><span>Collage<b>Magik</b></span></div>
+
+  <div class="scene s1">
+    <div class="copy"><div class="eyebrow">COLLAGE MAKER</div><div class="headline">Half photos, <em>half videos?</em></div></div>
+    <div class="card"><div class="roll">
+      <div class="pic"><img src="santorini-sunset.jpg" alt=""><span class="tag p">PHOTO</span></div>
+      <div class="pic vid"><img src="golden-wave.jpg" alt=""><span class="badge">&#9654; 0:12</span><span class="tag v">VIDEO</span></div>
+      <div class="pic"><img src="pizza.jpg" alt=""></div>
+      <div class="pic vid"><img src="venice-canal.jpg" alt=""><span class="badge">&#9654; 0:18</span></div>
+      <div class="pic"><img src="balloons.jpg" alt=""></div>
+      <div class="pic"><img src="positano.jpg" alt=""></div>
+    </div></div>
+  </div>
+
+  <div class="scene s2">
+    <div class="copy"><div class="eyebrow">PHOTOS + VIDEOS</div><div class="headline">One collage. <em>Side by side.</em></div></div>
+    <div class="card"><div class="collage">
+      <div class="pic pop c1"><img src="santorini-sunset.jpg" alt=""><span class="tag p">STILL</span></div>
+      <div class="pic vid pop c2"><img src="golden-wave.jpg" alt=""><span class="badge">&#9654;</span><span class="tag v">MOVING</span><span class="bar"><i></i></span></div>
+      <div class="pic vid pop c3"><img src="venice-canal.jpg" alt=""><span class="badge">&#9654;</span><span class="tag v">MOVING</span></div>
+      <div class="pic pop c4"><img src="pizza.jpg" alt=""><span class="tag p">STILL</span></div>
+    </div></div>
+  </div>
+
+  <div class="scene s3">
+    <div class="copy"><div class="eyebrow">VIDEO TOOLS</div><div class="headline">Trim clips. <em>Add a song.</em></div></div>
+    <div class="card">
+      <div class="row"><b>Beach clip</b><span class="muted">pick the moment</span></div>
+      <div class="lane"><span class="cut l"></span><span class="cut r"></span><span class="clip"></span></div>
+      <div class="row"><span class="ico">&#127754;</span>Waves<span class="vol"><i style="width:100%;background:#E0457B"></i></span><span class="ico">&#128266;</span></div>
+      <div class="row wind"><span class="ico">&#127811;</span>Wind<span class="vol"><i></i></span><span class="ico">&#128263;</span></div>
+      <div class="row pop song"><span class="ico">&#9835;</span>Song added<span class="vol"><i style="width:70%;background:#1FA58F"></i></span><span class="ico">&#10003;</span></div>
+    </div>
+  </div>
+
+  <div class="scene s4">
+    <div class="copy"><div class="eyebrow new">NEW &middot; RESIZE</div><div class="headline">Portrait shot? <em>Fit it whole.</em></div></div>
+    <div class="card"><div class="fit">
+      <div class="cell"><img class="blur" src="positano.jpg" alt=""><img class="fg" src="positano.jpg" alt=""></div>
+      <div class="chips">
+        <span class="chip">Fill cell</span>
+        <span class="chip go" style="position:relative">Fit whole picture<span class="tap"></span></span>
+        <span class="sw"><span class="muted" style="margin-right:2px">Sides</span><i class="b"></i><i style="background:#fff"></i><i style="background:#101016"></i><i style="background:#ffd6e7"></i></span>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="cta-bar"><span>Free &middot; iPhone</span><span class="btn">Free on the App Store</span></div>
+
+  <div class="end">
+    <img src="logo.png" alt="CollageMagik">
+    <h1>Photos + videos,<br>one collage.</h1>
+    <p>Trim clips, mix the sound, fit &amp; caption.<br>Ready for Reels, Stories &amp; TikTok.</p>
+    <span class="btn">Free on the App Store</span>
+  </div>
+</div>
+<script type="text/javascript">
+  document.getElementById("ad").addEventListener("click", function () {
+    window.open(window.clickTag, "_blank");
+  });
+</script>
+</body>
+</html>
