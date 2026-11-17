@@ -3,6 +3,12 @@
 <plist version="1.0">
 <dict>
 	<!-- Merged into the generated Info.plist. -->
+	<!-- iPad: one window only. The editor keeps one design for the whole app, so a second window would edit the same one. -->
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
 	<!-- Google AdMob app ID (required by the Google Mobile Ads SDK, even while Google ads are switched off in AdsSwitch.swift). -->
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-3743383597691737~8957379689</string>

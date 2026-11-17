@@ -29,38 +29,52 @@ struct RootView: View {
             ZStack(alignment: .top) {
                 AuroraBackground(paused: store.playback.isPlaying).ignoresSafeArea()
 
-                VStack(spacing: 6) {
-                    TopBar(
-                        openLibrary: { store.playback.pause(); libraryOpen = true },
-                        requestNew: { mode in
-                            if store.items.isEmpty { withAnimation(.smooth) { store.newCollage(mode: mode) } } else { pendingNew = mode }
-                        },
-                        requestMode: { mode in
-                            if mode == .carousel && store.videoCount > 0 { confirmCarousel = true } else { store.setMode(mode) }
+                GeometryReader { geo in
+                    // iPad in landscape (or a wide window): the preview on the left, the tools in a column on the right.
+                    // iPhone is portrait only, so it always gets the stacked layout.
+                    let sideBySide = geo.size.width > geo.size.height && geo.size.width >= 900
+                    VStack(spacing: 6) {
+                        TopBar(
+                            openLibrary: { store.playback.pause(); libraryOpen = true },
+                            requestNew: { mode in
+                                if store.items.isEmpty { withAnimation(.smooth) { store.newCollage(mode: mode) } } else { pendingNew = mode }
+                            },
+                            requestMode: { mode in
+                                if mode == .carousel && store.videoCount > 0 { confirmCarousel = true } else { store.setMode(mode) }
+                            }
+                        )
+                        UpdateBanner()
+                        if sideBySide {
+                            HStack(alignment: .bottom, spacing: 16) {
+                                VStack(spacing: 6) {
+                                    stage
+                                    stageBar
+                                }
+                                VStack(spacing: 6) {
+                                    Spacer(minLength: 0)
+                                    PanelCard()
+                                    AdBannerSlot()
+                                    BottomDock()
+                                }
+                                .frame(width: min(440, geo.size.width * 0.38))
+                            }
+                        } else {
+                            stage
+                            // on a wide portrait iPad the tools keep a phone-like width instead of stretching edge to edge
+                            VStack(spacing: 6) {
+                                stageBar
+                                PanelCard()
+                                AdBannerSlot()
+                                BottomDock()
+                            }
+                            .frame(maxWidth: 640)
                         }
-                    )
-                    UpdateBanner()
-                    StageView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        // undo / redo float over the preview's top corner, so the top bar keeps its labelled switch
-                        .overlay(alignment: .topLeading) {
-                            UndoRedoPill().padding(.top, 2)
-                        }
-                        .animation(.smooth(duration: 0.25), value: store.canUndo || store.canRedo)
-                    if store.isCarousel {
-                        SlideBar()
-                    } else if store.hasPlacedVideo && store.tab != .video {
-                        // always there while the collage has a video: play, scrub, and the way into the timeline
-                        TransportBar()
                     }
-                    PanelCard()
-                    AdBannerSlot()
-                    BottomDock()
+                    .padding(.horizontal, 12)
+                    .padding(.top, 2)
+                    .padding(.bottom, 4)
+                    .animation(.smooth(duration: 0.35), value: UpdateChecker.shared.availableVersion)
                 }
-                .padding(.horizontal, 12)
-                .padding(.top, 2)
-                .padding(.bottom, 4)
-                .animation(.smooth(duration: 0.35), value: UpdateChecker.shared.availableVersion)
                 // the caption keyboard opens over the editor; it must not squeeze the preview behind it
                 .ignoresSafeArea(.keyboard, edges: .bottom)
 
@@ -180,6 +194,25 @@ struct RootView: View {
             Button("Keep editing", role: .cancel) {}
         } message: { _ in
             Text("Your current design is kept in My Library, under Drafts.")
+        }
+    }
+
+    private var stage: some View {
+        StageView()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // undo / redo float over the preview's top corner, so the top bar keeps its labelled switch
+            .overlay(alignment: .topLeading) {
+                UndoRedoPill().padding(.top, 2)
+            }
+            .animation(.smooth(duration: 0.25), value: store.canUndo || store.canRedo)
+    }
+
+    @ViewBuilder private var stageBar: some View {
+        if store.isCarousel {
+            SlideBar()
+        } else if store.hasPlacedVideo && store.tab != .video {
+            // always there while the collage has a video: play, scrub, and the way into the timeline
+            TransportBar()
         }
     }
 }
