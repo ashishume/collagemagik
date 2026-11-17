@@ -13,8 +13,8 @@ Connect from "Insta Collage Pro" to "CollageMagik Pro".
 open ios/CollageMagik/CollageMagik.xcodeproj    # pick an iPhone simulator or your device, press Run
 ```
 
-The `CollageMagik/` folder is a synchronized group, so new Swift files are picked up automatically. Xcode fetches two
-Swift packages on first open: Google Mobile Ads (with Google's consent SDK, UMP) and Meta Audience Network. To run on a
+The `CollageMagik/` folder is a synchronized group, so new Swift files are picked up automatically. Xcode fetches the
+Swift packages on first open: Google Mobile Ads (with Google's consent SDK, UMP), Firebase and the Facebook SDK (install tracking only). To run on a
 device set your Team under Signing & Capabilities. The shared scheme uses `Products.storekit`, so the Pro plans load in
 the simulator without App Store Connect.
 
@@ -81,8 +81,9 @@ open by themselves while a picture is selected.
 ## Ads and CollageMagik Pro
 
 The app is free and shows **Google AdMob** ads (`Ads/GoogleAdsManager.swift`): a small banner above the bottom dock, and
-one full-screen ad after an export finishes, before the result is shown. Meta Audience Network (`Ads/AdManager.swift`) is
-still in the code but switched off; `Ads/AdsSwitch.swift` picks the network. Debug builds use Google's test ad units.
+one full-screen ad after an export finishes, before the result is shown. `Ads/AdsSwitch.swift` turns ads on or off. Debug builds use Google's test ad units. Meta's
+ads SDK (Audience Network) was removed; the Facebook SDK stays only to count installs for Meta campaigns
+(`Ads/MetaInstallTracking.swift`).
 
 At first launch the order is: Google's consent form (EU/UK only, nothing is requested before it is answered), then Apple's
 tracking prompt, then the ad SDK starts. A one-time "Thank you for using CollageMagik" note comes before the first
@@ -179,7 +180,7 @@ right. AVI, MKV, WebM, MPEG-1/2 can't be decoded by iOS: the app says so and ask
 | `Media/` | Import and validation, live playback engine (one `AVPlayer` per video kept in step with the timeline) |
 | `Export/` | Frame renderer (Core Graphics), per-clip frame reader, audio mix, MP4 writer |
 | `UI/` | Stage, panels, timeline, crop editor, export sheet, glass components |
-| `Ads/` | Google AdMob (on) and Meta Audience Network (off), the switch between them, ad unit IDs, install tracking for Google Ads (Firebase, off until its config file is added) |
+| `Ads/` | Google AdMob, the ads on/off switch, ad unit IDs, install tracking for Google Ads (Firebase) and Meta (Facebook SDK) |
 | `Store/` | CollageMagik Pro: StoreKit 2 purchases and the Pro page |
 | `DebugHarness.swift` | Debug builds only: drives the app from environment variables (below) |
 

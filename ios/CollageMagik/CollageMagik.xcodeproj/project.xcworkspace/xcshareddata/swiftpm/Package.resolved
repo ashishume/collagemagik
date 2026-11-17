@@ -29,15 +29,6 @@
       }
     },
     {
-      "identity" : "fbaudiencenetwork",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/meta/FBAudienceNetwork",
-      "state" : {
-        "revision" : "4a7051592f50bb276c7346d5751967cdbbd64ac6",
-        "version" : "6.22.1"
-      }
-    },
-    {
       "identity" : "firebase-ios-sdk",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/firebase/firebase-ios-sdk",

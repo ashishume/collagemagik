@@ -153,14 +153,10 @@ struct ExportSheet: View {
         .interactiveDismissDisabled(job.isRunning)
         .proPaywallHost()
         .onDisappear {
-            // An ad (if one is due) comes only after a finished export, once this sheet is gone.
-            let finished: Bool
             switch job.state {
-            case .done, .doneSlides: finished = true
-            default: finished = false
+            case .done, .doneSlides: PushNotifications.shared.exportFinished()
+            default: break
             }
-            AdManager.shared.exportSheetClosed(finished: finished)
-            if finished { PushNotifications.shared.exportFinished() }
         }
         .task {
             ultraAvailable = CollageExporter.canEncode(format: project.format, quality: .ultra)
@@ -467,7 +463,7 @@ struct ExportSheet: View {
             if let saveError {
                 SaveFailureNote(error: saveError)
             }
-            if GoogleAdsManager.shared.isEnabled || AdManager.shared.isEnabled {
+            if GoogleAdsManager.shared.isEnabled {
                 Button { ProStore.shared.openPaywall() } label: {
                     Label("Remove ads with Pro", systemImage: "sparkles").font(.footnote.weight(.semibold))
                 }
@@ -561,7 +557,7 @@ struct ExportSheet: View {
             if let saveError {
                 SaveFailureNote(error: saveError)
             }
-            if GoogleAdsManager.shared.isEnabled || AdManager.shared.isEnabled {
+            if GoogleAdsManager.shared.isEnabled {
                 Button { ProStore.shared.openPaywall() } label: {
                     Label("Remove ads with Pro", systemImage: "sparkles").font(.footnote.weight(.semibold))
                 }

@@ -40,9 +40,8 @@ final class PushNotifications: NSObject {
     func exportFinished() {
         guard started, !defaults.bool(forKey: askedKey) else { return }
         Task {
-            // let the export sheet (and the ads notice, if it is about to show) settle first
+            // let the export sheet settle first
             try? await Task.sleep(for: .seconds(1.4))
-            guard !AdManager.shared.showNotice else { return } // try again after the next export
             let status = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
             guard status == .notDetermined || status == .provisional else {
                 defaults.set(true, forKey: askedKey)

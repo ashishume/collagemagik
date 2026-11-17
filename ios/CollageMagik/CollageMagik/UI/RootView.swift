@@ -14,7 +14,6 @@ struct RootView: View {
     /// Carousel needs photos only: asks before the videos are dropped.
     @State private var confirmCarousel = false
     /// The one-time ads notice, shown after the first finished export.
-    @Bindable private var ads = AdManager.shared
 
     /// Replacing a picture takes one item; adding to the collage (or filling an empty cell) takes as many as there is room for.
     private var pickLimit: Int {
@@ -127,14 +126,12 @@ struct RootView: View {
         .sheet(isPresented: $store.helpOpen) { HelpSheet() }
         .sheet(isPresented: $libraryOpen) { LibrarySheet() }
         .sheet(isPresented: $store.aboutOpen) { AboutSheet() }
-        .sheet(isPresented: $ads.showNotice) { AdNoticeSheet() }
         // The consent and tracking questions wait until the splash has gone, so they never pop up over the animation.
         .onChange(of: splashDone, initial: true) { _, done in
             guard done, !launched else { return }
             launched = true
             ProStore.shared.start()
             ProStore.shared.appDidLaunch()
-            AdManager.shared.appDidLaunch()
             GoogleAdsManager.shared.appDidLaunch()
             UpdateChecker.shared.checkIfDue()
         }

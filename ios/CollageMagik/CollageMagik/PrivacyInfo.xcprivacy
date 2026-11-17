@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<!-- CollageMagik has no account and no server of its own. It shows Google AdMob ads (a banner, and a full-screen ad after an
-	     export); the Meta Audience Network SDK is also linked (switched off in AdsSwitch). So it declares tracking and the data
+	     export), and the Facebook SDK counts installs for Meta app install campaigns. So it declares tracking and the data
 	     those SDKs collect. Each SDK ships its own manifest with its tracking domains; the Meta ones are repeated below.
 	     Apple's tracking question is asked at launch (GoogleAdsManager.appDidLaunch). Photos, videos, music and collages are
 	     never collected. -->
@@ -79,7 +79,7 @@
 			</array>
 		</dict>
 	</array>
-	<!-- The app stores ad choices and an export counter in UserDefaults (reason CA92.1: for the app's own use). -->
+	<!-- The app stores ad and Pro state and an export counter in UserDefaults (reason CA92.1: for the app's own use). -->
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
 		<dict>

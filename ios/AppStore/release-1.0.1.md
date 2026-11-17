@@ -120,7 +120,7 @@ Also check under **App Information → License Agreement**: either keep Apple's 
 
 ## 4. App Privacy ("App Privacy" page): update for Google AdMob
 
-1.0.1 shows **Google AdMob** ads (Meta Audience Network is in the code but switched off). Answer the questionnaire like this. Your photos, videos, music and collages never leave the iPhone, so none of that is listed.
+1.0.1 shows **Google AdMob** ads (Meta Audience Network has since been removed from the app). Answer the questionnaire like this. Your photos, videos, music and collages never leave the iPhone, so none of that is listed.
 
 **Do you or your third-party partners collect data from this app?** Yes.
 
@@ -138,7 +138,7 @@ Check this against Google's own guide before you submit, since Google updates it
 The app asks Apple's "Allow tracking?" question once, at first launch (after Google's EU/UK consent form, before any ad loads), so declaring **tracking = Yes** is correct.
 
 **Privacy Policy:** the page at the URL above should now say that:
-- ads come from **Google AdMob** (and possibly Meta Audience Network),
+- ads come from **Google AdMob**,
 - the advertising ID is used only with the person's permission,
 - in the EU/UK, Google's consent form asks first,
 - **Insta Collage Pro** is bought through Apple, and the developer never sees any payment details.

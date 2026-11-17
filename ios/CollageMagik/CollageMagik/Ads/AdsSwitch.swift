@@ -1,18 +1,13 @@
 import Foundation
 
-/// Which ad network the app uses. There is no backend, so this file is the switch: change a value and ship a new build.
+/// Whether the app shows ads. There is no backend, so this file is the switch: change the value and ship a new build.
 ///
-/// * `googleAdsEnabled = true`: Google AdMob. A small banner above the bottom tool bar on every tab, and one full-screen ad after
-///   an export finishes, before the result is shown.
-/// * `metaAdsEnabled = true`: Meta Audience Network (the older setup in `AdManager`; it also needs a placement ID in `AdConfig`).
-///
-/// Turn on only one. If both are on, Google wins and Meta stays off.
+/// `googleAdsEnabled = true`: Google AdMob. A small banner above the bottom tool bar on every tab, and one full-screen ad after
+/// an export finishes, before the result is shown.
 enum AdsSwitch {
     static let googleAdsEnabled = true
-    static let metaAdsEnabled = false
 
     static var useGoogle: Bool { googleAdsEnabled }
-    static var useMeta: Bool { metaAdsEnabled && !googleAdsEnabled }
 }
 
 /// Google AdMob IDs. The app ID itself lives in `AdInfo.plist` (`GADApplicationIdentifier`), where the SDK reads it.
