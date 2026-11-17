@@ -18,6 +18,15 @@ Swift packages on first open: Google Mobile Ads (with Google's consent SDK, UMP)
 device set your Team under Signing & Capabilities. The shared scheme uses `Products.storekit`, so the Pro plans load in
 the simulator without App Store Connect.
 
+## iPad
+
+The app runs on iPad as well as iPhone (`TARGETED_DEVICE_FAMILY = 1,2`). iPhone stays portrait only; iPad supports every
+orientation, as iPadOS expects. In portrait the iPad uses the phone layout, with the tools capped at 640 pt wide. In a wide
+window (landscape, 900 pt or more) the preview fills the left side and the tools sit in a column on the right (`RootView`).
+The app opens one window only (`UIApplicationSupportsMultipleScenes` is false in `AdInfo.plist`), since the editor holds one
+design for the whole app. App Store Connect needs iPad screenshots (13-inch, 2064 × 2752) before a version with iPad
+support can be submitted.
+
 ## What it does
 
 Everything the web app does: up to 9 cells (photos + at most 2 videos) in the collage (10 photos in a carousel), picked from a **media tray** that holds up to 15 pictures and videos (extras wait in the tray as "In tray" and can be swapped in). When the tray is full, adding shows an alert that says to press and hold a tray picture and tap Remove, 35 layouts, Story / Post / Square, gap,
