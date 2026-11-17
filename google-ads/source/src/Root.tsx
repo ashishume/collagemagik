@@ -2,6 +2,8 @@ import { Composition, Folder, Still } from "remotion";
 import { Ad } from "./ad/Ad";
 import { Ad4 } from "./ad4/Ad4";
 import { TOTAL as TOTAL4 } from "./ad4/cues";
+import { Ad5 } from "./ad5/Ad5";
+import { TOTAL as TOTAL5 } from "./ad5/cues";
 import { TOTAL } from "./ad/cues";
 import { AdImage, Logo } from "./photos/AdImage";
 import { ASSET_SIZES, BANNER_SIZES, THEMES } from "./photos/sizes";
@@ -19,6 +21,11 @@ export const RemotionRoot: React.FC = () => {
         <Composition id="Ad4Vertical" component={Ad4} durationInFrames={TOTAL4} fps={30} width={1080} height={1920} />
         <Composition id="Ad4Landscape" component={Ad4} durationInFrames={TOTAL4} fps={30} width={1920} height={1080} />
         <Composition id="Ad4Square" component={Ad4} durationInFrames={TOTAL4} fps={30} width={1080} height={1080} />
+      </Folder>
+      <Folder name="Videos-v5">
+        <Composition id="Ad5Vertical" component={Ad5} durationInFrames={TOTAL5} fps={30} width={1080} height={1920} />
+        <Composition id="Ad5Landscape" component={Ad5} durationInFrames={TOTAL5} fps={30} width={1920} height={1080} />
+        <Composition id="Ad5Square" component={Ad5} durationInFrames={TOTAL5} fps={30} width={1080} height={1080} />
       </Folder>
       <Folder name="Image-assets">
         {THEMES.flatMap((theme) =>

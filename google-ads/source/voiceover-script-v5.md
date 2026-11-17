@@ -1,12 +1,12 @@
-# Voiceover script v5 (CollageMagik, about 40 seconds)
+# Voiceover script v5 (CollageMagik, 46 seconds)
 
-Same voice and settings as v3 and v4 ("Amy - Conversational Ad & Commercial", Eleven v3). The name is written "Collage Magic"
-so the voice says it naturally; `scripts/merge-words.mjs` turns it back into "CollageMagik" for the captions.
+Recorded with the ElevenLabs voice "Candy - Young and Sweet" (45.95 s), saved as `public/audio/voiceover-v5.mp3`. The
+name is written "Collage Magic" so the voice says it naturally; the subtitles spell it CollageMagik. Word timings come
+from `scripts/align-v5.mjs` (Whisper drifted on this voice, so each phrase is pinned to the pauses in the audio).
 
 None of the earlier ads say that one collage can hold **photos and videos together**. This one is about exactly that: photos
 and up to two videos in the same collage, the videos playing next to the still photos, trimming, sound and music, a
-portrait shot fitted with blurred sides, and a smooth video export. About 105 words, so it should land near 40 seconds,
-like v4.
+portrait shot fitted with blurred sides, and a smooth video export. About 110 words; this slower voice read it in 46 seconds.
 
 Only collages mix photos and videos (a carousel is photos only), so the carousel isn't mentioned.
 
@@ -38,10 +38,5 @@ Add a caption, then export a smooth video for Reels, Stories, or TikTok.
 
 ## Rendering
 
-From `google-ads/source`, the same steps as v3 and v4:
-
-1. Save the MP3 as `public/audio/voiceover.mp3`.
-2. `npx remotion ffmpeg -y -i public/audio/voiceover.mp3 -ar 16000 -ac 1 assets-raw/voiceover16k.wav`
-3. `node scripts/transcribe.mjs && node scripts/merge-words.mjs`
-4. Set `VOICE_FRAMES` in `src/ad/cues.ts` to the new length (seconds x 30).
-5. Render as `v5` once the scenes above are built.
+From `google-ads/source`: `node scripts/align-v5.mjs`, then `bash scripts/render-videos.sh v5 Ad5 collagemagik-mix-ad`.
+The edit is in `src/ad5/`.

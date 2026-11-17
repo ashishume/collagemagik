@@ -7,13 +7,35 @@ google-ads/
 ├── output/      Videos, one folder per version
 │   ├── v1/
 │   ├── v2/
-│   └── v3/  (current)
+│   ├── v3/
+│   ├── v4/
+│   └── v5/  (current)
 └── photos/      Images (v1 and v2 were deleted: they said "Insta Collage")
     └── v3/  (current)
         ├── image-assets/     App, Demand Gen and Responsive Display images
         ├── display-banners/  Fixed-size Display image ads (all under 150 KB)
         └── logos/            Square 1:1 and landscape 4:1 logos
 ```
+
+## v5 videos: photos + videos in one collage (17 Nov 2026)
+
+`output/v5/collagemagik-mix-ad-*.mp4` (vertical 9:16, square 1:1, landscape 16:9, about 47.7 s). The first ad that says
+a collage can mix **photos and videos**. Voiceover: `source/voiceover-script-v5.md` (ElevenLabs, "Candy - Young and
+Sweet"), audio `source/public/audio/voiceover-v5.mp3`. Same music and level as v4.
+
+- Word timings: Whisper drifted up to a second on this voice, so `node scripts/align-v5.mjs` pins every phrase to the
+  pauses ffmpeg found in the audio and writes `src/data/v5-words.json`. Re-run it (with new phrase times) if the voice
+  is regenerated.
+- Edit (`source/src/ad5/`): a camera roll lights up its photos and its playing videos; "two separate posts" crash
+  together under a "Not anymore!" stamp; then a live editor (`Screen.tsx`) drops two photos and two videos into one
+  collage, the clips play while the photos stay still (MOVING / STILL tags), a clip is trimmed and its moment chosen,
+  the wind is muted and a song added, a portrait photo is shown cut off and then fitted whole with blurred sides (the
+  new Resize tool), a caption is typed and a 60 fps video exported. It ends on Reels / Stories / TikTok frames, the
+  collage with "= One collage", and the end card.
+- Subtitles (`ad5/Captions.tsx`): pages pop in slightly zoomed and the spoken word grows about 16% and turns gold,
+  making room for itself so it never touches its neighbours.
+- Photos: the same Unsplash set as v3/v4 (`source/public/travel/credits.json`), no identifiable people.
+- Render with `bash scripts/render-videos.sh v5 Ad5 collagemagik-mix-ad` from `source/`.
 
 ## v4 HTML5 display ads (15 Nov 2026)
 

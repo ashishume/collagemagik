@@ -1,0 +1,758 @@
+[
+  {
+    "text": "Trip's",
+    "startMs": 60,
+    "endMs": 591,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "over!",
+    "startMs": 591,
+    "endMs": 981,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "And",
+    "startMs": 981,
+    "endMs": 1300,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "my",
+    "startMs": 1300,
+    "endMs": 1548,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "camera",
+    "startMs": 1548,
+    "endMs": 2080,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "roll",
+    "startMs": 2080,
+    "endMs": 2469,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "is",
+    "startMs": 2469,
+    "endMs": 2717,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "half",
+    "startMs": 2717,
+    "endMs": 3107,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "photos,",
+    "startMs": 3107,
+    "endMs": 3639,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "half",
+    "startMs": 3639,
+    "endMs": 4029,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "videos.",
+    "startMs": 4029,
+    "endMs": 4560,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "That",
+    "startMs": 5080,
+    "endMs": 5552,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "usually",
+    "startMs": 5552,
+    "endMs": 6282,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "means",
+    "startMs": 6282,
+    "endMs": 6840,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "two",
+    "startMs": 6840,
+    "endMs": 7226,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "separate",
+    "startMs": 7226,
+    "endMs": 8042,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "posts.",
+    "startMs": 8042,
+    "endMs": 8600,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Not",
+    "startMs": 9070,
+    "endMs": 9409,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "anymore!",
+    "startMs": 9409,
+    "endMs": 10050,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "In",
+    "startMs": 10450,
+    "endMs": 10644,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "CollageMagik,",
+    "startMs": 10644,
+    "endMs": 11392,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "they",
+    "startMs": 11392,
+    "endMs": 11697,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "go",
+    "startMs": 11697,
+    "endMs": 11891,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "in",
+    "startMs": 11891,
+    "endMs": 12085,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "the",
+    "startMs": 12085,
+    "endMs": 12334,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "same",
+    "startMs": 12334,
+    "endMs": 12639,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "collage.",
+    "startMs": 12639,
+    "endMs": 13110,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Drop",
+    "startMs": 13530,
+    "endMs": 13849,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "in",
+    "startMs": 13849,
+    "endMs": 14052,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "my",
+    "startMs": 14052,
+    "endMs": 14254,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "photos,",
+    "startMs": 14254,
+    "endMs": 14689,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "then",
+    "startMs": 14689,
+    "endMs": 15008,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "two",
+    "startMs": 15008,
+    "endMs": 15268,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "videos,",
+    "startMs": 15268,
+    "endMs": 15703,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "right",
+    "startMs": 15703,
+    "endMs": 16080,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "next",
+    "startMs": 16080,
+    "endMs": 16398,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "to",
+    "startMs": 16398,
+    "endMs": 16601,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "them.",
+    "startMs": 16601,
+    "endMs": 16920,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "The",
+    "startMs": 17390,
+    "endMs": 17603,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "beach",
+    "startMs": 17603,
+    "endMs": 17911,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "clip",
+    "startMs": 17911,
+    "endMs": 18172,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "plays",
+    "startMs": 18172,
+    "endMs": 18480,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "while",
+    "startMs": 18480,
+    "endMs": 18788,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "the",
+    "startMs": 18788,
+    "endMs": 19001,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "sunset",
+    "startMs": 19001,
+    "endMs": 19356,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "photo",
+    "startMs": 19356,
+    "endMs": 19664,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "stays",
+    "startMs": 19664,
+    "endMs": 19972,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "still.",
+    "startMs": 19972,
+    "endMs": 20280,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Moving",
+    "startMs": 20700,
+    "endMs": 21199,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "and",
+    "startMs": 21199,
+    "endMs": 21498,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "still,",
+    "startMs": 21498,
+    "endMs": 21930,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "side",
+    "startMs": 22240,
+    "endMs": 22608,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "by",
+    "startMs": 22608,
+    "endMs": 22842,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "side.",
+    "startMs": 22842,
+    "endMs": 23210,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Trim",
+    "startMs": 23680,
+    "endMs": 24039,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "each",
+    "startMs": 24039,
+    "endMs": 24398,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "video,",
+    "startMs": 24398,
+    "endMs": 24823,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "pick",
+    "startMs": 24823,
+    "endMs": 25182,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "the",
+    "startMs": 25182,
+    "endMs": 25476,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "exact",
+    "startMs": 25476,
+    "endMs": 25900,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "moment,",
+    "startMs": 25900,
+    "endMs": 26390,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "keep",
+    "startMs": 26780,
+    "endMs": 27056,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "the",
+    "startMs": 27056,
+    "endMs": 27282,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "waves,",
+    "startMs": 27282,
+    "endMs": 27609,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "mute",
+    "startMs": 27609,
+    "endMs": 27885,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "the",
+    "startMs": 27885,
+    "endMs": 28112,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "wind,",
+    "startMs": 28112,
+    "endMs": 28388,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "and",
+    "startMs": 28388,
+    "endMs": 28614,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "add",
+    "startMs": 28614,
+    "endMs": 28840,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "a",
+    "startMs": 28840,
+    "endMs": 28966,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "song",
+    "startMs": 28966,
+    "endMs": 29242,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "underneath.",
+    "startMs": 29242,
+    "endMs": 29820,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Shot",
+    "startMs": 30310,
+    "endMs": 30535,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "it",
+    "startMs": 30535,
+    "endMs": 30678,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "in",
+    "startMs": 30678,
+    "endMs": 30821,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "portrait?",
+    "startMs": 30821,
+    "endMs": 31210,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Fit",
+    "startMs": 31710,
+    "endMs": 31969,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "the",
+    "startMs": 31969,
+    "endMs": 32228,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "whole",
+    "startMs": 32228,
+    "endMs": 32603,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "picture",
+    "startMs": 32603,
+    "endMs": 33092,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "with",
+    "startMs": 33092,
+    "endMs": 33409,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "soft",
+    "startMs": 33409,
+    "endMs": 33726,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "blurred",
+    "startMs": 33726,
+    "endMs": 34216,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "sides.",
+    "startMs": 34216,
+    "endMs": 34590,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Add",
+    "startMs": 35040,
+    "endMs": 35255,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "a",
+    "startMs": 35255,
+    "endMs": 35374,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "caption,",
+    "startMs": 35374,
+    "endMs": 35780,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "then",
+    "startMs": 36050,
+    "endMs": 36384,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "export",
+    "startMs": 36384,
+    "endMs": 36839,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "a",
+    "startMs": 36839,
+    "endMs": 36990,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "smooth",
+    "startMs": 36990,
+    "endMs": 37445,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "video",
+    "startMs": 37445,
+    "endMs": 37840,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "for",
+    "startMs": 37840,
+    "endMs": 38113,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Reels,",
+    "startMs": 38113,
+    "endMs": 38507,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Stories,",
+    "startMs": 38507,
+    "endMs": 39023,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "or",
+    "startMs": 39023,
+    "endMs": 39235,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "TikTok.",
+    "startMs": 39235,
+    "endMs": 39690,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Photos",
+    "startMs": 40180,
+    "endMs": 40715,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "and",
+    "startMs": 40715,
+    "endMs": 41035,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "videos.",
+    "startMs": 41035,
+    "endMs": 41570,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "One",
+    "startMs": 41830,
+    "endMs": 42145,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "collage.",
+    "startMs": 42145,
+    "endMs": 42740,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "CollageMagik.",
+    "startMs": 43110,
+    "endMs": 44200,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Free",
+    "startMs": 44570,
+    "endMs": 44824,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "on",
+    "startMs": 44824,
+    "endMs": 44985,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "the",
+    "startMs": 44985,
+    "endMs": 45193,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "App",
+    "startMs": 45193,
+    "endMs": 45400,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Store.",
+    "startMs": 45400,
+    "endMs": 45700,
+    "timestampMs": null,
+    "confidence": 1
+  }
+]
