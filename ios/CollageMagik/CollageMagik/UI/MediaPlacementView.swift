@@ -30,6 +30,8 @@ struct MediaPlacementView: View {
     let rect: PxRect
     let view: MediaView
     var player: AVPlayer? = nil
+    /// The cell's filter and adjustments (photos only).
+    var look = PhotoLook()
 
     var body: some View {
         let p = placeMedia(srcW: item.width, srcH: item.height, cell: rect, view: view)
@@ -43,7 +45,7 @@ struct MediaPlacementView: View {
 
     @ViewBuilder private var content: some View {
         if item.kind == .photo, let img = item.preview {
-            Image(uiImage: img).resizable()
+            Image(uiImage: PhotoLookRenderer.apply(img, look, key: item.id)).resizable()
         } else {
             ZStack {
                 Image(uiImage: item.thumbnail).resizable()

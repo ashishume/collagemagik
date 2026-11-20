@@ -34,12 +34,14 @@ enum CollageRenderer {
             let framed = project.isFramed(i)
             drawPrint(
                 ctx, outer: outers[i], picture: r, radius: project.pictureRadius(i, W: W),
-                frame: framed ? project.frame : .none, frameColor: project.frameColor,
+                frame: framed ? project.frame(of: i) : .none, frameColor: project.frameColor,
                 edge: project.frameEdges(i, outers[i], W: W).side, seed: i, unit: unit
             ) {
                 if let id = cell.mediaId, let item = snapshot.items[id], let img = image(id) {
                     BackdropRenderer.drawFitBars(ctx: ctx, rect: r, cell: cell, item: item)
-                    drawMedia(ctx, img, item: item, rect: r, view: cell.view)
+                    // a photo's filter and colour adjustments (the preview shows the same through PhotoLookRenderer)
+                    let shown = item.kind == .photo ? PhotoLookRenderer.apply(img, cell.look, key: id) : img
+                    drawMedia(ctx, shown, item: item, rect: r, view: cell.view)
                 }
             }
         }
@@ -48,7 +50,7 @@ enum CollageRenderer {
             guard let item = snapshot.items[o.mediaId], let img = image(o.mediaId) else { continue }
             let g = project.overlayGeometry(o, item: item, W: W, H: H)
             drawPrint(
-                ctx, outer: g.outer, picture: g.picture, radius: o.frame == .torn ? 0 : 3 * unit,
+                ctx, outer: g.outer, picture: g.picture, radius: o.frame.printRadius(unit: unit),
                 frame: o.frame, frameColor: o.frameColor, edge: g.edge, seed: 1000 + k, unit: unit
             ) {
                 drawMedia(ctx, img, item: item, rect: g.picture, view: o.view)
@@ -84,8 +86,7 @@ enum CollageRenderer {
             ctx.rotate(by: outer.tilt * RAD)
             ctx.translateBy(x: -c.x, y: -c.y)
         }
-        let rr = max(0, min(radius, picture.w / 2, picture.h / 2))
-        let path = CGPath(roundedRect: picture.cgRect, cornerWidth: rr, cornerHeight: rr, transform: nil)
+        let path = pictureClipPath(frame, rect: picture.cgRect, radius: radius)
         if frame != .none {
             ctx.saveGState()
             ctx.setShadow(offset: CGSize(width: 0, height: 7 * unit), blur: 22 * unit, color: UIColor.black.withAlphaComponent(0.38).cgColor)
@@ -100,10 +101,14 @@ enum CollageRenderer {
             }
             ctx.fillPath()
             ctx.restoreGState()
+            FrameDecor.drawUnder(ctx, frame: frame, outer: outer.cgRect, picture: picture.cgRect, color: frameColor, unit: unit)
         }
+        ctx.saveGState()
         ctx.addPath(path)
         ctx.clip()
         content()
+        ctx.restoreGState()
+        FrameDecor.drawOver(ctx, frame: frame, outer: outer.cgRect, picture: picture.cgRect, color: frameColor, unit: unit, seed: seed)
     }
 
     /// The context must have a top-left origin (flipped). The picture is drawn with zoom, pan, rotation, flip and straighten.

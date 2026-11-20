@@ -54,11 +54,31 @@ editor's top bar shows it as a title instead of a switch. A carousel's dock read
 
 **Templates** (`Model/Templates.swift`, `UI/TemplateViews.swift`): a `DesignTemplate` is a design without pictures
 (layout or carousel style, size, gap, corners, background, frame, placeholder captions and stickers). `allTemplates`
-holds 23 (17 collage, 6 carousel) in 10 categories; add one by adding an entry. Previews are drawn by the real
+holds 44 (35 collage, 9 carousel) in 18 categories; add one by adding an entry. Previews are drawn by the real
 renderer (`TemplatePreview`), with sample scenes on Home and the person's own pictures in the editor
 (Layout / Slides → Templates). Picking one from Home starts a design with it and opens the photo picker; in the editor
 it re-lays the pictures already there, and Undo brings the previous design back. A collage template keeps its slots as
 pictures are added (extras wait in the tray); a carousel template keeps its style as the slide count changes.
+
+## Frames, captions and photo looks
+
+**Frames** (`PhotoFrame` in `Model/Types.swift`, drawing in `Model/Frames.swift`): None, Border, Instant, Film (35 mm
+strip with sprocket holes), Tape (washi tape over the corners), Stamp (perforated edge), Gallery (wide mat with an inner
+line), Torn, Shadow, Date (orange camera date stamp), Neon (a glowing line in the frame colour), and the shapes Circle,
+Heart and Arch. Style → Frame sets one frame for every picture; picture tools → Frame gives one picture its own
+(`CellState.frame`, nil = same as all). Photos on top take the same frames. Edge thickness per side comes from
+`PhotoFrame.edgeFactors`; the extras are drawn by `FrameDecor` (under the picture: film holes; over it: tape, mat line,
+date, neon) and shapes by `pictureClipPath`. The live preview runs the very same Core Graphics code through a SwiftUI
+`Canvas` (`UI/FrameViews.swift`), and it clips the design at its edges like an export.
+
+**Captions** also come in Neon, Sticker and Gradient looks (`CaptionLook`), stacked **vertical** letters
+(`Caption.vertical`, a formatting toggle), and six more lettering styles that ship with iOS (Romance, Retro, Note,
+Magazine, Engraved, Slab), so nothing is downloaded or bundled for them.
+
+**Photo looks** (`Model/PhotoLook.swift`): picture tools → Look gives a photo a filter (Original, Vivid, Warm, Cool, Fade,
+Film, Chrome, Vintage, Mono, Noir; each swatch shows the photo itself) and Light / Contrast / Colour / Warmth. One
+Core Image renderer (`PhotoLookRenderer`, cached) feeds the preview, the crop screen and every export. Photos only;
+videos play as they are.
 
 ## Carousel mode
 

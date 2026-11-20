@@ -46,6 +46,8 @@ final class CollageStore {
     var videoSection: VideoSection = .timeline
     /// The selected picture's Resize options (fill or fit, and what fills the sides) are open instead of its zoom.
     var resizeOpen = false
+    /// Picture tools → Look: filters and colour adjustments for the selected photo.
+    var adjustOpen = false
     /// The open group in the Style tab: size, spacing, background or frame.
     var styleSection: StyleSection = .size
     /// Carousel preview: the slide position at the left edge of the visible area (0 = first slide), and how many slides fit on screen.
@@ -512,6 +514,31 @@ final class CollageStore {
         clampCarouselOffset()
     }
 
+    /// Changes the selected photo's filter or adjustments.
+    func setCellLook(_ i: Int, _ change: (inout PhotoLook) -> Void) {
+        guard project.cells.indices.contains(i) else { return }
+        change(&project.cells[i].look)
+    }
+
+    /// Style → Frame: one frame for every picture (any picture's own frame gives way). Film and neon start in a colour
+    /// that suits them; leaving them for a plain frame goes back to white.
+    func selectFrame(_ f: PhotoFrame) {
+        let previous = project.frame
+        if let c = f.startColor, previous != f {
+            project.frameColor = c
+        } else if f.startColor == nil, let old = previous.startColor, project.frameColor == old {
+            project.frameColor = "#ffffff"
+        }
+        project.frame = f
+        for i in project.cells.indices { project.cells[i].frame = nil }
+    }
+
+    /// Picture tools → Frame: this picture alone gets `f` (nil goes back to the design's frame).
+    func setCellFrame(_ i: Int, _ f: PhotoFrame?) {
+        guard project.cells.indices.contains(i) else { return }
+        project.cells[i].frame = f == project.frame ? nil : f
+    }
+
     /// Set once the person picks Post or Square for a carousel themselves; from then on only the style is chosen for them.
     var carouselFormatChosen = false
 
@@ -653,7 +680,7 @@ final class CollageStore {
     // MARK: Selection
 
     func selectCell(_ i: Int?) {
-        if i != selectedCell { resizeOpen = false }
+        if i != selectedCell { resizeOpen = false; adjustOpen = false }
         selectedCell = i
         if i != nil { selectedCaption = nil; selectedSticker = nil; if selectedOverlay != nil { selectOverlay(nil) } }
         if i == nil && tab == .picture {

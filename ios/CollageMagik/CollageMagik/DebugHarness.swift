@@ -46,6 +46,11 @@ enum DebugHarness {
         // CM_LAYOUT_ID=2-inset picks a collage layout by id; CM_FRAME=border|instant|torn|shadow, CM_FRAME_COLOR=#f4ecdc.
         if let id = env["CM_LAYOUT_ID"] { store.setLayout(id) }
         if let f = env["CM_FRAME"].flatMap(PhotoFrame.init(rawValue:)) { store.project.frame = f }
+        // CM_LOOK=vivid etc. puts that filter on every picture; CM_LOOK_CELL=1 on that cell only
+        if let f = env["CM_LOOK"].flatMap(PhotoFilter.init(rawValue:)) {
+            let only = env["CM_LOOK_CELL"].flatMap(Int.init)
+            for i in store.project.cells.indices where only == nil || only == i { store.setCellLook(i) { $0.filter = f } }
+        }
         if let c = env["CM_FRAME_COLOR"] { store.project.frameColor = c }
         if let g = env["CM_GAP"].flatMap(Double.init) { store.project.gap = g }
         // CM_DEMO=1: captions using the bundled scripts, a two-size mix and every decoration.
@@ -90,7 +95,18 @@ enum DebugHarness {
         // CM_CAPTION_TITLE="Summer in Italy" replaces the first caption's text (to match the photos in marketing captures).
         if env["CM_CAPTIONS"] != nil {
             let slides = Double(store.project.slides)
-            let samples: [(String, CaptionFont, String, CaptionLook, Double, Double, Double, Double)] = [
+            // CM_CAPTIONS=new: the newer looks and lettering, plus stacked (vertical) letters
+            let newer: [(String, CaptionFont, String, CaptionLook, Double, Double, Double, Double)] = [
+                ("neon nights", .retro, "#ff4fd8", .neon, 96, 0.5, 0.1, 0),
+                ("Sticker", .rounded, "#ff6b4a", .sticker, 92, 0.32, 0.25, -5),
+                ("Gradient", .poster, "#8b6cff", .gradient, 120, 0.5, 0.4, 0),
+                ("Vogue issue", .magazine, "#ffffff", .plain, 84, 0.5, 0.55, 0),
+                ("ENGRAVED", .engraved, "#f4e9d8", .plate, 60, 0.5, 0.67, 0),
+                ("forever yours", .romance, "#ffffff", .plain, 90, 0.5, 0.78, 0),
+                ("note to self", .note, "#ffd84d", .plain, 64, 0.3, 0.9, -4),
+                ("Slab", .slab, "#52d98c", .outline, 80, 0.75, 0.9, 0),
+            ]
+            let samples: [(String, CaptionFont, String, CaptionLook, Double, Double, Double, Double)] = env["CM_CAPTIONS"] == "new" ? newer : [
                 (env["CM_CAPTION_TITLE"] ?? "Summer in Lisbon", .script, "#ffffff", .plain, 110, 0.5, 0.2, 0),
                 ("best week ever", .classic, "#ffd84d", .label, 64, 0.5, 0.36, -6),
                 ("day 3 · the old town\nand way too much gelato 🍦", .typewriter, "#ffffff", .plate, 50, 0.5, 0.56, 0),
@@ -100,6 +116,11 @@ enum DebugHarness {
             for (i, s) in samples.enumerated() {
                 let x = slides > 1 ? 0.5 + Double(i % Int(slides)) : s.5
                 store.project.captions.append(Caption(text: s.0, font: s.1, color: s.2, look: s.3, size: s.4, x: x, y: s.6, rotation: s.7))
+            }
+            if env["CM_CAPTIONS"] == "new" {
+                var v = Caption(text: "STACK", font: .poster, color: "#ffffff", look: .label, size: 64, x: 0.9, y: 0.4)
+                v.vertical = true
+                store.project.captions.append(v)
             }
             store.tab = .text
             if let i = env["CM_CAPTION_SELECT"].flatMap(Int.init), store.project.captions.indices.contains(i) {

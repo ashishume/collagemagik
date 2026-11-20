@@ -101,6 +101,12 @@ struct CropEditor: View {
         }
     }
 
+    /// A cell's photo is shown with its filter while it is cropped.
+    private var cropLook: PhotoLook {
+        if case .cell(let i) = target, store.project.cells.indices.contains(i) { return store.project.cells[i].look }
+        return PhotoLook()
+    }
+
     // MARK: Canvas
 
     @ViewBuilder
@@ -111,9 +117,9 @@ struct CropEditor: View {
         ZStack(alignment: .topLeading) {
             if let item {
                 // everything, dimmed: this is what is being cut off
-                MediaPlacementView(item: item, rect: frame, view: draft).opacity(0.35)
+                MediaPlacementView(item: item, rect: frame, view: draft, look: cropLook).opacity(0.35)
                 // inside the frame, at full strength
-                MediaPlacementView(item: item, rect: frame, view: draft)
+                MediaPlacementView(item: item, rect: frame, view: draft, look: cropLook)
                     .mask(
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
                             .frame(width: frame.w, height: frame.h)

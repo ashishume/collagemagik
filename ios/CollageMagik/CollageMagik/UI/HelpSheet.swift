@@ -25,7 +25,7 @@ struct HelpSheet: View {
                     Label("Photos on top have the same tools as pictures in cells: change, rotate, flip, crop and zoom.", systemImage: "square.on.square")
                 }
                 Section("Captions") {
-                    Label("Open Text and tap Add caption to write on your collage. Pick from \(CaptionFont.allCases.count) lettering styles, bold, italic, underline, strikethrough or all caps, any colour, and a shadow, label, plate or outline behind the words.", systemImage: "textformat")
+                    Label("Open Text and tap Add caption to write on your collage. Pick from \(CaptionFont.allCases.count) lettering styles, bold, italic, underline, strikethrough, all caps or stacked vertical letters, any colour, and a shadow, label, plate, outline, neon glow, sticker edge or gradient letters.", systemImage: "textformat")
                     Label("Tap a caption to select it, then drag to move it (it clicks onto the middle), pinch to resize it and twist with two fingers to turn it. Tap it again to change the words.", systemImage: "hand.draw")
                     Label("Long captions wrap by themselves so they always fit inside the picture. Captions are part of every export.", systemImage: "text.justify.left")
                 }

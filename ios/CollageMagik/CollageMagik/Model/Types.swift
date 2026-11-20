@@ -31,15 +31,24 @@ struct LayoutRect: Hashable {
 /// What goes around a photo: nothing, a printed border, an instant-photo border (deeper at the bottom), a torn paper
 /// edge, or just a soft shadow. The Style tab sets it for every cell; each photo on top has its own.
 enum PhotoFrame: String, CaseIterable, Identifiable {
-    case none, border, instant, torn, shadow
+    case none, border, instant, film, tape, stamp, gallery, torn, shadow, date, neon, circle, heart, arch
     var id: String { rawValue }
     var title: String {
         switch self {
         case .none: "None"
         case .border: "Border"
         case .instant: "Instant"
+        case .film: "Film"
+        case .tape: "Tape"
+        case .stamp: "Stamp"
+        case .gallery: "Gallery"
         case .torn: "Torn"
         case .shadow: "Shadow"
+        case .date: "Date"
+        case .neon: "Neon"
+        case .circle: "Circle"
+        case .heart: "Heart"
+        case .arch: "Arch"
         }
     }
     var symbol: String {
@@ -47,14 +56,53 @@ enum PhotoFrame: String, CaseIterable, Identifiable {
         case .none: "square.dashed"
         case .border: "square"
         case .instant: "photo.artframe"
+        case .film: "film"
+        case .tape: "bandage"
+        case .stamp: "seal"
+        case .gallery: "rectangle.inset.filled"
         case .torn: "scribble.variable"
         case .shadow: "shadow"
+        case .date: "calendar"
+        case .neon: "light.max"
+        case .circle: "circle"
+        case .heart: "heart"
+        case .arch: "capsule.portrait"
         }
     }
-    var hasEdge: Bool { self == .border || self == .instant || self == .torn }
+    /// A printed edge around the picture, drawn in the frame colour.
+    var hasEdge: Bool {
+        switch self {
+        case .border, .instant, .film, .tape, .stamp, .gallery, .torn: true
+        default: false
+        }
+    }
+    /// Uses the frame colour (the printed edge, or the neon light).
+    var usesColor: Bool { hasEdge || self == .neon }
+    /// The picture takes a shape instead of a rectangle.
+    var isShape: Bool { self == .circle || self == .heart || self == .arch }
+    /// Edge thickness at each side, as multiples of the frame width: sides, top, bottom.
+    var edgeFactors: (side: Double, top: Double, bottom: Double) {
+        switch self {
+        case .instant: (1, 1, 3.4)
+        case .film: (0.55, 2.4, 2.4)
+        case .torn: (1.2, 1.2, 1.2)
+        case .stamp: (1.25, 1.25, 1.25)
+        case .gallery: (2.4, 2.4, 2.4)
+        case .border, .tape: (1, 1, 1)
+        default: (0, 0, 0)
+        }
+    }
+    /// A colour that suits the frame when it is first picked (film is black, the rest start white).
+    var startColor: String? {
+        switch self {
+        case .film: "#101016"
+        case .neon: "#ff4fd8"
+        default: nil
+        }
+    }
 }
 
-let frameSwatches = ["#ffffff", "#f4ecdc", "#101016", "#ffd6e7", "#c9e4ff"]
+let frameSwatches = ["#ffffff", "#f4ecdc", "#101016", "#ffd6e7", "#c9e4ff", "#ff4fd8", "#3de0ff", "#ffd23f"]
 
 /// How a grid layout is split, as fractions that each add up to 1. `rows`: `outer` are band heights from top to
 /// bottom and `inner[i]` the cell widths in band i. Otherwise `outer` are column widths and `inner[i]` cell heights.
@@ -101,6 +149,10 @@ struct CellState: Equatable, Codable {
     var fit: Bool = false
     /// What fills the sides around a fitted picture: `fitBlur` (a blurred copy of the picture) or a hex colour.
     var fitBars: String = fitBlur
+    /// This picture's own frame, or nil to use the design's frame (Style → Frame).
+    var frame: PhotoFrame? = nil
+    /// Filter and colour adjustments (photos only).
+    var look = PhotoLook()
 
     var view: MediaView {
         MediaView(zoom: zoom, panX: panX, panY: panY, rotation: rotation, flip: flip, angle: angle, fit: fit)

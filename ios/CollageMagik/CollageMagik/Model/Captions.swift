@@ -25,7 +25,8 @@ enum BundledFonts {
 
 /// The lettering styles. Most ship with iOS; Vows, Signature, Dreamy and Diary are bundled (see `BundledFonts`).
 enum CaptionFont: String, CaseIterable, Identifiable {
-    case classic, script, vows, signature, dreamy, diary, hand, italic, rounded, serif, marker, poster, typewriter, chalk
+    case classic, script, vows, signature, dreamy, romance, retro, diary, hand, note, italic, rounded, serif, magazine,
+         engraved, slab, marker, poster, typewriter, chalk
     var id: String { rawValue }
 
     var label: String {
@@ -44,6 +45,12 @@ enum CaptionFont: String, CaseIterable, Identifiable {
         case .poster: "Poster"
         case .typewriter: "Typed"
         case .chalk: "Chalk"
+        case .romance: "Romance"
+        case .retro: "Retro"
+        case .note: "Note"
+        case .magazine: "Magazine"
+        case .engraved: "Engraved"
+        case .slab: "Slab"
         }
     }
 
@@ -58,6 +65,10 @@ enum CaptionFont: String, CaseIterable, Identifiable {
         case .italic, .hand: 1.1
         case .poster: 1.12
         case .chalk: 0.82
+        case .romance: 1.6
+        case .retro: 1.35
+        case .note: 1.05
+        case .engraved: 0.92
         default: 1
         }
     }
@@ -65,14 +76,14 @@ enum CaptionFont: String, CaseIterable, Identifiable {
     /// Extra room around the letters, as a fraction of the size (script letters swing far outside their line box).
     var overhang: Double {
         switch self {
-        case .script, .vows, .dreamy: 0.3
+        case .script, .vows, .dreamy, .romance, .retro: 0.3
         case .signature: 0.45
         default: 0.12
         }
     }
 
     /// Flowing scripts whose letters join up: they sit on tighter lines.
-    var isScript: Bool { self == .script || self == .vows || self == .signature || self == .dreamy }
+    var isScript: Bool { self == .script || self == .vows || self == .signature || self == .dreamy || self == .romance || self == .retro }
 
     /// Line spacing (a multiple of the font's own line height). The bundled scripts have small letters on very tall
     /// lines, so they are pulled together to about the same spacing as Script.
@@ -82,6 +93,8 @@ enum CaptionFont: String, CaseIterable, Identifiable {
         case .vows: 0.82
         case .signature: 0.5
         case .dreamy: 0.68
+        case .romance: 0.8
+        case .retro: 0.85
         default: 1.02
         }
     }
@@ -117,6 +130,13 @@ enum CaptionFont: String, CaseIterable, Identifiable {
         case .poster: return named("Futura-CondensedExtraBold")
         case .typewriter: return named("AmericanTypewriter-Semibold")
         case .chalk: return named("Chalkduster")
+        // lettering that ships with iOS: nothing to download, nothing added to the app's size
+        case .romance: return named("SavoyeLetPlain")
+        case .retro: return named("PartyLetPlain")
+        case .note: return named("Noteworthy-Bold")
+        case .magazine: return named("Didot-Bold")
+        case .engraved: return named("Copperplate-Bold")
+        case .slab: return named("Rockwell-Bold")
         }
     }
 }
@@ -131,6 +151,12 @@ enum CaptionLook: String, CaseIterable, Identifiable {
     case plate
     /// Letters with a thick contrasting edge.
     case outline
+    /// Glowing tube letters in the caption's colour, with a bright core.
+    case neon
+    /// A thick white die-cut edge with a drop shadow, like a sticker.
+    case sticker
+    /// Letters filled with a two-colour gradient made from the caption's colour.
+    case gradient
     var id: String { rawValue }
 
     var title: String {
@@ -139,6 +165,9 @@ enum CaptionLook: String, CaseIterable, Identifiable {
         case .label: "Label"
         case .plate: "Plate"
         case .outline: "Outline"
+        case .neon: "Neon"
+        case .sticker: "Sticker"
+        case .gradient: "Gradient"
         }
     }
     var symbol: String {
@@ -147,6 +176,9 @@ enum CaptionLook: String, CaseIterable, Identifiable {
         case .label: "a.square.fill"
         case .plate: "a.square"
         case .outline: "character.textbox"
+        case .neon: "light.max"
+        case .sticker: "seal"
+        case .gradient: "paintpalette"
         }
     }
 }
@@ -271,11 +303,16 @@ struct Caption: Identifiable, Equatable, Codable {
     var strikethrough: Bool = false
     /// Shown in capital letters (the words keep the case they were typed in).
     var allCaps: Bool = false
+    /// Letters stacked top to bottom, one under the other.
+    var vertical: Bool = false
+
+    /// Stacked letters are all one size, so the small-line mix is off while they are.
+    var activeMix: CaptionMix { vertical ? .none : mix }
 }
 
 /// The formatting toggles of a caption, in the order they are shown.
 enum CaptionFormat: String, CaseIterable, Identifiable {
-    case bold, italic, underline, strikethrough, allCaps
+    case bold, italic, underline, strikethrough, allCaps, vertical
     var id: String { rawValue }
     var title: String {
         switch self {
@@ -284,6 +321,7 @@ enum CaptionFormat: String, CaseIterable, Identifiable {
         case .underline: "Underline"
         case .strikethrough: "Strikethrough"
         case .allCaps: "All caps"
+        case .vertical: "Vertical"
         }
     }
     var symbol: String {
@@ -293,6 +331,7 @@ enum CaptionFormat: String, CaseIterable, Identifiable {
         case .underline: "underline"
         case .strikethrough: "strikethrough"
         case .allCaps: "textformat.alt"
+        case .vertical: "arrow.up.and.down.text.horizontal"
         }
     }
     var keyPath: WritableKeyPath<Caption, Bool> {
@@ -302,6 +341,7 @@ enum CaptionFormat: String, CaseIterable, Identifiable {
         case .underline: \.underline
         case .strikethrough: \.strikethrough
         case .allCaps: \.allCaps
+        case .vertical: \.vertical
         }
     }
 }
@@ -375,11 +415,21 @@ enum CaptionRenderer {
 
     private static func letterColor(_ c: Caption) -> UIColor {
         let base = UIColor(hex: c.color)
-        return c.look == .label ? (base.isLight ? UIColor(hex: "#101016") : .white) : base
+        switch c.look {
+        case .label: return base.isLight ? UIColor(hex: "#101016") : .white
+        // a neon tube is nearly white in the middle; the colour is in the glow
+        case .neon: return UIColor(white: 1, alpha: 0.96)
+        default: return base
+        }
     }
 
     private static func lines(_ c: Caption) -> [String] {
         let text = c.allCaps ? c.text.uppercased() : c.text
+        if c.vertical {
+            // one letter per line; a space or a line break leaves a short gap between words
+            let letters = text.filter { $0 != "\n" }.map { $0 == " " ? "" : String($0) }
+            return letters.isEmpty ? [" "] : letters
+        }
         return (text.isEmpty ? " " : text).components(separatedBy: "\n")
     }
 
@@ -402,7 +452,7 @@ enum CaptionRenderer {
 
     /// The font of line `i` of `count` (small lines of a mixed caption use the accent lettering).
     private static func lineFont(_ c: Caption, _ i: Int, _ count: Int, fontPx: Double) -> (font: UIFont, spacing: Double) {
-        let (base, spacing) = c.mix.isSmall(i, of: count)
+        let (base, spacing) = c.activeMix.isSmall(i, of: count)
             ? (c.accentFont.uiFont(size: fontPx * captionAccentScale), c.accentFont.lineSpacing)
             : (c.font.uiFont(size: fontPx), c.font.lineSpacing)
         return (formatted(base, c).font, spacing)
@@ -410,7 +460,7 @@ enum CaptionRenderer {
 
     /// Index of the last big line when the small last line follows it (that's where a divider goes).
     private static func lastMainBeforeTail(_ c: Caption, count: Int) -> Int? {
-        guard count > 1, c.mix.isSmall(count - 1, of: count), !c.mix.isSmall(count - 2, of: count) else { return nil }
+        guard count > 1, c.activeMix.isSmall(count - 1, of: count), !c.activeMix.isSmall(count - 2, of: count) else { return nil }
         return count - 2
     }
 
@@ -422,12 +472,12 @@ enum CaptionRenderer {
         for (i, line) in ls.enumerated() {
             let (font, spacing) = lineFont(c, i, ls.count, fontPx: fontPx)
             let para = NSMutableParagraphStyle()
-            para.alignment = c.align.textAlignment
+            para.alignment = c.vertical ? .center : c.align.textAlignment
             para.lineBreakMode = .byWordWrapping
-            para.lineHeightMultiple = spacing
+            para.lineHeightMultiple = c.vertical ? min(spacing, 0.86) : spacing
             if i == gapAfter { para.paragraphSpacing = fontPx * 0.6 }
             // a big script line reaches far above its line: keep it off the small line before it
-            if i + 1 < ls.count, c.mix.isSmall(i, of: ls.count), !c.mix.isSmall(i + 1, of: ls.count) {
+            if i + 1 < ls.count, c.activeMix.isSmall(i, of: ls.count), !c.activeMix.isSmall(i + 1, of: ls.count) {
                 para.paragraphSpacing = max(para.paragraphSpacing, fontPx * (c.font.isScript ? 0.45 : 0.12))
             }
             var attrs: [NSAttributedString.Key: Any] = [
@@ -506,7 +556,7 @@ enum CaptionRenderer {
         // where the big lines are, for decorations that sit beside or under them
         var mainTop = 0.0, mainBottom = 1.0, mainWidth = 1.0, tailTop = 1.0
         // one size: a heart goes after the last line, so treat that line as the "main" one
-        let mains = c.mix == .none ? [ls.count - 1] : ls.indices.filter { !c.mix.isSmall($0, of: ls.count) }
+        let mains = c.activeMix == .none ? [ls.count - 1] : ls.indices.filter { !c.activeMix.isSmall($0, of: ls.count) }
         if let first = mains.first, let last = mains.last, ls.count > 1, ts.height > 0 {
             func part(_ r: Range<Int>) -> NSAttributedString {
                 let starts = ls.indices.map { i in ls[..<i].reduce(0) { $0 + ($1 as NSString).length + 1 } }
@@ -675,12 +725,85 @@ enum CaptionRenderer {
             ctx.restoreGState()
             l.text.draw(with: textRect, options: opts, context: nil)
             drawOrnament(l, in: ctx, color: ink)
+        case .neon:
+            // the glow: the letters in the caption's colour, blurred wide and then close, under a bright core
+            let glow = NSMutableAttributedString(attributedString: l.text)
+            glow.addAttribute(.foregroundColor, value: base, range: NSRange(location: 0, length: glow.length))
+            for (blur, alpha) in [(0.55, 0.9), (0.22, 1.0)] {
+                ctx.saveGState()
+                ctx.setShadow(offset: .zero, blur: l.fontPx * blur, color: base.withAlphaComponent(alpha).cgColor)
+                glow.draw(with: textRect, options: opts, context: nil)
+                ctx.restoreGState()
+            }
+            ctx.saveGState()
+            ctx.setShadow(offset: .zero, blur: l.fontPx * 0.06, color: base.cgColor)
+            l.text.draw(with: textRect, options: opts, context: nil)
+            ctx.restoreGState()
+            drawOrnament(l, in: ctx, color: base)
+        case .sticker:
+            let edge = NSMutableAttributedString(attributedString: l.text)
+            let all = NSRange(location: 0, length: edge.length)
+            edge.addAttribute(.strokeColor, value: UIColor.white, range: all)
+            edge.addAttribute(.strokeWidth, value: 34, range: all)
+            ctx.setLineJoin(.round)
+            ctx.saveGState()
+            ctx.setShadow(offset: CGSize(width: 0, height: l.fontPx * 0.06), blur: l.fontPx * 0.14, color: UIColor.black.withAlphaComponent(0.35).cgColor)
+            edge.draw(with: textRect, options: opts, context: nil)
+            drawOrnament(l, in: ctx, color: .white, extra: l.fontPx * 0.16)
+            ctx.restoreGState()
+            l.text.draw(with: textRect, options: opts, context: nil)
+            drawOrnament(l, in: ctx, color: ink)
+        case .gradient:
+            drawGradientLetters(l, in: ctx, rect: textRect, options: opts, base: base)
+            drawOrnament(l, in: ctx, color: base)
         case .plain:
             let shade = base.isLight ? UIColor.black.withAlphaComponent(0.6) : UIColor.white.withAlphaComponent(0.7)
             ctx.setShadow(offset: .zero, blur: l.fontPx * 0.16, color: shade.cgColor)
             l.text.draw(with: textRect, options: opts, context: nil)
             drawOrnament(l, in: ctx, color: ink)
         }
+    }
+
+    /// The letters as a window onto a gradient that runs from the caption's colour to a brighter, warmer partner.
+    /// The letters are drawn into a mask the size of the box (in the context's units, which are pixels both in the
+    /// preview's caption picture and in an export), then the gradient is drawn through it.
+    private static func drawGradientLetters(_ l: CaptionLayout, in ctx: CGContext, rect: CGRect, options: NSStringDrawingOptions, base: UIColor) {
+        let bounds = CGRect(x: -l.box.width / 2 - l.bleed, y: -l.box.height / 2 - l.bleed,
+                            width: l.box.width + l.bleed * 2, height: l.box.height + l.bleed * 2)
+        let w = Int(bounds.width.rounded(.up)), h = Int(bounds.height.rounded(.up))
+        guard w > 0, h > 0, w < 8192, h < 8192,
+              let mctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
+                                   space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue) else { return }
+        // top-left origin, like the caller, with the box's top-left at the mask's corner
+        mctx.translateBy(x: 0, y: Double(h))
+        mctx.scaleBy(x: 1, y: -1)
+        mctx.translateBy(x: -bounds.minX, y: -bounds.minY)
+        let white = NSMutableAttributedString(attributedString: l.text)
+        white.addAttribute(.foregroundColor, value: UIColor.white, range: NSRange(location: 0, length: white.length))
+        UIGraphicsPushContext(mctx)
+        white.draw(with: rect, options: options, context: nil)
+        UIGraphicsPopContext()
+        guard let mask = mctx.makeImage() else { return }
+
+        var hue: CGFloat = 0, sat: CGFloat = 0, bri: CGFloat = 0, a: CGFloat = 0
+        base.getHue(&hue, saturation: &sat, brightness: &bri, alpha: &a)
+        let partner = UIColor(hue: (hue + 0.2).truncatingRemainder(dividingBy: 1), saturation: max(0.55, sat), brightness: max(0.85, bri), alpha: 1)
+        let start = sat < 0.15 ? UIColor(hue: 0.83, saturation: 0.6, brightness: 1, alpha: 1) : base
+        guard let g = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB), colors: [start.cgColor, partner.cgColor] as CFArray, locations: nil) else { return }
+
+        // a soft shadow first, so the letters lift off busy photos
+        ctx.saveGState()
+        ctx.setShadow(offset: .zero, blur: l.fontPx * 0.14, color: UIColor.black.withAlphaComponent(0.45).cgColor)
+        ctx.beginTransparencyLayer(auxiliaryInfo: nil)
+        ctx.saveGState()
+        // a mask is laid with its first row at the bottom; flip around the box so it lines up with the letters
+        ctx.translateBy(x: 0, y: bounds.minY + bounds.maxY)
+        ctx.scaleBy(x: 1, y: -1)
+        ctx.clip(to: bounds, mask: mask)
+        ctx.drawLinearGradient(g, start: CGPoint(x: bounds.minX, y: bounds.maxY), end: CGPoint(x: bounds.maxX, y: bounds.minY), options: [])
+        ctx.restoreGState()
+        ctx.endTransparencyLayer()
+        ctx.restoreGState()
     }
 
     /// Every caption of the project, drawn onto a canvas `W` × `H` pixels.
@@ -706,7 +829,7 @@ enum CaptionRenderer {
     /// One caption as a picture for the live preview (upright; the view turns and places it). `scale` is the screen scale.
     static func image(_ l: CaptionLayout, scale: Double) -> UIImage? {
         let c = l.caption
-        let key = "\(c.text)|\(c.font.rawValue)|\(c.color)|\(c.look.rawValue)|\(c.align.rawValue)|\(c.ornament.rawValue)|\(c.mix.rawValue)|\(c.accentFont.rawValue)|\(c.bold)\(c.italic)\(c.underline)\(c.strikethrough)\(c.allCaps)|\(Int((l.fontPx * 100).rounded()))|\(Int(l.box.width.rounded()))|\(Int(l.box.height.rounded()))|\(scale)" as NSString
+        let key = "\(c.text)|\(c.font.rawValue)|\(c.color)|\(c.look.rawValue)|\(c.align.rawValue)|\(c.ornament.rawValue)|\(c.mix.rawValue)|\(c.accentFont.rawValue)|\(c.bold)\(c.italic)\(c.underline)\(c.strikethrough)\(c.allCaps)\(c.vertical)|\(Int((l.fontPx * 100).rounded()))|\(Int(l.box.width.rounded()))|\(Int(l.box.height.rounded()))|\(scale)" as NSString
         if let hit = imageCache.object(forKey: key) { return hit }
         let w = Int(((l.box.width + l.bleed * 2) * scale).rounded(.up))
         let h = Int(((l.box.height + l.bleed * 2) * scale).rounded(.up))

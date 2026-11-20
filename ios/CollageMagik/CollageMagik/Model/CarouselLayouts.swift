@@ -20,8 +20,15 @@ extension Project {
         let outer = frameRects(W: W, H: H)
         return outer.indices.map { i in
             let e = frameEdges(i, outer[i], W: W)
-            return outer[i].inset(left: e.side, top: e.side, right: e.side, bottom: e.bottom)
+            return outer[i].inset(left: e.side, top: e.top, right: e.side, bottom: e.bottom)
         }
+    }
+
+    /// The frame around cell `i`: its own, or the design's.
+    func frame(of i: Int) -> PhotoFrame {
+        guard i < cellCount else { return .none }
+        if cells.indices.contains(i), let own = cells[i].frame { return own }
+        return frame
     }
 
     /// The whole of each cell, frame included.
@@ -32,27 +39,26 @@ extension Project {
     /// Corner radius for a canvas drawn `W` pixels wide.
     func cornerRadius(W: Double) -> Double { radius * W / canvasWidth }
 
-    /// Does cell `i` get the Style tab's frame?
-    func isFramed(_ i: Int) -> Bool { frame != .none && i < cellCount }
+    /// Does cell `i` have a frame (its own or the design's)?
+    func isFramed(_ i: Int) -> Bool { frame(of: i) != .none }
 
-    /// Frame thickness around cell `i` (sides, and the bottom, which is deeper on an instant photo), in canvas pixels.
-    func frameEdges(_ i: Int, _ r: PxRect, W: Double) -> (side: Double, bottom: Double) {
-        guard isFramed(i), frame.hasEdge else { return (0, 0) }
-        let side = min(frameWidth * W / canvasWidth, min(r.w, r.h) * 0.12)
-        switch frame {
-        case .instant: return (side, min(side * 3.4, r.h * 0.3))
-        case .torn: return (side * 1.2, side * 1.2)
-        default: return (side, side)
-        }
+    /// Frame thickness around cell `i` (sides, top and bottom: an instant photo is deeper at the bottom, film at both
+    /// ends), in canvas pixels.
+    func frameEdges(_ i: Int, _ r: PxRect, W: Double) -> (side: Double, top: Double, bottom: Double) {
+        let f = frame(of: i)
+        guard f.hasEdge else { return (0, 0, 0) }
+        let base = min(frameWidth * W / canvasWidth, min(r.w, r.h) * 0.12)
+        let k = f.edgeFactors
+        return (min(base * k.side, r.w * 0.2), min(base * k.top, r.h * 0.3), min(base * k.bottom, r.h * 0.3))
     }
 
     /// Corner radius of the picture in cell `i`: printed photos have small corners.
     func pictureRadius(_ i: Int, W: Double) -> Double {
         let r = cornerRadius(W: W)
         guard isFramed(i) else { return r }
-        switch frame {
-        case .torn: return 0
-        case .shadow: return r
+        switch frame(of: i) {
+        case .torn, .stamp, .film: return 0
+        case .shadow, .date, .neon, .circle, .heart, .arch: return r
         default: return min(r, 3 * W / canvasWidth)
         }
     }

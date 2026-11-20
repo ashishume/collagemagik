@@ -207,11 +207,38 @@ struct CompactTool: View {
         Button(role: role, action: action) {
             VStack(spacing: 2) {
                 Image(systemName: symbol).font(.system(size: 15, weight: .medium)).frame(height: 18)
-                Text(title).font(.system(size: 10, weight: .medium)).lineLimit(1).minimumScaleFactor(0.8)
+                Text(title).font(.system(size: 10, weight: .medium)).lineLimit(1).minimumScaleFactor(0.65)
             }
             // the whole tile is room for the title: seven tools fit in a row without cutting words off
             .padding(.horizontal, 2)
             .foregroundStyle(role == .destructive ? Color.red : (isOn ? Color.white : Color.primary))
+            .frame(maxWidth: .infinity)
+            .frame(height: 42)
+            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .glassEffect(isOn ? .regular.tint(Color.brand.opacity(0.7)).interactive() : .regular.interactive(), in: .rect(cornerRadius: 14))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+    }
+}
+
+/// A compact tool tile that opens a menu (same look as `CompactTool`).
+struct CompactMenuTool<Items: View>: View {
+    let title: String
+    let symbol: String
+    var isOn = false
+    @ViewBuilder let items: Items
+
+    var body: some View {
+        Menu {
+            items
+        } label: {
+            VStack(spacing: 2) {
+                Image(systemName: symbol).font(.system(size: 15, weight: .medium)).frame(height: 18)
+                Text(title).font(.system(size: 10, weight: .medium)).lineLimit(1).minimumScaleFactor(0.65)
+            }
+            .padding(.horizontal, 2)
+            .foregroundStyle(isOn ? Color.white : Color.primary)
             .frame(maxWidth: .infinity)
             .frame(height: 42)
             .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))

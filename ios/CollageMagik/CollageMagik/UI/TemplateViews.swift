@@ -114,7 +114,13 @@ struct TemplateBrowserSheet: View {
                     TemplateGrid(list: list, pictures: store.items) { t in
                         withAnimation(.smooth) { store.applyTemplate(t) }
                         dismiss()
-                        store.notify("\(t.name) applied. Undo brings your design back.")
+                        // the template's words are placeholders: select the first, so changing it is one tap away
+                        if let first = store.project.captions.first {
+                            store.selectCaption(first.id)
+                            store.notify("\(t.name) applied. Tap Edit to write your own words; Undo brings your design back.")
+                        } else {
+                            store.notify("\(t.name) applied. Undo brings your design back.")
+                        }
                     }
                 }
                 .padding(.vertical, 10)

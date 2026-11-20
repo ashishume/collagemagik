@@ -267,6 +267,8 @@ struct PanelCard: View {
             guard let s = store.selectedCell, store.project.cells.indices.contains(s) else { return 44 + pad }
             if store.swapFrom != nil { return 36 + pad }
             guard let id = store.project.cells[s].mediaId else { return 40 + pad }
+            // Look open: filter swatches, which adjustment, and its slider
+            if store.adjustOpen && store.item(id)?.kind == .photo { return 42 + 8 + 56 + 8 + 30 + 8 + 30 + pad }
             // Resize open: Fill / Fit, then (when fitted) what fills the sides
             if store.resizeOpen { return (store.project.cells[s].fit ? 132 : 92) + pad }
             return (store.item(id)?.kind == .video ? 150 : 108) + pad

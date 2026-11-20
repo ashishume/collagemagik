@@ -107,20 +107,32 @@ struct CaptionFormatRow: View {
                 Spacer(minLength: 0)
             }
         }
-        .sensoryFeedback(.selection, trigger: [caption.bold, caption.italic, caption.underline, caption.strikethrough, caption.allCaps])
+        .sensoryFeedback(.selection, trigger: [caption.bold, caption.italic, caption.underline, caption.strikethrough, caption.allCaps, caption.vertical])
     }
 }
 
-/// Shadow, Label, Plate or Outline.
+/// Shadow, Label, Plate, Outline, Neon, Sticker or Gradient: a row of chips that scrolls sideways.
 struct CaptionLookPicker: View {
     let selection: CaptionLook
     let pick: (CaptionLook) -> Void
 
     var body: some View {
-        Picker("Caption background", selection: Binding(get: { selection }, set: pick)) {
-            ForEach(CaptionLook.allCases) { l in Text(l.title).tag(l) }
+        ScrollView(.horizontal, showsIndicators: false) {
+            GlassEffectContainer(spacing: 6) {
+                HStack(spacing: 6) {
+                    ForEach(CaptionLook.allCases) { l in
+                        ChipButton(title: l.title, symbol: l.symbol, isOn: l == selection) {
+                            withAnimation(.smooth(duration: 0.2)) { pick(l) }
+                        }
+                        .accessibilityAddTraits(l == selection ? .isSelected : [])
+                    }
+                }
+                .padding(.vertical, 2)
+            }
         }
-        .pickerStyle(.segmented)
+        .scrollClipDisabled()
+        .frame(height: 32)
+        .sensoryFeedback(.selection, trigger: selection)
     }
 }
 

@@ -5,7 +5,8 @@ import UIKit
 
 /// What a template is for, shown as chips in the Templates browser.
 enum TemplateCategory: String, CaseIterable, Identifiable {
-    case photoDump, travel, birthday, love, friends, food, minimal, moodboard, beforeAfter, scrapbook
+    case photoDump, travel, birthday, love, wedding, baby, friends, pets, food, fitness, graduation, holidays, business,
+         quote, minimal, moodboard, beforeAfter, scrapbook
 
     var id: String { rawValue }
     var title: String {
@@ -14,6 +15,14 @@ enum TemplateCategory: String, CaseIterable, Identifiable {
         case .travel: "Travel"
         case .birthday: "Birthday"
         case .love: "Love"
+        case .wedding: "Wedding"
+        case .baby: "Baby"
+        case .pets: "Pets"
+        case .fitness: "Fitness"
+        case .graduation: "Graduation"
+        case .holidays: "Holidays"
+        case .business: "Shop"
+        case .quote: "Quote"
         case .friends: "Friends"
         case .food: "Food"
         case .minimal: "Minimal"
@@ -213,6 +222,109 @@ let allTemplates: [DesignTemplate] = [
         ]
     ),
 
+    DesignTemplate(
+        id: "c-film-roll", name: "Film roll", category: .photoDump, mode: .collage, format: .story,
+        layoutId: "3-rows", gap: 6, bg: "#161618", frame: .film, frameColor: "#101016", frameWidth: 30,
+        captions: [caption("roll 01", .typewriter, x: 0.86, y: 0.985, size: 30, color: "#ff9a3c")]
+    ),
+    DesignTemplate(
+        id: "c-disposable", name: "Disposable", category: .photoDump, mode: .collage, format: .post,
+        layoutId: "4-grid", gap: 10, bg: "#0f0f12", frame: .date
+    ),
+    DesignTemplate(
+        id: "c-washi", name: "Washi notes", category: .scrapbook, mode: .collage, format: .post,
+        layoutId: "4-grid", gap: 46, bg: "#efe6d8", backdrop: pattern(.grid), frame: .tape, frameColor: "#fbfaf6", frameWidth: 14,
+        captions: [caption("summer notes", .hand, y: 0.5, size: 70, color: "#3b2f2a", rotation: -3)]
+    ),
+    DesignTemplate(
+        id: "c-stamps", name: "Stamp collection", category: .travel, mode: .collage, format: .square,
+        layoutId: "6-grid", gap: 26, bg: "#e9dfcf", frame: .stamp, frameColor: "#fbfaf6", frameWidth: 16,
+        captions: [caption("par avion", .typewriter, x: 0.5, y: 0.5, size: 44, color: "#2b4a8b", look: .label, rotation: -6)]
+    ),
+    DesignTemplate(
+        id: "c-gallery", name: "Gallery", category: .minimal, mode: .collage, format: .post,
+        layoutId: "2-side", gap: 30, bg: "#f4f1ec", frame: .gallery, frameColor: "#ffffff", frameWidth: 16
+    ),
+    DesignTemplate(
+        id: "c-wedding", name: "Wedding day", category: .wedding, mode: .collage, format: .post,
+        layoutId: "3-big-top", gap: 16, radius: 6, bg: "#fbf7f2", frame: .shadow,
+        captions: [caption("Mr & Mrs", .vows, y: 0.6, size: 92, color: "#ffffff", ornament: .heart)]
+    ),
+    DesignTemplate(
+        id: "c-save-date", name: "Save the date", category: .wedding, mode: .collage, format: .post,
+        layoutId: "1-centre", bg: "#f6efe7", frame: .arch,
+        captions: [
+            caption("save the date", .signature, y: 0.09, size: 92, color: "#8a6d3b"),
+            caption("06 · 06 · 2027", .typewriter, y: 0.91, size: 44, color: "#8a6d3b"),
+        ]
+    ),
+    DesignTemplate(
+        id: "c-baby", name: "Hello baby", category: .baby, mode: .collage, format: .post,
+        layoutId: "4-grid", gap: 30, bg: "#fdf0f3", frame: .circle,
+        captions: [caption("hello, little one", .dreamy, y: 0.5, size: 76, color: "#b05c7a")],
+        stickers: [emoji("🍼", x: 0.9, y: 0.06, w: 0.1, tilt: 10)]
+    ),
+    DesignTemplate(
+        id: "c-baby-months", name: "Month by month", category: .baby, mode: .collage, format: .square,
+        layoutId: "6-grid", gap: 30, bg: "#eef6ff", frame: .instant, frameColor: "#ffffff",
+        stickers: [emoji("⭐️", x: 0.5, y: 0.5, w: 0.09)]
+    ),
+    DesignTemplate(
+        id: "c-graduation", name: "Graduation", category: .graduation, mode: .collage, format: .post,
+        layoutId: "4-big-top", gap: 16, radius: 10, backdrop: gradient(5), frame: .border, frameWidth: 10,
+        captions: [caption("Class of 2026", .poster, y: 0.5, size: 84, look: .plate, allCaps: true)],
+        stickers: [emoji("🎓", x: 0.9, y: 0.08, w: 0.13, tilt: 12)]
+    ),
+    DesignTemplate(
+        id: "c-progress", name: "Progress", category: .fitness, mode: .collage, format: .story,
+        layoutId: "2-side", gap: 8, bg: "#0d0d0f",
+        captions: [
+            caption("DAY 1", .poster, x: 0.25, y: 0.92, size: 70, look: .plate, allCaps: true),
+            caption("DAY 100", .poster, x: 0.75, y: 0.92, size: 70, look: .plate, allCaps: true),
+        ]
+    ),
+    DesignTemplate(
+        id: "c-pets", name: "Best friend", category: .pets, mode: .collage, format: .post,
+        layoutId: "4-grid", gap: 28, bg: "#fff4e0", frame: .heart,
+        captions: [caption("my best friend", .hand, y: 0.5, size: 76, color: "#6b3e1f")],
+        stickers: [emoji("🐾", x: 0.1, y: 0.06, w: 0.1, tilt: -12)]
+    ),
+    DesignTemplate(
+        id: "c-new-in", name: "New in", category: .business, mode: .collage, format: .square,
+        layoutId: "4-big-top", gap: 12, bg: "#ffffff",
+        captions: [
+            caption("NEW IN", .poster, x: 0.2, y: 0.08, size: 70, color: "#ffffff", look: .plate, allCaps: true),
+            caption("shop now →", .rounded, x: 0.8, y: 0.5, size: 38, look: .label),
+        ]
+    ),
+    DesignTemplate(
+        id: "c-quote", name: "Quote card", category: .quote, mode: .collage, format: .post,
+        layoutId: "1-centre", radius: 18, backdrop: gradient(2), frame: .shadow,
+        captions: [caption("“collect moments, not things”", .serif, y: 0.9, size: 52, color: "#4a2a22")]
+    ),
+    DesignTemplate(
+        id: "c-christmas", name: "Merry Christmas", category: .holidays, mode: .collage, format: .post,
+        layoutId: "5-hero", gap: 14, radius: 10, backdrop: gradient(10), frame: .border, frameWidth: 10,
+        captions: [caption("Merry Christmas", .script, y: 0.07, size: 92, ornament: .sparkles)],
+        stickers: [emoji("🎄", x: 0.92, y: 0.94, w: 0.12)]
+    ),
+    DesignTemplate(
+        id: "c-diwali", name: "Happy Diwali", category: .holidays, mode: .collage, format: .post,
+        layoutId: "4-grid", gap: 34, backdrop: gradient(1), frame: .neon, frameColor: "#ffd23f",
+        captions: [caption("Happy Diwali", .vows, y: 0.5, size: 96, color: "#fff3c4", ornament: .sparkles)],
+        stickers: [emoji("🪔", x: 0.5, y: 0.94, w: 0.1)]
+    ),
+    DesignTemplate(
+        id: "c-new-year", name: "New Year", category: .holidays, mode: .collage, format: .story,
+        layoutId: "6-grid", gap: 10, radius: 8, backdrop: gradient(5), frame: .date,
+        captions: [caption("2027", .poster, y: 0.5, size: 170, look: .outline)]
+    ),
+    DesignTemplate(
+        id: "c-valentine", name: "Be mine", category: .love, mode: .collage, format: .post,
+        layoutId: "4-grid", gap: 26, bg: "#ffe4ec", frame: .heart,
+        captions: [caption("be mine", .script, y: 0.5, size: 100, color: "#d6336c")]
+    ),
+
     // MARK: Carousels
     DesignTemplate(
         id: "k-swipe-story", name: "Swipe story", category: .photoDump, mode: .carousel,
@@ -239,6 +351,20 @@ let allTemplates: [DesignTemplate] = [
         captions: [caption("recap", .marker, x: 0.5, y: 0.5, size: 110, look: .label)]
     ),
     DesignTemplate(
+        id: "k-film", name: "Film roll", category: .photoDump, mode: .carousel,
+        style: .flow, bg: "#121212", frame: .film, frameColor: "#101016", frameWidth: 30
+    ),
+    DesignTemplate(
+        id: "k-neon", name: "After dark", category: .friends, mode: .carousel,
+        style: .squareFlow, bg: "#07070b", frame: .neon, frameColor: "#3de0ff",
+        captions: [caption("after dark", .marker, x: 0.5, y: 0.08, size: 64, look: .label)]
+    ),
+    DesignTemplate(
+        id: "k-holiday", name: "Holiday dump", category: .holidays, mode: .carousel,
+        style: .wall, gap: 22, bg: "#efe6d8", frame: .tape, frameColor: "#fbfaf6", frameWidth: 12,
+        captions: [caption("holiday dump", .hand, x: 0.5, y: 0.5, size: 80, color: "#3b2f2a", look: .label)]
+    ),
+    DesignTemplate(
         id: "k-wave", name: "Summer wave", category: .friends, mode: .carousel,
         style: .wave, radius: 18, backdrop: gradient(6),
         captions: [caption("summer", .dreamy, x: 0.5, y: 0.1, size: 96, color: "#5a3a00")],
@@ -263,7 +389,8 @@ enum TemplatePreview {
         let key = "\(t.id)|\(photos.map(\.id).joined(separator: ","))" as NSString
         if let hit = cache.object(forKey: key) { return hit }
         let items = photos.isEmpty ? samples : photos
-        let wanted = t.mode == .collage ? t.slots : max(min(items.count, maxCarouselPhotos), 3)
+        // a carousel preview stays readable: four sample pictures (about three slides), or the person's own pictures
+        let wanted = t.mode == .collage ? t.slots : (photos.isEmpty ? 4 : min(items.count, maxCarouselPhotos))
         let ids = (0..<wanted).map { items[$0 % items.count].id }
         let unique = t.mode == .collage ? ids : Array(ids.prefix(items.count))
         let project = t.project(basedOn: Project(), pictures: unique)

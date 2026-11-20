@@ -66,17 +66,19 @@ extension Project {
         let pw = clamp(o.w, overlayWidthRange.lowerBound, overlayWidthRange.upperBound) * slideW
         let ph = pw * max(0.2, min(5, aspect))
         // printed borders scale with the photo, so a small print has a thin edge
-        let side: Double, bottom: Double
+        let side: Double, top: Double, bottom: Double
         switch o.frame {
-        case .border: side = pw * 0.045; bottom = side
-        case .instant: side = pw * 0.05; bottom = side * 3.6
-        case .torn: side = pw * 0.055; bottom = side
-        case .none, .shadow: side = 0; bottom = 0
+        case .border: side = pw * 0.045; top = side; bottom = side
+        case .instant: side = pw * 0.05; top = side; bottom = side * 3.6
+        case .torn: side = pw * 0.055; top = side; bottom = side
+        default:
+            let base = pw * 0.045, k = o.frame.edgeFactors
+            side = base * k.side; top = base * k.top; bottom = base * k.bottom
         }
-        let ow = pw + side * 2, oh = ph + side + bottom
+        let ow = pw + side * 2, oh = ph + top + bottom
         let cx = clamp(o.cx, 0, Double(slides)) * slideW
         let cy = clamp(o.cy, 0, 1) * H
         let outer = PxRect(x: cx - ow / 2, y: cy - oh / 2, w: ow, h: oh, tilt: o.tilt)
-        return OverlayGeometry(outer: outer, picture: outer.inset(left: side, top: side, right: side, bottom: bottom), edge: side)
+        return OverlayGeometry(outer: outer, picture: outer.inset(left: side, top: top, right: side, bottom: bottom), edge: side)
     }
 }

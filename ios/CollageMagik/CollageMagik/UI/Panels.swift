@@ -348,7 +348,7 @@ struct StylePanel: View {
         case .size: content = formatCardHeight + (p.format == .story ? rowSpacing + 31 : 0)
         case .spacing: content = 2 * sliderRowHeight + rowSpacing
         case .background: content = 32 + 6 + (p.backdrop.kind == .pattern ? 26 + 4 + 44 : 44)
-        case .frame: content = 34 + (p.frame.hasEdge ? 2 * (rowSpacing + sliderRowHeight) : 0)
+        case .frame: content = 34 + (p.frame.usesColor ? rowSpacing + sliderRowHeight : 0) + (p.frame.hasEdge ? rowSpacing + sliderRowHeight : 0)
         }
         return panelTabsHeight + 12 + hintHeight + rowSpacing + content
     }
@@ -430,7 +430,7 @@ extension StylePanel {
                 HStack(spacing: 6) {
                     ForEach(PhotoFrame.allCases) { f in
                         ChipButton(title: f.title, symbol: f.symbol, isOn: f == frame) {
-                            withAnimation(.smooth) { store.project.frame = f }
+                            withAnimation(.smooth) { store.selectFrame(f) }
                         }
                         .accessibilityAddTraits(f == frame ? .isSelected : [])
                     }
@@ -440,9 +440,9 @@ extension StylePanel {
         }
         .scrollClipDisabled()
         .frame(height: 34)
-        if frame.hasEdge {
+        if frame.usesColor {
             HStack(spacing: 10) {
-                rowLabel("Colour", symbol: "paintbrush")
+                rowLabel(frame == .neon ? "Light" : "Colour", symbol: "paintbrush")
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
                         ForEach(frameSwatches, id: \.self) { c in
@@ -467,6 +467,8 @@ extension StylePanel {
                 .labelsHidden()
             }
             .frame(height: Self.sliderRowHeight)
+        }
+        if frame.hasEdge {
             labeledSlider("Thickness", symbol: "lineweight", value: $store.project.frameWidth, range: 6...60)
         }
     }
@@ -608,17 +610,40 @@ struct PicturePanel: View {
                             CompactTool(title: "Change", symbol: "photo.badge.plus") { store.openAdd(cell: sel) }
                             CompactTool(title: "Swap", symbol: "arrow.left.arrow.right") { withAnimation { store.swapFrom = sel } }
                             CompactTool(title: "Resize", symbol: "arrow.up.left.and.arrow.down.right", isOn: store.resizeOpen || cell.fit) {
-                                withAnimation(.smooth) { store.resizeOpen.toggle() }
+                                withAnimation(.smooth) { store.adjustOpen = false; store.resizeOpen.toggle() }
+                            }
+                            if let id = cell.mediaId, store.item(id)?.kind == .photo {
+                                CompactTool(title: "Look", symbol: "camera.filters", isOn: store.adjustOpen || !cell.look.isOriginal) {
+                                    withAnimation(.smooth) { store.resizeOpen = false; store.adjustOpen.toggle() }
+                                }
                             }
                             CompactTool(title: "Rotate", symbol: "rotate.right") { withAnimation(.smooth) { store.rotateCell(sel) } }
                             CompactTool(title: "Flip", symbol: "arrow.left.and.right.righttriangle.left.righttriangle.right", isOn: cell.flip) {
                                 withAnimation(.smooth) { store.flipCell(sel) }
                             }
                             CompactTool(title: "Crop", symbol: "crop") { store.cropCell = sel }
+                            // this picture's own frame; Style → Frame sets every picture at once
+                            CompactMenuTool(title: "Frame", symbol: "photo.artframe", isOn: cell.frame != nil) {
+                                Button {
+                                    withAnimation(.smooth) { store.setCellFrame(sel, nil) }
+                                } label: {
+                                    Label("Same as all (\(store.project.frame.title))", systemImage: cell.frame == nil ? "checkmark" : "square.stack")
+                                }
+                                Divider()
+                                ForEach(PhotoFrame.allCases) { f in
+                                    Button {
+                                        withAnimation(.smooth) { store.setCellFrame(sel, f) }
+                                    } label: {
+                                        Label(f.title, systemImage: cell.frame == f ? "checkmark" : f.symbol)
+                                    }
+                                }
+                            }
                             CompactTool(title: "Delete", symbol: "xmark", role: .destructive) { store.clearCell(sel) }
                         }
                     }
-                    if store.resizeOpen {
+                    if store.adjustOpen, let id = cell.mediaId, let item = store.item(id), item.kind == .photo {
+                        PhotoLookTools(sel: sel, cell: cell, item: item) { withAnimation(.smooth) { store.adjustOpen = false } }
+                    } else if store.resizeOpen {
                         resizeTools(sel, cell)
                     } else {
                     if let id = cell.mediaId, store.item(id)?.kind == .video {
@@ -808,7 +833,13 @@ struct OverlayPanel: View {
                     HStack(spacing: 6) {
                         ForEach(PhotoFrame.allCases) { f in
                             ChipButton(title: f.title, symbol: f.symbol, isOn: f == o.frame) {
-                                withAnimation(.smooth) { store.updateOverlay(o.id) { $0.frame = f } }
+                                withAnimation(.smooth) {
+                                    store.updateOverlay(o.id) {
+                                        if let c = f.startColor, $0.frame != f { $0.frameColor = c }
+                                        else if f.startColor == nil, let old = $0.frame.startColor, $0.frameColor == old { $0.frameColor = "#ffffff" }
+                                        $0.frame = f
+                                    }
+                                }
                             }
                             .accessibilityAddTraits(f == o.frame ? .isSelected : [])
                         }
@@ -817,7 +848,7 @@ struct OverlayPanel: View {
                 }
             }
             .scrollClipDisabled()
-            if o.frame.hasEdge {
+            if o.frame.usesColor {
                 HStack(spacing: 9) {
                     ForEach(frameSwatches, id: \.self) { c in
                         let on = o.frameColor.lowercased() == c
@@ -892,5 +923,93 @@ struct OverlayPanel: View {
                 }
             }
         }
+    }
+}
+
+/// Picture tools → Look: a filter (each swatch is this photo in that filter), then one fine adjustment at a time.
+struct PhotoLookTools: View {
+    @Environment(CollageStore.self) private var store
+    let sel: Int
+    let cell: CellState
+    let item: MediaItem
+    let done: () -> Void
+    @State private var adjusting: Adjustment = .light
+
+    enum Adjustment: String, CaseIterable, Identifiable {
+        case light, contrast, colour, warmth
+        var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .light: "Light"
+            case .contrast: "Contrast"
+            case .colour: "Colour"
+            case .warmth: "Warmth"
+            }
+        }
+        var keyPath: WritableKeyPath<PhotoLook, Double> {
+            switch self {
+            case .light: \.brightness
+            case .contrast: \.contrast
+            case .colour: \.saturation
+            case .warmth: \.warmth
+            }
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(PhotoFilter.allCases) { f in
+                        let on = cell.look.filter == f
+                        Button {
+                            withAnimation(.smooth(duration: 0.2)) { store.setCellLook(sel) { $0.filter = f } }
+                        } label: {
+                            VStack(spacing: 3) {
+                                Image(uiImage: PhotoLookRenderer.apply(item.thumbnail, PhotoLook(filter: f), key: "thumb-\(item.id)"))
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 40, height: 40)
+                                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.brand, lineWidth: on ? 2.5 : 0).padding(-3))
+                                Text(f.title)
+                                    .font(.system(size: 9.5, weight: on ? .semibold : .regular))
+                                    .foregroundStyle(on ? .primary : .secondary)
+                                    .lineLimit(1)
+                            }
+                            .frame(width: 50)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(f.title) filter")
+                        .accessibilityAddTraits(on ? .isSelected : [])
+                    }
+                }
+                .padding(.horizontal, 3)
+                .padding(.top, 3)
+            }
+            .frame(height: 56)
+            Picker("Adjust", selection: $adjusting) {
+                ForEach(Adjustment.allCases) { a in Text(a.title).tag(a) }
+            }
+            .pickerStyle(.segmented)
+            .frame(height: 30)
+            HStack(spacing: 8) {
+                Slider(value: Binding(
+                    get: { cell.look[keyPath: adjusting.keyPath] },
+                    set: { v in store.setCellLook(sel) { $0[keyPath: adjusting.keyPath] = abs(v) < 0.04 ? 0 : v } }
+                ), in: -1...1)
+                .accessibilityLabel(adjusting.title)
+                Text("\(Int((cell.look[keyPath: adjusting.keyPath] * 100).rounded()))")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .frame(width: 34, alignment: .trailing)
+                GlassIconButton(symbol: "arrow.counterclockwise", label: "Back to the original photo", size: 30) {
+                    withAnimation(.smooth) { store.setCellLook(sel) { $0 = PhotoLook() } }
+                }
+                GlassIconButton(symbol: "checkmark", label: "Done", size: 30, action: done)
+            }
+            .frame(height: 30)
+        }
+        .sensoryFeedback(.selection, trigger: cell.look.filter)
     }
 }

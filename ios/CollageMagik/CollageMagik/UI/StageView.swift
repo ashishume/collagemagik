@@ -285,23 +285,28 @@ struct StageView: View {
         let radius = project.cornerRadius(W: size.width)
 
         ZStack(alignment: .topLeading) {
-            BackdropLayer(project: project, size: size)
+            // what is drawn on the design is cut at its edges, as in every export (tape or a glow can't spill out)
+            ZStack(alignment: .topLeading) {
+                BackdropLayer(project: project, size: size)
 
-            ForEach(Array(px.enumerated()), id: \.offset) { i, r in
-                cell(i, r, size: size)
-            }
+                ForEach(Array(px.enumerated()), id: \.offset) { i, r in
+                    cell(i, r, size: size)
+                }
 
-            ForEach(Array(project.overlays.enumerated()), id: \.element.id) { k, o in
-                overlayView(o, index: k, size)
-            }
+                ForEach(Array(project.overlays.enumerated()), id: \.element.id) { k, o in
+                    overlayView(o, index: k, size)
+                }
 
-            ForEach(project.stickers) { st in
-                stickerView(st, size)
-            }
+                ForEach(project.stickers) { st in
+                    stickerView(st, size)
+                }
 
-            ForEach(project.captions) { c in
-                if !c.text.isEmpty { captionView(c, size) }
+                ForEach(project.captions) { c in
+                    if !c.text.isEmpty { captionView(c, size) }
+                }
             }
+            .frame(width: size.width, height: size.height, alignment: .topLeading)
+            .clipped()
 
             if interactive {
                 if project.mode == .carousel { seamGuides(size) }
@@ -395,19 +400,25 @@ struct StageView: View {
         let pr = min(project.pictureRadius(i, W: size.width), r.w / 2, r.h / 2)
         let unit = size.width / project.canvasWidth
         let framed = project.isFramed(i)
+        let frame = framed ? project.frame(of: i) : PhotoFrame.none
+        let local = CGRect(x: r.x - outer.x, y: r.y - outer.y, width: r.w, height: r.h)
+        let printSize = CGSize(width: outer.w, height: outer.h)
         ZStack(alignment: .topLeading) {
             if framed {
-                if project.frame.hasEdge {
-                    Path(frameOutline(project.frame, size: CGSize(width: outer.w, height: outer.h), radius: 3 * unit,
+                if frame.hasEdge {
+                    Path(frameOutline(frame, size: printSize, radius: 3 * unit,
                                       edge: project.frameEdges(i, outer, W: size.width).side, seed: i))
                         .fill(Color(hex: project.frameColor))
                         .shadow(color: .black.opacity(0.38), radius: 11 * unit, y: 7 * unit)
                 } else {
-                    RoundedRectangle(cornerRadius: pr, style: .continuous)
+                    PictureShape(frame: frame, radius: pr)
                         .fill(.black)
                         .frame(width: r.w, height: r.h)
                         .shadow(color: .black.opacity(0.38), radius: 11 * unit, y: 7 * unit)
                         .offset(x: r.x - outer.x, y: r.y - outer.y)
+                }
+                if frame == .film {
+                    FrameDecorLayer(frame: frame, size: printSize, picture: local, color: project.frameColor, unit: unit, seed: i, over: false)
                 }
             }
             ZStack {
@@ -417,7 +428,8 @@ struct StageView: View {
                         item: item,
                         rect: PxRect(x: 0, y: 0, w: r.w, h: r.h),
                         view: state.view,
-                        player: item.kind == .video ? store.playback.player(for: item) : nil
+                        player: item.kind == .video ? store.playback.player(for: item) : nil,
+                        look: state.look
                     )
                 } else if !interactive {
                     Color.white.opacity(0.06)
@@ -426,8 +438,11 @@ struct StageView: View {
                 }
             }
             .frame(width: r.w, height: r.h)
-            .clipShape(RoundedRectangle(cornerRadius: pr, style: .continuous))
+            .clipShape(PictureShape(frame: frame, radius: pr))
             .offset(x: r.x - outer.x, y: r.y - outer.y)
+            if frame.hasDecor && frame != .film {
+                FrameDecorLayer(frame: frame, size: printSize, picture: local, color: project.frameColor, unit: unit, seed: i, over: true)
+            }
         }
         .frame(width: outer.w, height: outer.h, alignment: .topLeading)
         .rotationEffect(.degrees(outer.tilt))
@@ -445,23 +460,31 @@ struct StageView: View {
     private func overlayView(_ o: PhotoOverlay, index k: Int, _ size: CGSize) -> some View {
         if let item = store.item(o.mediaId), let g = overlayGeometry(o, size) {
             let unit = size.width / store.project.canvasWidth
-            let pr: Double = o.frame == .torn ? 0 : 3 * unit
+            let pr: Double = o.frame.printRadius(unit: unit)
+            let printSize = CGSize(width: g.outer.w, height: g.outer.h)
+            let local = CGRect(x: g.picture.x - g.outer.x, y: g.picture.y - g.outer.y, width: g.picture.w, height: g.picture.h)
             ZStack(alignment: .topLeading) {
                 if o.frame.hasEdge {
-                    Path(frameOutline(o.frame, size: CGSize(width: g.outer.w, height: g.outer.h), radius: 3 * unit, edge: g.edge, seed: 1000 + k))
+                    Path(frameOutline(o.frame, size: printSize, radius: 3 * unit, edge: g.edge, seed: 1000 + k))
                         .fill(Color(hex: o.frameColor))
                         .shadow(color: .black.opacity(0.38), radius: 11 * unit, y: 7 * unit)
-                } else if o.frame == .shadow {
-                    RoundedRectangle(cornerRadius: pr, style: .continuous)
+                } else if o.frame != .none {
+                    PictureShape(frame: o.frame, radius: pr)
                         .fill(.black)
                         .frame(width: g.picture.w, height: g.picture.h)
                         .shadow(color: .black.opacity(0.38), radius: 11 * unit, y: 7 * unit)
                         .offset(x: g.picture.x - g.outer.x, y: g.picture.y - g.outer.y)
                 }
+                if o.frame == .film {
+                    FrameDecorLayer(frame: o.frame, size: printSize, picture: local, color: o.frameColor, unit: unit, seed: 1000 + k, over: false)
+                }
                 MediaPlacementView(item: item, rect: PxRect(x: 0, y: 0, w: g.picture.w, h: g.picture.h), view: o.view, player: nil)
                     .frame(width: g.picture.w, height: g.picture.h)
-                    .clipShape(RoundedRectangle(cornerRadius: pr, style: .continuous))
+                    .clipShape(PictureShape(frame: o.frame, radius: pr))
                     .offset(x: g.picture.x - g.outer.x, y: g.picture.y - g.outer.y)
+                if o.frame.hasDecor && o.frame != .film {
+                    FrameDecorLayer(frame: o.frame, size: printSize, picture: local, color: o.frameColor, unit: unit, seed: 1000 + k, over: true)
+                }
             }
             .frame(width: g.outer.w, height: g.outer.h, alignment: .topLeading)
             .rotationEffect(.degrees(g.outer.tilt))
