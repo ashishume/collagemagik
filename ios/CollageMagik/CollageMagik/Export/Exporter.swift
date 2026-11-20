@@ -430,12 +430,19 @@ struct PhotosAccessDenied: LocalizedError {
 /// Saves to Photos with add-only access: the app can add a collage but never read or change what is already there.
 /// iOS shows its permission prompt the first time this runs, which is when the person taps Save to Photos.
 enum PhotoSaver {
-    /// Saves several pictures in one go (a carousel's slides), in order.
+    /// Saves a carousel's slides in one go, each with its own creation date so their order is fixed rather than left to
+    /// Photos to break a tie. Slide 1 is the newest: Instagram's picker lists newest first, so the slides sit at its
+    /// top-left as 1, 2, 3… and people tap them in posting order. (The Photos app lists newest last, so there they read
+    /// backwards at the bottom.)
     static func saveAll(urls: [URL]) async throws {
         let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
         guard status == .authorized || status == .limited else { throw PhotosAccessDenied() }
+        let now = Date()
         try await PHPhotoLibrary.shared().performChanges {
-            for url in urls { PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: url) }
+            for (i, url) in urls.enumerated() {
+                let request = PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: url)
+                request?.creationDate = now.addingTimeInterval(-Double(i))
+            }
         }
     }
 

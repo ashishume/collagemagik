@@ -152,7 +152,8 @@ struct StripPlan: Equatable {
 
 /// Plans a strip of `n` pictures, each `aspect` wide for 1 tall. Pictures are as tall as the slide when they can be; they
 /// shrink a little, never below 85% (and the strip slides along) when that would put a slide seam on the join between two pictures,
-/// because a seam that cuts through a picture is what makes people swipe.
+/// because a seam that cuts through a picture is what makes people swipe. The size and slide count are picked that way,
+/// then the strip is drawn from the left edge (see `pinnedLeft`).
 func stripPlan(count n: Int, aspect: Double, format: FormatId) -> StripPlan {
     let n = max(1, n)
     let ratio = format.height / format.width
@@ -181,14 +182,22 @@ func stripPlan(count n: Int, aspect: Double, format: FormatId) -> StripPlan {
                 if seam >= 1, seam <= Double(slides - 1) { score = min(score, abs(edge - seam)) }
             }
             let plan = StripPlan(slides: slides, height: height, width: w, start: start)
-            if score >= clearance { return plan }
+            if score >= clearance { return pinnedLeft(plan) }
             // a taller picture wins a near tie: a seam a little close to a join beats a lot of empty space
             if best == nil || score > best!.score + 0.03 { best = (plan, score) }
         }
         if height < h { break }
         h -= 0.01
     }
-    return best!.plan
+    return pinnedLeft(best!.plan)
+}
+
+/// The same strip moved to start at the left edge of the first slide, so the carousel never opens on a sliver of
+/// background. Picture sizes and the slide count don't change; any spare room is left at the far end instead.
+private func pinnedLeft(_ plan: StripPlan) -> StripPlan {
+    var p = plan
+    p.start = 0
+    return p
 }
 
 /// The pictures of a strip, in reading order, in layout units (0...1 across all the slides).

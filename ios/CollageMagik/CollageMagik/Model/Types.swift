@@ -192,8 +192,8 @@ struct Project: Equatable, Codable {
     var cellSizes: LayoutGrid? = nil
     var cells: [CellState] = Array(repeating: CellState(), count: initialCellCount)
     /// Pixels at 1080 px wide; scaled for other sizes.
-    var gap: Double = 12
-    var radius: Double = 16
+    var gap: Double = 0
+    var radius: Double = 0
     var bg: String = "#101016"
     var safeZone: Bool = false
     var lanes: [Lane] = []
