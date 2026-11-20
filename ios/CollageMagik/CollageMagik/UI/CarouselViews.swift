@@ -34,20 +34,14 @@ struct ModeSwitch: View {
                             .padding(.horizontal, on ? 11 : 10)
                             .frame(height: 30)
                             .contentShape(Capsule())
-                            .background {
-                                if on {
-                                    Capsule()
-                                        .fill(.clear)
-                                        .glassEffect(.regular.tint(Color.brand.opacity(0.75)).interactive(), in: .capsule)
-                                        .glassEffectID("mode", in: glass)
-                                }
-                            }
+                            .slidingBubbleSlot(on, in: glass)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(mode.label)
                     .accessibilityAddTraits(on ? .isSelected : [])
                 }
             }
+            .slidingBubble(in: glass)
             .padding(2)
             .glassEffect(.regular, in: .capsule)
         }

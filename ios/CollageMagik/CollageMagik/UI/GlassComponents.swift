@@ -279,18 +279,36 @@ struct SectionTabs<S: PanelSection>: View {
                         .frame(maxWidth: .infinity)
                         .frame(height: 30)
                         .contentShape(Capsule())
-                        .background {
-                            if on {
-                                Capsule().fill(.clear)
-                                    .glassEffect(.regular.tint(Color.brand.opacity(0.75)).interactive(), in: .capsule)
-                                    .glassEffectID("section", in: glass)
-                            }
-                        }
+                        .slidingBubbleSlot(on, in: glass)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(s.title)
                 .accessibilityAddTraits(on ? .isSelected : [])
             }
+        }
+        .slidingBubble(in: glass)
+    }
+}
+
+// MARK: - Sliding selection bubble
+
+/// One glass bubble behind a row of tabs that slides (and stretches) from the old tab to the new one, like the system
+/// tab bar, instead of a separate bubble fading out under one tab and in under the next. The selected tab marks its
+/// place with `slidingBubbleSlot`; the row draws the bubble there with `slidingBubble`.
+extension View {
+    func slidingBubbleSlot(_ selected: Bool, in ns: Namespace.ID) -> some View {
+        background {
+            if selected { Color.clear.matchedGeometryEffect(id: "bubble", in: ns) }
+        }
+    }
+
+    func slidingBubble(in ns: Namespace.ID) -> some View {
+        background {
+            Capsule()
+                .fill(.clear)
+                .glassEffect(.regular.tint(Color.brand.opacity(0.75)).interactive(), in: .capsule)
+                .matchedGeometryEffect(id: "bubble", in: ns, isSource: false)
+                .allowsHitTesting(false)
         }
     }
 }
