@@ -58,8 +58,8 @@ If the simulator shows "Apple Account Verification" (StoreKit sandbox), tap Not 
 Code is under `ios/CollageMagik/CollageMagik/`.
 
 - **State**: `Model/CollageStore.swift` is the single `@MainActor @Observable` store holding the design (`project`), the
-  media tray (up to 15 items) and UI state. The design is either a **collage** (up to 9 cells, at most 2 videos, 60 s
-  max) or a **carousel** (2–10 slides, photos only, pictures crossing slide seams; layouts in
+  media tray (up to 25 items) and UI state. The design is either a **collage** (up to 12 cells, at most 3 videos, 60 s
+  max) or a **carousel** (up to 20 photos on 2–20 slides, photos only, pictures crossing slide seams; layouts in
   `Model/CarouselLayouts.swift`, which guarantees every seam cuts through a picture).
 - **Pure model maths**: `Layouts.swift` (cell rects as 0..1 fractions; a new collage starts with `initialCellCount` = 4),
   `CellSizes.swift` (user-dragged borders), `Geometry.swift` (cover/zoom/pan/rotate/straighten placement, formats),
@@ -82,7 +82,7 @@ Code is under `ios/CollageMagik/CollageMagik/`.
   convert to SDR BT.709, unless HDR export is on (10-bit HEVC HLG via the `HDR` helpers). `Export/Exporter.swift`
   (`CollageExporter`) writes MP4 (H.264 + AAC, HD or 4K, 30/60 fps), PNG, or one JPEG per carousel slide
   (`exportSlides`), and saves to Photos with add-only access.
-- **Home**: the app opens on `UI/HomeView.swift` (system tab bar: Collage, Carousel, Templates, each with its drafts);
+- **Home**: the app opens on `UI/HomeView.swift` (system tab bar: Collage, Carousel, Templates, Library);
   the editor (`RootView`) is shown full screen over it while `store.editorOpen`. Templates are `DesignTemplate`s in
   `Model/Templates.swift` (designs without pictures), applied with `store.applyTemplate`. The debug harness opens the
   editor by itself when any `CM_` variable other than the Pro ones is set.

@@ -10,24 +10,32 @@ struct LibrarySheet: View {
     @State private var pendingDelete: LibraryEntry?
     @State private var pendingDraftDelete: DraftSummary?
     @State private var detent: PresentationDetent = .medium
+    /// Only collages or only carousels (the Library tab's top tabs); nil shows both.
+    var kind: EditMode? = nil
+    /// Shown inside Home's Library tab instead of as a sheet: no Done button, and the theme shows through.
+    var embedded = false
+
+    private var drafts: [DraftSummary] { store.drafts.filter { kind == nil || $0.mode == kind } }
+    private var entries: [LibraryEntry] { library.entries.filter { kind == nil || $0.isCarousel == (kind == .carousel) } }
+    private var noun: String { kind == .carousel ? "carousel" : "collage" }
 
     private let columns = [GridItem(.adaptive(minimum: 110), spacing: 8, alignment: .top)]
 
     var body: some View {
         NavigationStack {
             Group {
-                if library.entries.isEmpty && store.drafts.isEmpty {
+                if entries.isEmpty && drafts.isEmpty {
                     ContentUnavailableView(
-                        "Nothing here yet",
-                        systemImage: "photo.stack",
-                        description: Text("Designs you're working on are saved here as drafts, and collages you export are kept here too. All on this iPhone only; nothing is uploaded.")
+                        kind == nil ? "Nothing here yet" : "No \(noun)s yet",
+                        systemImage: kind == .carousel ? "rectangle.split.3x1" : "photo.stack",
+                        description: Text("\(kind == nil ? "Designs" : noun.capitalized + "s") you're working on are saved here as drafts, and the ones you export are kept here too. All on this iPhone only; nothing is uploaded.")
                     )
                 } else {
                     ScrollView {
-                        if !store.drafts.isEmpty { draftsSection }
-                        if !library.entries.isEmpty && !store.drafts.isEmpty { sectionHeader("Exported", count: library.entries.count) }
+                        if !drafts.isEmpty { draftsSection }
+                        if !entries.isEmpty && !drafts.isEmpty { sectionHeader("Exported", count: entries.count) }
                         LazyVGrid(columns: columns, spacing: 8) {
-                            ForEach(library.entries) { entry in
+                            ForEach(entries) { entry in
                                 Button { selected = entry } label: { LibraryCell(entry: entry) }
                                     .buttonStyle(.plain)
                                     .contextMenu {
@@ -39,8 +47,8 @@ struct LibrarySheet: View {
                         }
                         .padding(12)
 
-                        if !library.entries.isEmpty {
-                        Text("\(library.entries.count) \(library.entries.count == 1 ? "collage" : "collages") · \(ByteCountFormatter.string(fromByteCount: library.totalBytes, countStyle: .file)) on this iPhone. Touch and hold a collage to share or delete it.")
+                        if !entries.isEmpty {
+                        Text("\(entries.count) \(entries.count == 1 ? noun : noun + "s") · \(ByteCountFormatter.string(fromByteCount: library.totalBytes, countStyle: .file)) on this iPhone. Touch and hold a collage to share or delete it.")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -53,10 +61,14 @@ struct LibrarySheet: View {
             }
             .navigationTitle("My Library")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationDestination(item: $selected) { LibraryDetail(entry: $0) }
+            .navigationDestination(item: $selected) { LibraryDetail(entry: $0).toolbar(.visible, for: .navigationBar) }
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done", systemImage: "checkmark") { dismiss() } }
+                if !embedded {
+                    ToolbarItem(placement: .confirmationAction) { Button("Done", systemImage: "checkmark") { dismiss() } }
+                }
             }
+            .toolbar(embedded ? .hidden : .automatic, for: .navigationBar)
+            .containerBackground(embedded ? AnyShapeStyle(Color.clear) : AnyShapeStyle(.background), for: .navigation)
             .confirmationDialog("Delete this collage?", isPresented: Binding(
                 get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }
             ), titleVisibility: .visible) {
@@ -100,10 +112,10 @@ extension LibrarySheet {
 
     private var draftsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionHeader("Drafts", count: store.drafts.count)
+            sectionHeader("Drafts", count: drafts.count)
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(alignment: .top, spacing: 10) {
-                    ForEach(store.drafts) { d in
+                    ForEach(drafts) { d in
                         Button { open(d) } label: { DraftCell(draft: d, isOpen: d.id == store.draftId) }
                             .buttonStyle(.plain)
                             .contextMenu {

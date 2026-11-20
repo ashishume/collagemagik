@@ -49,7 +49,7 @@ struct MediaPanel: View {
         }
     }
 
-    /// "5 of 15 in tray · 5 of 9 in collage · 1 of 2 videos": the tray holds more than the collage can show.
+    /// "5 of 25 in tray · 5 of 12 in collage · 1 of 3 videos": the tray holds more than the collage can show.
     private func trayCaption(placed: Int) -> String {
         var text = "\(store.items.count) of \(maxTrayItems) in tray  ·  \(placed) of \(store.cellLimit) in \(store.isCarousel ? "carousel" : "collage")"
         if !store.isCarousel { text += "  ·  \(store.videoCount) of \(maxVideos) videos" }
@@ -524,12 +524,12 @@ struct AudioPanel: View {
 
     private func laneRow(_ i: Int, _ lane: Lane) -> some View {
         let item = store.item(lane.mediaId)
-        let name = i == 0 ? "A" : "B"
+        let name = laneName(i)
         return HStack(spacing: 8) {
             Text(name)
                 .font(.caption.weight(.bold))
                 .frame(width: 22, height: 22)
-                .background(i == 0 ? Color.laneA : Color.laneB, in: Circle())
+                .background(Color.lane(i), in: Circle())
                 .foregroundStyle(.black.opacity(0.8))
             if item?.hasAudio == true {
                 Image(systemName: lane.volume == 0 ? "speaker.slash.fill" : "speaker.wave.2.fill")

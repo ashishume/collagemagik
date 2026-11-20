@@ -193,7 +193,8 @@ enum DraftDisk {
     static func thumbnail(project: Project, items: [MediaItem]) -> Data? {
         let maxSide = 420.0
         let cw = project.canvasWidth, ch = project.canvasHeight
-        let k = maxSide / max(cw, ch)
+        // a long carousel (up to 20 slides) is sized by its height, so each slide stays sharp in the Library
+        let k = project.mode == .carousel ? min(480 / ch, 6000 / cw) : maxSide / max(cw, ch)
         let w = max(1, Int((cw * k).rounded())), h = max(1, Int((ch * k).rounded()))
         guard let ctx = CollageRenderer.makeContext(width: w, height: h) else { return nil }
         let byId = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0) })

@@ -67,22 +67,39 @@ struct SlideBar: View {
     var body: some View {
         let slides = store.project.slides
         let current = store.visibleSlide
-        GlassEffectContainer(spacing: 6) {
-            HStack(spacing: 6) {
-                ForEach(1...slides, id: \.self) { k in
-                    let on = k == current
-                    Button { store.focusSlide(k - 1) } label: {
-                        Text("\(k)")
-                            .font(.system(size: 11, weight: .semibold).monospacedDigit())
-                            .frame(width: 24, height: 24)
-                            .glassEffect(on ? .regular.tint(Color.brand.opacity(0.8)).interactive() : .regular.interactive(), in: .circle)
+        // up to 20 slides: the numbers scroll sideways (centred while they fit) and follow the slide in view
+        ScrollViewReader { reader in
+            ScrollView(.horizontal, showsIndicators: false) {
+                GlassEffectContainer(spacing: 6) {
+                    HStack(spacing: 6) {
+                        ForEach(1...slides, id: \.self) { k in
+                            let on = k == current
+                            Button { store.focusSlide(k - 1) } label: {
+                                Text("\(k)")
+                                    .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                                    .frame(width: 24, height: 24)
+                                    .glassEffect(on ? .regular.tint(Color.brand.opacity(0.8)).interactive() : .regular.interactive(), in: .circle)
+                            }
+                            .buttonStyle(.plain)
+                            .id(k)
+                            .accessibilityLabel("Slide \(k)")
+                            .accessibilityAddTraits(on ? .isSelected : [])
+                        }
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Slide \(k)")
-                    .accessibilityAddTraits(on ? .isSelected : [])
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 2)
                 }
             }
+            .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+            .defaultScrollAnchor(.center)
             .frame(maxWidth: .infinity)
+            .frame(height: 30)
+            .onChange(of: current) { _, k in
+                withAnimation(.smooth(duration: 0.3)) { reader.scrollTo(k, anchor: .center) }
+            }
+            // start on the slide in view (slide 1 for a new carousel), not the middle of a long row
+            .onAppear { reader.scrollTo(current, anchor: .center) }
+            .onChange(of: slides) { reader.scrollTo(current, anchor: .center) }
         }
         .sensoryFeedback(.selection, trigger: current)
     }

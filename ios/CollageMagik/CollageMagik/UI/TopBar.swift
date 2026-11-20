@@ -116,12 +116,13 @@ struct TopBar: View {
                         Label(ProStore.shared.isPro ? "Collage Magic Pro" : "Remove ads (Pro)", systemImage: "sparkles")
                     }
                 } label: {
-                    BarIcon(symbol: "ellipsis")
+                    // a menu icon rather than three dots: it holds adding photos, help, theme and Pro
+                    BarIcon(symbol: "line.3.horizontal")
                         .overlay(alignment: .topTrailing) {
                             if updates.updateAvailable { UpdateDot().offset(x: -3, y: 3) }
                         }
                 }
-                .accessibilityLabel("More")
+                .accessibilityLabel("Menu")
                 .sheet(isPresented: $themeOpen) { ThemePicker() }
             }
             .frame(maxWidth: .infinity, alignment: .trailing)

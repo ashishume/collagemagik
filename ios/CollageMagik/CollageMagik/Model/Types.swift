@@ -328,10 +328,17 @@ enum VideoSection: String, CaseIterable, Identifiable {
 
 // MARK: - Colour helpers
 
+/// Letter of video lane `i`: A, B, C.
+func laneName(_ i: Int) -> String { String(UnicodeScalar(UInt8(65 + max(0, i) % 26))) }
+
 extension Color {
     static let brand = Color(red: 0.545, green: 0.424, blue: 1.0)
     static let laneA = Color(red: 1.0, green: 0.37, blue: 0.64)
     static let laneB = Color(red: 0.30, green: 0.78, blue: 1.0)
+    static let laneC = Color(red: 1.0, green: 0.78, blue: 0.25)
+
+    /// Colour of video lane `i` on the timeline and its badges (A pink, B blue, C amber).
+    static func lane(_ i: Int) -> Color { [laneA, laneB, laneC][max(0, i) % 3] }
     static let musicGreen = Color(red: 0.32, green: 0.85, blue: 0.55)
 
     init(hex: String) {

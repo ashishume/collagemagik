@@ -29,7 +29,7 @@ support can be submitted.
 
 ## What it does
 
-Everything the web app does: up to 9 cells (photos + at most 2 videos) in the collage (10 photos in a carousel), picked from a **media tray** that holds up to 15 pictures and videos (extras wait in the tray as "In tray" and can be swapped in). When the tray is full, adding shows an alert that says to press and hold a tray picture and tap Remove, 35 layouts, Story / Post / Square, gap,
+Everything the web app does: up to 12 cells (photos + at most 3 videos) in the collage (20 photos in a carousel), picked from a **media tray** that holds up to 25 pictures and videos (extras wait in the tray as "In tray" and can be swapped in). When the tray is full, adding shows an alert that says to press and hold a tray picture and tap Remove, 45 layouts (up to 12 pictures), Story / Post / Square, gap,
 corners, background colour (swatches + colour picker), Instagram safe-area overlay, tap / drag / pinch /
 press-and-hold-to-swap, rotate / flip / crop / straighten, a timeline (trim, move, split, delete, loop, mute), your
 own background music (volume, trim, repeat, fade out), and export to MP4 (H.264 + AAC, 30 fps, 1080 wide or 2x) or PNG,
@@ -45,7 +45,10 @@ pictures picked. New in 1.0.1:
 
 ## Home and templates
 
-The app opens on **Home** (`UI/HomeView.swift`), a system tab bar with **Collage**, **Carousel** and **Templates**.
+The app opens on **Home** (`UI/HomeView.swift`), a system tab bar with **Collage**, **Carousel**, **Templates** and
+**Library** (drafts and exports, with Collages | Carousels tabs at the top; it reuses `LibrarySheet` with `kind` and
+`embedded`). Every Home tab shows the Collage Magic logo and name top left and a gear for Settings (theme, help, about,
+rating, Pro); the editor's menu button is a menu icon.
 Collage and Carousel each show a "New" card, a row of templates for that kind and that kind's drafts (Recent); Templates
 lists every template with a kind filter and category chips. Starting or opening a design shows the editor full screen
 (`RootView`, `store.editorOpen`); its back button saves the draft and returns Home. The kind is chosen on Home, so the
@@ -83,7 +86,7 @@ videos play as they are.
 ## Carousel mode
 
 The Collage | Carousel switch in the top bar changes what you are making. A carousel is one wide design, `slides` Instagram
-slides side by side (4:5 or square, 2 to 10 slides, up to 10 photos, photos only), with pictures laid out so they cross the
+slides side by side (4:5 or square, 2 to 20 slides, up to 20 photos, photos only), with pictures laid out so they cross the
 seams between slides. `Model/CarouselLayouts.swift` builds the layouts (Flow, Two rows, Stagger, Mosaic, Scatter, Wave,
 Wall, Panorama) and guarantees every seam cuts through a picture. A new carousel starts in **Flow** (`defaultCarouselStyle`);
 a single picture uses Panorama. When a set of pictures is added, `bestCarouselFit` picks the slide size (Post or Square)

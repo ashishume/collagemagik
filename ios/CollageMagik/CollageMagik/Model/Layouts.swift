@@ -83,19 +83,33 @@ let allLayouts: [CollageLayout] = [
     rowsOf("9-grid", "Grid 3×3", [3, 3, 3]),
     rowsOf("9-hero", "Hero and eight", [1, 4, 4], [0.36, 0.32, 0.32]),
     rowsOf("9-pyramid", "Pyramid", [2, 3, 4]),
+
+    rowsOf("10-mix", "Mixed rows", [3, 4, 3]),
+    rowsOf("10-hero", "Hero and nine", [1, 3, 3, 3], [0.34, 0.22, 0.22, 0.22]),
+    rowsOf("10-grid", "Grid 2×5", [2, 2, 2, 2, 2]),
+
+    rowsOf("11-mix", "Mixed rows", [3, 4, 4]),
+    rowsOf("11-hero", "Hero and ten", [1, 3, 3, 4], [0.34, 0.22, 0.22, 0.22]),
+    rowsOf("11-pairs", "Pairs and threes", [2, 3, 3, 3]),
+
+    rowsOf("12-grid", "Grid 3×4", [3, 3, 3, 3]),
+    rowsOf("12-wide", "Grid 4×3", [4, 4, 4]),
+    rowsOf("12-hero", "Hero and eleven", [1, 3, 4, 4], [0.34, 0.22, 0.22, 0.22]),
+    rowsOf("12-tall", "Grid 2×6", [2, 2, 2, 2, 2, 2]),
 ]
 
-let maxCells = 9
+let maxCells = 12
 /// A new collage opens with four slots showing (a 2x2-style layout). It resizes to the number actually picked.
 let initialCellCount = 4
-/// Carousels: up to ten pictures over two to ten slides (the slide count follows the pictures and the style). A new one opens with five empty slots.
-let maxCarouselPhotos = 10
+/// Carousels: up to twenty pictures over two to twenty slides (Instagram allows 20) (the slide count follows the pictures and the style). A new one opens with five empty slots.
+let maxCarouselPhotos = 20
 let minSlides = 2
-let maxSlides = 10
+let maxSlides = 20
 let initialCarouselCells = 5
-let maxVideos = 2
-/// The media tray (the strip at the bottom) holds more than a collage can show: pick from up to 15 and swap the best into the cells.
-let maxTrayItems = 15
+let maxVideos = 3
+/// The media tray (the strip at the bottom) holds more than a design can show: pick from up to 25 (a full 20-photo
+/// carousel plus a few spares) and swap the best into the cells.
+let maxTrayItems = 25
 
 func layouts(for count: Int) -> [CollageLayout] { allLayouts.filter { $0.count == count } }
 func layout(byId id: String) -> CollageLayout { allLayouts.first { $0.id == id } ?? allLayouts[0] }

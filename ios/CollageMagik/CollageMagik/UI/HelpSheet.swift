@@ -13,8 +13,8 @@ struct HelpSheet: View {
                     Label("Export gives you one image per slide. Upload them to Instagram in order.", systemImage: "square.and.arrow.up")
                 }
                 Section("Build a collage") {
-                    Label("Keep up to 15 photos and videos in your tray (2 can be videos), and use up to 9 in the collage. Press and hold a tray picture to remove it.", systemImage: "photo.on.rectangle.angled")
-                    Label("The layouts follow how many pictures you add (up to 9). Pick one, then set its size, spacing, background and frame in Style.", systemImage: "square.grid.2x2")
+                    Label("Keep up to \(maxTrayItems) photos and videos in your tray (\(maxVideos) can be videos), and use up to \(maxCells) in a collage or \(maxCarouselPhotos) in a carousel. Press and hold a tray picture to remove it.", systemImage: "photo.on.rectangle.angled")
+                    Label("The layouts follow how many pictures you add (up to \(maxCells)). Pick one, then set its size, spacing, background and frame in Style.", systemImage: "square.grid.2x2")
                     Label("Story, Post (4:5) and Square formats.", systemImage: "rectangle.portrait")
                 }
                 Section("In the preview") {

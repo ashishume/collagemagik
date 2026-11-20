@@ -2,7 +2,7 @@ import SwiftUI
 
 /// The three places to start from, in the system tab bar.
 enum HomeSection: Hashable {
-    case collage, carousel, templates
+    case collage, carousel, templates, library
 }
 
 /// The app's first screen: Collage, Carousel and Templates. Each kind lists its own drafts and a few templates; the
@@ -26,6 +26,9 @@ struct HomeView: View {
             }
             SwiftUI.Tab("Templates", systemImage: "sparkles.rectangle.stack", value: .templates) {
                 TemplatesHome(mode: $templateMode)
+            }
+            SwiftUI.Tab("Library", systemImage: "photo.stack", value: .library) {
+                LibraryHome()
             }
         }
         .fullScreenCover(isPresented: $store.editorOpen) {
@@ -133,7 +136,7 @@ private struct KindHome: View {
                     Text(mode == .collage ? "New collage" : "New carousel")
                         .font(.headline)
                         .foregroundStyle(.white)
-                    Text(mode == .collage ? "Up to 9 photos and 2 videos, with music" : "2 to 10 photos, slides added for you")
+                    Text(mode == .collage ? "Up to \(maxCells) photos and \(maxVideos) videos, with music" : "2 to \(maxCarouselPhotos) photos, slides added for you")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -196,62 +199,117 @@ private struct TemplatesHome: View {
     }
 }
 
-/// Big title, a line under it, and My Library + More on the right.
+/// The Collage Magic mark (logo and name) with the Settings menu, then the tab's big title and a line under it.
 private struct HomeHeader: View {
-    @Environment(CollageStore.self) private var store
-    @Environment(LibraryStore.self) private var library
-    @State private var libraryOpen = false
-    @State private var themeOpen = false
     let title: String
     let subtitle: String
 
     var body: some View {
-        HStack(alignment: .top) {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                BrandMark()
+                Spacer()
+                SettingsMenu()
+            }
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.largeTitle.weight(.bold))
                 Text(subtitle).font(.subheadline).foregroundStyle(.secondary)
             }
-            Spacer()
-            HStack(spacing: 0) {
-                Button { libraryOpen = true } label: {
-                    Image(systemName: "photo.stack")
-                        .font(.system(size: 15, weight: .semibold))
-                        .frame(width: 38, height: 38)
-                        .overlay(alignment: .topTrailing) {
-                            if !library.entries.isEmpty {
-                                Text("\(min(library.entries.count, 99))")
-                                    .font(.system(size: 9, weight: .bold).monospacedDigit())
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 4)
-                                    .frame(minWidth: 14, minHeight: 14)
-                                    .background(Color.brand, in: Capsule())
-                            }
-                        }
-                }
-                .accessibilityLabel("My Library")
-                Menu {
-                    Button { themeOpen = true } label: { Label("Theme", systemImage: "paintpalette") }
-                    Button { store.helpOpen = true } label: { Label("How it works", systemImage: "questionmark.circle") }
-                    Button { store.aboutOpen = true } label: { Label("About & Privacy", systemImage: "hand.raised") }
-                    Link(destination: AppLinks.writeReview) { Label("Rate Collage Magic", systemImage: "star") }
-                    Divider()
-                    Button { ProStore.shared.openPaywall() } label: {
-                        Label(ProStore.shared.isPro ? "Collage Magic Pro" : "Remove ads (Pro)", systemImage: "sparkles")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 15, weight: .semibold))
-                        .frame(width: 38, height: 38)
-                }
-                .accessibilityLabel("More")
-            }
-            .foregroundStyle(.white)
-            .padding(2)
-            .glassEffect(.regular.interactive(), in: .capsule)
         }
         .padding(.horizontal, 16)
-        .sheet(isPresented: $libraryOpen) { LibrarySheet() }
+    }
+}
+
+/// The app's logo and name, top left on Home.
+struct BrandMark: View {
+    var body: some View {
+        HStack(spacing: 8) {
+            Image("Logo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 30, height: 30)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .shadow(color: Color.brand.opacity(0.5), radius: 6)
+            Text("Collage Magic")
+                .font(.system(size: 19, weight: .heavy, design: .rounded))
+                .foregroundStyle(LinearGradient(colors: [.white, Color(red: 0.85, green: 0.78, blue: 1)], startPoint: .leading, endPoint: .trailing))
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Collage Magic")
+        .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// Settings (a gear, not three dots): theme, help, about, rating and Pro.
+private struct SettingsMenu: View {
+    @Environment(CollageStore.self) private var store
+    @State private var themeOpen = false
+
+    var body: some View {
+        Menu {
+            Button { themeOpen = true } label: { Label("Theme", systemImage: "paintpalette") }
+            Button { store.helpOpen = true } label: { Label("How it works", systemImage: "questionmark.circle") }
+            Button { store.aboutOpen = true } label: { Label("About & Privacy", systemImage: "hand.raised") }
+            Link(destination: AppLinks.writeReview) { Label("Rate Collage Magic", systemImage: "star") }
+            Divider()
+            Button { ProStore.shared.openPaywall() } label: {
+                Label(ProStore.shared.isPro ? "Collage Magic Pro" : "Remove ads (Pro)", systemImage: "sparkles")
+            }
+        } label: {
+            Image(systemName: "gearshape.fill")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 40, height: 40)
+                .glassEffect(.regular.interactive(), in: .circle)
+        }
+        .accessibilityLabel("Settings")
         .sheet(isPresented: $themeOpen) { ThemePicker() }
+    }
+}
+
+/// The Library tab: Collage and Carousel tabs at the top, each with its drafts and its exports.
+private struct LibraryHome: View {
+    @State private var kind: EditMode = .collage
+    @Namespace private var glass
+
+    var body: some View {
+        ZStack {
+            AuroraBackground().ignoresSafeArea()
+            VStack(alignment: .leading, spacing: 14) {
+                HomeHeader(title: "Library", subtitle: "Your drafts and exports, on this iPhone only")
+                GlassEffectContainer(spacing: 6) {
+                    HStack(spacing: 0) {
+                        ForEach([EditMode.collage, .carousel], id: \.self) { k in
+                            let on = kind == k
+                            Button {
+                                withAnimation(.spring(response: 0.38, dampingFraction: 0.78)) { kind = k }
+                            } label: {
+                                Label(k == .collage ? "Collages" : "Carousels", systemImage: k == .collage ? "square.grid.2x2" : "rectangle.split.3x1")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(on ? Color.white : Color.white.opacity(0.7))
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 36)
+                                    .contentShape(Capsule())
+                                    .slidingBubbleSlot(on, in: glass)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityAddTraits(on ? .isSelected : [])
+                        }
+                    }
+                    .slidingBubble(in: glass)
+                    .padding(3)
+                    .glassEffect(.regular, in: .capsule)
+                }
+                .padding(.horizontal, 16)
+                .sensoryFeedback(.selection, trigger: kind)
+
+                LibrarySheet(kind: kind, embedded: true)
+                    .id(kind)
+            }
+            .padding(.top, 12)
+            .frame(maxWidth: 900)
+            .frame(maxWidth: .infinity)
+        }
     }
 }
 

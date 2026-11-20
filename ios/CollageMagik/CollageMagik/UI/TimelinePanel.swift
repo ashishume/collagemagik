@@ -199,12 +199,12 @@ private struct TimelineArea: View {
         VStack(spacing: rowGap) {
             Color.clear.frame(height: rulerHeight)
             ForEach(Array(lanes.enumerated()), id: \.element.mediaId) { i, lane in
-                let name = i == 0 ? "A" : "B"
+                let name = laneName(i)
                 HStack(spacing: 2) {
                     Text(name)
                         .font(.system(size: 10, weight: .bold))
                         .frame(width: 18, height: 18)
-                        .background(i == 0 ? Color.laneA : Color.laneB, in: Circle())
+                        .background(Color.lane(i), in: Circle())
                         .foregroundStyle(.black.opacity(0.8))
                     miniButton(lane.volume == 0 ? "speaker.slash.fill" : "speaker.wave.2.fill", on: lane.volume == 0, label: lane.volume == 0 ? "Unmute video \(name)" : "Mute video \(name)") {
                         store.setLane(lane.mediaId) { $0.volume = $0.volume == 0 ? 1 : 0 }
@@ -385,7 +385,7 @@ private struct TimelineArea: View {
     }
 
     private func laneRow(index: Int, lane: Lane, pxPerSec: Double, width: CGFloat) -> some View {
-        let color: Color = index == 0 ? .laneA : .laneB
+        let color: Color = .lane(index)
         let item = store.item(lane.mediaId)
         return ZStack(alignment: .topLeading) {
             RoundedRectangle(cornerRadius: 9, style: .continuous)
