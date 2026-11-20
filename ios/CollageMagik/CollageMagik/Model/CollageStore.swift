@@ -537,7 +537,14 @@ final class CollageStore {
             for v in items where v.kind == .video { removeMedia(v.id) }
             if project.format == .story { project.format = .post }
         }
+        let followingBlur = BackdropRenderer.followsPictures(project)
         project.mode = mode
+        if mode == .carousel, project.backdrop.kind == .color {
+            // a carousel's empty space shows a blur of the pictures beside it, unless a backdrop was already chosen
+            project.backdrop = Backdrop(kind: .blur)
+        } else if mode == .collage, followingBlur {
+            project.backdrop = Backdrop()
+        }
         let ids = items.map(\.id)
         // The cells take the first pictures that fit; any others stay in the tray, not deleted.
         let n = ids.isEmpty ? (mode == .carousel ? initialCarouselCells : initialCellCount) : min(ids.count, cellLimit)
@@ -977,6 +984,7 @@ final class CollageStore {
             project.cellCount = initialCarouselCells
             project.cells = Array(repeating: CellState(), count: initialCarouselCells)
             project.layoutId = defaultLayoutId(for: project)
+            project.backdrop = Backdrop(kind: .blur)
         }
         carouselOffset = 0
         selectedCell = nil

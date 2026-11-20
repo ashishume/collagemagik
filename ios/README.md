@@ -73,6 +73,8 @@ open by themselves while a picture is selected.
   preview moved into More •••, and the Collage | Carousel switch shows icons only when the bar is narrow.
 - **Backgrounds** (Style tab; `Model/Backdrop.swift`): Colour, 12 gradients, a blurred copy of any picture in the tray, or a
   pattern (dots, grid, stripes, checks, confetti, hearts) over the colour. One renderer draws the preview and every export.
+  Carousels start on **Blur → Auto** (✨): each gap shows a blur of the picture beside it, over a gradient of the pictures'
+  average colours, so the empty space around and after the pictures matches them. Picking one picture blurs that instead.
 - **Stickers** (in the Text tab, next to captions; `Model/Stickers.swift`, `UI/StickerPanel.swift`): emoji (Faces, Love, Fun)
   and colourable shapes, up to 30. Drag, pinch and twist like captions; size, tilt, colour, flip, layer order, copy, delete.
 - **Clip speed** (timeline): 0.25× to 3×. The clip keeps its start; sound keeps its pitch in the preview and the export.

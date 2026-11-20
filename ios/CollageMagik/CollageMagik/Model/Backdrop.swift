@@ -88,6 +88,15 @@ enum BackdropRenderer {
             let unit = W / project.canvasWidth
             drawPattern(ctx, rect: rect, pattern: BackdropPattern(rawValue: b.pattern) ?? .dots, base: UIColor(hex: project.bg), unit: unit)
         case .blur:
+            if followsPictures(project) {
+                guard let blurred = followingBlur(project: project, W: W, H: H, picture: picture) else { return }
+                ctx.saveGState()
+                ctx.translateBy(x: 0, y: H)
+                ctx.scaleBy(x: 1, y: -1)
+                ctx.draw(blurred, in: rect)
+                ctx.restoreGState()
+                return
+            }
             guard let id = blurSource(project), let img = picture(id),
                   let blurred = blurredImage(img, key: id, W: W, H: H) else { return }
             ctx.saveGState()
@@ -114,6 +123,105 @@ enum BackdropRenderer {
             ctx.setFillColor(UIColor(hex: cell.fitBars).cgColor)
             ctx.fill(rect.cgRect)
         }
+    }
+
+    /// A carousel's blur with no picture chosen follows the pictures: each gap shows a blur of the picture beside it.
+    static func followsPictures(_ project: Project) -> Bool {
+        project.mode == .carousel && project.backdrop.kind == .blur && project.backdrop.blurMediaId == nil
+    }
+
+    /// What the blur backdrop is made from, for knowing when to redraw it: the chosen picture, or (following the
+    /// pictures) every picture and where it sits. nil when the backdrop isn't a blur.
+    static func blurSignature(_ project: Project) -> String? {
+        guard project.backdrop.kind == .blur else { return nil }
+        guard followsPictures(project) else { return blurSource(project) }
+        let ids = project.cells.prefix(project.cellCount).map { $0.mediaId ?? "-" }.joined(separator: ",")
+        return "follow|\(project.layoutId)|\(project.format.rawValue)|\(project.cellCount)|\(ids)"
+    }
+
+    /// The carousel's pictures blurred into the space around them. Each picture is stretched (cropped, not squashed) to
+    /// the full height of its column, the first and last ones out to the ends, over a gradient of the pictures' average
+    /// colours; the whole thing is then blurred so neighbours melt into each other across the joins and seams.
+    static func followingBlur(project: Project, W: Double, H: Double, picture: (String) -> UIImage?) -> CGImage? {
+        let scale = min(1, 480 / H)
+        let w = max(1, Int(W * scale)), h = max(1, Int(H * scale))
+        let rects = layout(for: project).rects
+        let placed: [(r: LayoutRect, img: UIImage)] = project.cells.prefix(project.cellCount).enumerated().compactMap { i, cell in
+            guard i < rects.count, let id = cell.mediaId, let img = picture(id) else { return nil }
+            return (rects[i], img)
+        }.sorted { $0.r.x + $0.r.w / 2 < $1.r.x + $1.r.w / 2 }
+        guard !placed.isEmpty else { return nil }
+        let key = ("follow|\(blurSignature(project) ?? "")|\(w)x\(h)") as NSString
+        if let hit = cache.object(forKey: key) { return hit }
+        guard let ctx = CollageRenderer.makeContext(width: w, height: h) else { return nil }
+        let fw = Double(w), fh = Double(h)
+        let full = CGRect(x: 0, y: 0, width: fw, height: fh)
+
+        // 1. the pictures' average colours, left to right, as a soft base
+        let colours = placed.map { averageColour($0.img) }
+        if colours.count == 1 {
+            ctx.setFillColor(colours[0])
+            ctx.fill(full)
+        } else {
+            let stops = placed.map { CGFloat(min(1, max(0, $0.r.x + $0.r.w / 2))) }
+            if let g = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB), colors: colours as CFArray, locations: stops) {
+                ctx.drawLinearGradient(g, start: .zero, end: CGPoint(x: fw, y: 0), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+            }
+        }
+
+        // 2. each picture filling its whole column; the outer ones reach the ends of the carousel
+        ctx.saveGState()
+        ctx.translateBy(x: 0, y: fh)
+        ctx.scaleBy(x: 1, y: -1)
+        ctx.interpolationQuality = .low
+        for (k, p) in placed.enumerated() {
+            var x0 = p.r.x * fw, x1 = (p.r.x + p.r.w) * fw
+            if k == 0 { x0 = 0 }
+            if k == placed.count - 1 { x1 = fw }
+            guard x1 > x0, let cg = uprightCGImage(p.img) else { continue }
+            let col = CGRect(x: x0, y: 0, width: x1 - x0, height: fh)
+            let iw = Double(cg.width), ih = Double(cg.height)
+            let cover = max(col.width / iw, col.height / ih)
+            let dw = iw * cover, dh = ih * cover
+            ctx.saveGState()
+            ctx.clip(to: col)
+            ctx.draw(cg, in: CGRect(x: col.midX - dw / 2, y: col.midY - dh / 2, width: dw, height: dh))
+            ctx.restoreGState()
+        }
+        ctx.restoreGState()
+
+        // 3. blur it all, a little darker so the pictures on top stand out
+        guard let base = ctx.makeImage() else { return nil }
+        let blur = CIFilter.gaussianBlur()
+        blur.inputImage = CIImage(cgImage: base).clampedToExtent()
+        blur.radius = Float(fh * 0.07)
+        let dim = CIFilter.colorControls()
+        dim.inputImage = blur.outputImage
+        dim.brightness = -0.08
+        dim.saturation = 1.15
+        guard let out = dim.outputImage, let made = ci.createCGImage(out, from: full) else { return nil }
+        cache.setObject(made, forKey: key)
+        return made
+    }
+
+    /// The picture as a CGImage the right way up.
+    private static func uprightCGImage(_ img: UIImage) -> CGImage? {
+        if img.imageOrientation == .up, let cg = img.cgImage { return cg }
+        guard let input = CIImage(image: img)?.oriented(CGImagePropertyOrientation(img.imageOrientation)) else { return img.cgImage }
+        return ci.createCGImage(input, from: input.extent)
+    }
+
+    /// A picture's average colour.
+    private static func averageColour(_ img: UIImage) -> CGColor {
+        var px = [UInt8](repeating: 0, count: 4)
+        let fallback = UIColor(white: 0.2, alpha: 1).cgColor
+        guard let cg = img.cgImage,
+              let ctx = CGContext(data: &px, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+                                  space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return fallback }
+        ctx.interpolationQuality = .medium
+        ctx.draw(cg, in: CGRect(x: 0, y: 0, width: 1, height: 1))
+        return UIColor(red: CGFloat(px[0]) / 255, green: CGFloat(px[1]) / 255, blue: CGFloat(px[2]) / 255, alpha: 1).cgColor
     }
 
     /// The picture behind a blur backdrop: the chosen one, or the first picture in the layout.

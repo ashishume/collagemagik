@@ -1099,7 +1099,7 @@ private struct BackdropLayer: View {
         return Key(
             backdrop: project.backdrop, bg: project.bg,
             w: Int(size.width * scale), h: Int(size.height * scale), canvasWidth: project.canvasWidth,
-            blurId: project.backdrop.kind == .blur ? BackdropRenderer.blurSource(project) : nil
+            blurId: BackdropRenderer.blurSignature(project)
         )
     }
 

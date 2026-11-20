@@ -280,8 +280,24 @@ struct BackdropPicker: View {
         } else {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
+                    let following = store.project.mode == .carousel
+                    if following {
+                        // the default: each gap shows a blur of the picture beside it
+                        let on = b.blurMediaId == nil
+                        Button { store.project.backdrop.blurMediaId = nil } label: {
+                            swatch(on: on) {
+                                ZStack {
+                                    LinearGradient(colors: [Color(hex: "#8b6cff"), Color(hex: "#ff7f8c")], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                    Image(systemName: "sparkles").font(.system(size: 14, weight: .semibold)).foregroundStyle(.white)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Blur follows the pictures")
+                        .accessibilityAddTraits(on ? .isSelected : [])
+                    }
                     ForEach(store.items) { item in
-                        let on = source == item.id
+                        let on = following ? b.blurMediaId == item.id : source == item.id
                         Button { store.project.backdrop.blurMediaId = item.id } label: {
                             swatch(on: on) {
                                 Image(uiImage: item.thumbnail).resizable().scaledToFill().blur(radius: 2)
