@@ -53,24 +53,27 @@ struct TopBar: View {
     var body: some View {
         HStack(spacing: 8) {
             BarGroup {
-                Button(action: openLibrary) {
-                    BarIcon(symbol: "photo.stack", badge: library.entries.count)
+                // back to Home; the design stays in Drafts there
+                Button {
+                    store.playback.pause()
+                    store.saveDraftNow()
+                    store.editorOpen = false
+                } label: {
+                    BarIcon(symbol: "chevron.left")
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(library.entries.isEmpty ? "My Library" : "My Library, \(library.entries.count) saved")
-
-                Menu {
-                    Button { requestNew(.collage) } label: { Label("New collage", systemImage: "square.grid.2x2") }
-                    Button { requestNew(.carousel) } label: { Label("New carousel", systemImage: "rectangle.split.3x1") }
-                } label: {
-                    BarIcon(symbol: "plus")
-                }
-                .accessibilityLabel("New")
+                .accessibilityLabel("Home")
             }
-            // the two sides are equal-width columns, so the switch is always exactly in the middle
+            // the two sides are equal-width columns, so the title is always exactly in the middle
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            ModeSwitch(request: requestMode)
+            // what is being made; the kind is chosen on Home
+            Label(store.project.mode.label, systemImage: store.isCarousel ? "rectangle.split.3x1" : "square.grid.2x2")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 14)
+                .frame(height: 34)
+                .glassEffect(.regular, in: .capsule)
                 .layoutPriority(1)
 
             BarGroup {

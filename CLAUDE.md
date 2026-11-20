@@ -82,7 +82,11 @@ Code is under `ios/CollageMagik/CollageMagik/`.
   convert to SDR BT.709, unless HDR export is on (10-bit HEVC HLG via the `HDR` helpers). `Export/Exporter.swift`
   (`CollageExporter`) writes MP4 (H.264 + AAC, HD or 4K, 30/60 fps), PNG, or one JPEG per carousel slide
   (`exportSlides`), and saves to Photos with add-only access.
-- **UI**: `UI/RootView.swift` picks the layout: phone layout on iPhone and portrait iPad (tools capped at 640 pt);
+- **Home**: the app opens on `UI/HomeView.swift` (system tab bar: Collage, Carousel, Templates, each with its drafts);
+  the editor (`RootView`) is shown full screen over it while `store.editorOpen`. Templates are `DesignTemplate`s in
+  `Model/Templates.swift` (designs without pictures), applied with `store.applyTemplate`. The debug harness opens the
+  editor by itself when any `CM_` variable other than the Pro ones is set.
+- **UI**: `UI/RootView.swift` (the editor) picks the layout: phone layout on iPhone and portrait iPad (tools capped at 640 pt);
   preview left + tool column right in windows ≥ 900 pt wide. iPhone is portrait only; iPad supports all orientations,
   single window. `UI/StageView.swift` holds the preview and all gestures (select, pan, pinch, press-and-hold swap,
   border dragging via `dividerAt`, carousel swiping). The bottom dock (`ToolDock.swift`) has Media, Layout, Style, Text

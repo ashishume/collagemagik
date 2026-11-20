@@ -190,6 +190,7 @@ struct LayoutThumb: View {
 
 struct LayoutPanel: View {
     @Environment(CollageStore.self) private var store
+    @State private var templatesOpen = false
 
     var body: some View {
         let options = layoutOptions(for: store.project)
@@ -219,10 +220,19 @@ struct LayoutPanel: View {
                     .minimumScaleFactor(0.75)
                     Spacer(minLength: 0)
                 }
+                Button { templatesOpen = true } label: {
+                    Label("Templates", systemImage: "sparkles.rectangle.stack")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 10)
+                        .frame(height: 30)
+                        .glassEffect(.regular.tint(Color.brand.opacity(0.55)).interactive(), in: .capsule)
+                }
+                .buttonStyle(.plain)
                 GlassIconButton(symbol: "shuffle", label: "Try another arrangement", size: 30) {
                     withAnimation(.smooth) { store.shuffleLayout() }
                 }
             }
+            .sheet(isPresented: $templatesOpen) { TemplateBrowserSheet() }
             ScrollView(.horizontal, showsIndicators: false) {
                 GlassEffectContainer(spacing: 8) {
                     HStack(spacing: 8) {

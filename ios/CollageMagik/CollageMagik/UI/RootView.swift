@@ -126,15 +126,7 @@ struct RootView: View {
         .sheet(isPresented: $store.helpOpen) { HelpSheet() }
         .sheet(isPresented: $libraryOpen) { LibrarySheet() }
         .sheet(isPresented: $store.aboutOpen) { AboutSheet() }
-        // The consent and tracking questions wait until the splash has gone, so they never pop up over the animation.
-        .onChange(of: splashDone, initial: true) { _, done in
-            guard done, !launched else { return }
-            launched = true
-            ProStore.shared.start()
-            ProStore.shared.appDidLaunch()
-            GoogleAdsManager.shared.appDidLaunch()
-            UpdateChecker.shared.checkIfDue()
-        }
+        // launch work (consent, ads, Pro, update check) runs on Home, which is always there first
         // the Pro page opens here only when no other sheet is up (those host it themselves)
         .proPaywallHost(active: !store.exportOpen && !store.aboutOpen)
         .fullScreenCover(isPresented: $store.previewOpen) { FullScreenPreview() }
@@ -162,9 +154,8 @@ struct RootView: View {
         // leaving the app: save at once, iOS may close it in the background
         .onChange(of: scenePhase) { _, phase in
             if phase != .active { store.saveDraftNow() }
-            if phase == .active && launched { UpdateChecker.shared.checkIfDue() }
+            if phase == .active { UpdateChecker.shared.checkIfDue() }
         }
-        .task { await store.restoreLastDraft() }
         // a selection lasts only while its own tools are showing: a dock tab edits the whole design
         .onChange(of: store.tab) { _, tab in
             if tab != .text { store.selectedCaption = nil }

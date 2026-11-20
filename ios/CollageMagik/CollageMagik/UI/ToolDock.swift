@@ -28,11 +28,11 @@ struct ToolDock: View {
                         select(tab)
                     } label: {
                         VStack(spacing: 1) {
-                            Image(systemName: tab.symbol)
+                            Image(systemName: tab.symbol(in: store.project.mode))
                                 .font(.system(size: 16, weight: .medium))
                                 .symbolVariant(on ? .fill : .none)
                                 .frame(height: 19)
-                            Text(tab.label)
+                            Text(tab.label(in: store.project.mode))
                                 .font(.system(size: 9.5, weight: .medium))
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)
@@ -43,7 +43,7 @@ struct ToolDock: View {
                         .contentShape(Capsule())
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(tab.label)
+                    .accessibilityLabel(tab.label(in: store.project.mode))
                     .accessibilityAddTraits(store.tab == tab ? .isSelected : [])
                 }
             }

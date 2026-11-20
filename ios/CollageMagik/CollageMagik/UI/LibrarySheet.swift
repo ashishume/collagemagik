@@ -127,6 +127,8 @@ extension LibrarySheet {
 
     private func open(_ d: DraftSummary) {
         dismiss()
+        // from Home, opening a draft also opens the editor
+        store.editorOpen = true
         guard d.id != store.draftId else { return }
         Task { await store.openDraft(d.id) }
     }

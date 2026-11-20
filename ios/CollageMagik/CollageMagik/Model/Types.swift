@@ -244,6 +244,25 @@ enum Tab: String, CaseIterable, Identifiable {
     /// The tabs shown in the dock.
     static func dock(for mode: EditMode) -> [Tab] { [.media, .layout, .style, .text] }
 
+    /// The dock name in each kind of design: a carousel is photos only, and its layout is how the slides are laid out.
+    func label(in mode: EditMode) -> String {
+        guard mode == .carousel else { return label }
+        switch self {
+        case .media: return "Photos"
+        case .layout: return "Slides"
+        default: return label
+        }
+    }
+
+    func symbol(in mode: EditMode) -> String {
+        guard mode == .carousel else { return symbol }
+        switch self {
+        case .media: return "photo.on.rectangle"
+        case .layout: return "rectangle.split.3x1"
+        default: return symbol
+        }
+    }
+
     /// Tabs that edit the whole design (in the dock), as opposed to the panels for one selected thing.
     var inDock: Bool { self == .media || self == .layout || self == .style || self == .text }
 }

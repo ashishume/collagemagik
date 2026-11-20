@@ -21,7 +21,7 @@ struct CollageMagikApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                RootView()
+                HomeView()
                     .environment(\.splashDone, !showSplash)
 
                 if showSplash {

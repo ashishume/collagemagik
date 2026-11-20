@@ -43,6 +43,23 @@ pictures picked. New in 1.0.1:
 - **Choose part**: pick which moment of a video plays, on a filmstrip (`UI/ChoosePartEditor.swift`).
 - Duplicate a clip and "Use whole video" in the timeline menu; adding many files shows "Adding 2 of 5" and can be cancelled.
 
+## Home and templates
+
+The app opens on **Home** (`UI/HomeView.swift`), a system tab bar with **Collage**, **Carousel** and **Templates**.
+Collage and Carousel each show a "New" card, a row of templates for that kind and that kind's drafts (Recent); Templates
+lists every template with a kind filter and category chips. Starting or opening a design shows the editor full screen
+(`RootView`, `store.editorOpen`); its back button saves the draft and returns Home. The kind is chosen on Home, so the
+editor's top bar shows it as a title instead of a switch. A carousel's dock reads **Photos · Slides · Style · Text**
+(`Tab.label(in:)`); a collage's reads Media · Layout · Style · Text (+ Video).
+
+**Templates** (`Model/Templates.swift`, `UI/TemplateViews.swift`): a `DesignTemplate` is a design without pictures
+(layout or carousel style, size, gap, corners, background, frame, placeholder captions and stickers). `allTemplates`
+holds 23 (17 collage, 6 carousel) in 10 categories; add one by adding an entry. Previews are drawn by the real
+renderer (`TemplatePreview`), with sample scenes on Home and the person's own pictures in the editor
+(Layout / Slides → Templates). Picking one from Home starts a design with it and opens the photo picker; in the editor
+it re-lays the pictures already there, and Undo brings the previous design back. A collage template keeps its slots as
+pictures are added (extras wait in the tray); a carousel template keeps its style as the slide count changes.
+
 ## Carousel mode
 
 The Collage | Carousel switch in the top bar changes what you are making. A carousel is one wide design, `slides` Instagram

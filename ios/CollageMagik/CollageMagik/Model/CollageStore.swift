@@ -83,6 +83,11 @@ final class CollageStore {
     let playback = PlaybackEngine()
     private var toastSeq = 0
 
+    /// True while the editor is open over Home (Collage · Carousel · Templates).
+    var editorOpen = false
+    /// The template this design was started from, if any: it keeps its slots and style as pictures are added.
+    var activeTemplate: DesignTemplate?
+
     // Drafts: the design in progress is saved as you go, so closing the app (or iOS closing it) loses nothing.
     /// The draft this design is saved as.
     private(set) var draftId = newId()
@@ -338,7 +343,8 @@ final class CollageStore {
         // formats for N cells ready to choose from. (A single add to a collage already in progress leaves it alone.)
         if !replacing, added > 0, fresh || added >= 2 {
             let lastFilled = project.cells.lastIndex { $0.mediaId != nil } ?? 0
-            setCellCount(lastFilled + 1)
+            // a collage template keeps its slots even when fewer pictures are added
+            if !(activeTemplate?.mode == .collage && !isCarousel) { setCellCount(lastFilled + 1) }
             if isCarousel {
                 // the slide count follows the pictures on its own; start in the size and style that suit them
                 fitCarouselToPictures()
@@ -393,6 +399,11 @@ final class CollageStore {
         var count = project.cellCount
         var idx = cell ?? cells.firstIndex { $0.mediaId == nil } ?? -1
         if idx == -1 {
+            // a collage template keeps its own slots: once they are full, more pictures wait in the tray
+            if activeTemplate?.mode == .collage && !isCarousel {
+                if !quiet { notify("This template has \(count) slots. Tap a picture, then a tray picture, to swap it in.") }
+                return false
+            }
             if count >= cellLimit {
                 if !quiet { notify("The \(isCarousel ? "carousel" : "collage") is full (\(cellLimit)). Tap a cell first, then tap a tray picture to swap it in.") }
                 return false
@@ -504,10 +515,45 @@ final class CollageStore {
     /// Set once the person picks Post or Square for a carousel themselves; from then on only the style is chosen for them.
     var carouselFormatChosen = false
 
+    /// Puts a template on the design: its layout, spacing, background, frame, captions and stickers, filled with the
+    /// pictures already here (the ones in the design first, then the tray). Undo brings the previous design back when
+    /// the kind doesn't change; a template of the other kind starts fresh history, like switching Collage / Carousel.
+    func applyTemplate(_ t: DesignTemplate) {
+        let placed = project.cells.prefix(project.cellCount).compactMap(\.mediaId)
+        var order = placed + items.map(\.id).filter { !placed.contains($0) }
+        if t.mode == .carousel {
+            order = order.filter { item($0)?.kind == .photo }
+            for v in items where v.kind == .video { removeMedia(v.id) }
+        }
+        let pictures = Array(order.prefix(t.mode == .collage ? t.slots : maxCarouselPhotos))
+        let kindChanged = t.mode != project.mode
+        playback.pause()
+        playback.playhead = 0
+        activeTemplate = t
+        carouselFormatChosen = t.mode == .carousel
+        project = t.project(basedOn: project, pictures: pictures)
+        selectedCell = nil
+        selectedOverlay = nil
+        selectedCaption = nil
+        selectedSticker = nil
+        swapFrom = nil
+        carouselOffset = 0
+        clampCarouselOffset()
+        if kindChanged { resetHistory() }
+        playback.projectChanged()
+    }
+
     /// Picks the carousel's slide size and strip style from its pictures' shapes, so it opens with the least empty
     /// background and the least trimmed off each picture (`bestCarouselFit`). A size the person chose is kept.
     func fitCarouselToPictures() {
         guard isCarousel else { return }
+        // a carousel template keeps its size and style as the pictures change
+        if let t = activeTemplate, t.mode == .carousel {
+            let n = project.cellCount
+            project.layoutId = carouselLayoutId(carouselStyles(for: n).contains(t.style) ? t.style : defaultCarouselStyle(count: n))
+            clampCarouselOffset()
+            return
+        }
         let aspects = project.cells.prefix(project.cellCount).compactMap { cell -> Double? in
             guard let id = cell.mediaId, let item = item(id), item.height > 0 else { return nil }
             return item.width / item.height
@@ -573,7 +619,7 @@ final class CollageStore {
         project.cellCount = n
         project.cells = (0..<n).map { CellState(mediaId: ids.indices.contains($0) ? ids[$0] : nil) }
         project.layoutId = defaultLayoutId(for: project)
-        carouselFormatChosen = false
+        carouselFormatChosen = false; activeTemplate = nil
         if mode == .carousel { fitCarouselToPictures() }
         selectedCell = nil
         selectedClip = nil
@@ -1010,7 +1056,7 @@ final class CollageStore {
             project.layoutId = defaultLayoutId(for: project)
             project.backdrop = Backdrop(kind: .blur)
         }
-        carouselFormatChosen = false
+        carouselFormatChosen = false; activeTemplate = nil
         carouselOffset = 0
         selectedCell = nil
         selectedClip = nil
@@ -1126,7 +1172,7 @@ extension CollageStore {
         items = loaded
         project = p
         draftId = file.id
-        draftCreated = file.createdAt
+        draftCreated = file.createdAt; activeTemplate = nil
         lastSaved = (p, loaded.map(\.id))
         selectedCell = nil
         selectedClip = nil
