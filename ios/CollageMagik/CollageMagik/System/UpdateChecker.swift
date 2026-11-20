@@ -2,7 +2,7 @@ import Foundation
 import Observation
 import UIKit
 
-/// Finds out whether a newer CollageMagik is on the App Store, without a server of our own: it asks Apple's public
+/// Finds out whether a newer Collage Magic is on the App Store, without a server of our own: it asks Apple's public
 /// lookup API (`itunes.apple.com/lookup`) for the live version and compares it with the one running.
 ///
 /// It never interrupts: when there is an update, `TopBar` shows a small "Update" button that opens the App Store page.

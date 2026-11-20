@@ -10,7 +10,7 @@ scope unless asked.
 
 ## The app
 
-**CollageMagik: Collage Maker & Editor**: a native SwiftUI app for iPhone and iPad (iOS 26+, Liquid Glass) that makes
+**Collage Magic: Collage Maker & Editor**: a native SwiftUI app for iPhone and iPad (iOS 26+, Liquid Glass) that makes
 Instagram collages mixing photos and videos that play inside the collage, plus cross-seam carousels. App Store ID
 `6832640005`, bundle ID `com.axpo.collagemagik`, Team ID `83FYPW267R`. Version and build are `MARKETING_VERSION` /
 `CURRENT_PROJECT_VERSION` in the project file. `ios/README.md` is the full feature and setup reference; keep it current
@@ -95,7 +95,7 @@ Code is under `ios/CollageMagik/CollageMagik/`.
   export finishes. `Ads/AdsSwitch.swift` turns ads on or off. Debug builds use Google's test ad units.
 - **Launch order**: splash (~2.4 s) → Google UMP consent (EU/UK only, nothing requested before it is answered) → ATT
   tracking prompt → ad SDK and Firebase start. A one-time "Thank you" note precedes the first interstitial.
-- **CollageMagik Pro** (`Store/`, StoreKit 2, verified on device, no server) removes ads and unlocks nothing else.
+- **Collage Magic Pro** (`Store/`, StoreKit 2, verified on device, no server) removes ads and unlocks nothing else.
   Products: `com.axpo.collagemagik.pro.yearly` (1-week trial), `.monthly`, `.lifetime`. Prices, trial and "Save N%" come
   from the App Store; never hard-code them.
 - **Install tracking**: `Ads/InstallTracking.swift` (Firebase Analytics `first_open` for Google Ads) and
@@ -111,5 +111,5 @@ Code is under `ios/CollageMagik/CollageMagik/`.
 - `ios/AppStore/release-1.0.1.md`: the current release checklist (IAP, App Privacy answers, AdMob, review notes).
 - `ios/AppStore/screenshots/`: screenshot scripts and manifest, captured with `CM_PRO=1`. iPad submissions need 13-inch
   (2064 × 2752) screenshots.
-- Pending listing change: name **CollageMagik**, subtitle **Collage Maker & Editor**; rename "Insta Collage Pro" to
-  "CollageMagik Pro" in App Store Connect. Avoid "Insta" in user-facing text (Meta treats it as its brand).
+- Pending listing change: name **Collage Magic**, subtitle **Collage Maker & Editor**; rename "Insta Collage Pro" to
+  "Collage Magic Pro" in App Store Connect. Avoid "Insta" in user-facing text (Meta treats it as its brand).

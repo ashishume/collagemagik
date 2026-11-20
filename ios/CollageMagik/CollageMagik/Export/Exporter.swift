@@ -424,7 +424,7 @@ final class CollageExporter: @unchecked Sendable {
 
 /// Adding to Photos was refused. Only the person can change that, in Settings, so the UI offers a button for it.
 struct PhotosAccessDenied: LocalizedError {
-    var errorDescription: String? { "CollageMagik needs permission to add pictures to your Photos. You can allow it in Settings." }
+    var errorDescription: String? { "Collage Magic needs permission to add pictures to your Photos. You can allow it in Settings." }
 }
 
 /// Saves to Photos with add-only access: the app can add a collage but never read or change what is already there.

@@ -1,7 +1,7 @@
 import StoreKit
 import SwiftUI
 
-/// CollageMagik Pro: removes all ads. Three ways to get it, all handled by StoreKit 2 on the iPhone (there is no server):
+/// Collage Magic Pro: removes all ads. Three ways to get it, all handled by StoreKit 2 on the iPhone (there is no server):
 ///
 /// * Monthly and Yearly: auto-renewable subscriptions in one subscription group (people can switch between them).
 /// * Lifetime: a one-time, non-consumable purchase.

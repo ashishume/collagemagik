@@ -16,7 +16,7 @@ struct SplashView: View {
     @State private var ripple: CGFloat = 1
 
     private let iconSize: CGFloat = 150
-    private let title = Array("CollageMagik")
+    private let title = Array("Collage Magic")
 
     var body: some View {
         ZStack {
@@ -32,7 +32,7 @@ struct SplashView: View {
         .scaleEffect(phase >= 5 ? 1.08 : 1)
         .task { await run() }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("CollageMagik")
+        .accessibilityLabel("Collage Magic")
     }
 
     // MARK: Icon

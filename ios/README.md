@@ -1,13 +1,13 @@
-# CollageMagik: Collage Maker & Editor (iPhone)
+# Collage Magic: Collage Maker & Editor (iPhone)
 
 Native SwiftUI port of the web app, built for iOS 26+ with Liquid Glass. Apple ID `6832640005`, bundle ID
-`com.axpo.collagemagik`. On the home screen and inside the app it is **CollageMagik** (renamed from "Insta Collage", since "Insta" is a term
+`com.axpo.collagemagik`. On the home screen and inside the app it is **Collage Magic** (renamed from "Insta Collage", since "Insta" is a term
 Meta treats as its brand). Current version: **1.0.3 (build 3)**.
 
 **App Store listing to set with the next version** (App Store Connect → the app → the new version → App Information):
-Name **CollageMagik**, Subtitle **Collage Maker & Editor**. The live listing still says "Insta Collage Maker & Editor" until
+Name **Collage Magic**, Subtitle **Collage Maker & Editor**. The live listing still says "Insta Collage Maker & Editor" until
 that version is approved. Also rename the subscription group display name and the Pro plan display names in App Store
-Connect from "Insta Collage Pro" to "CollageMagik Pro".
+Connect from "Insta Collage Pro" to "Collage Magic Pro".
 
 ```bash
 open ios/CollageMagik/CollageMagik.xcodeproj    # pick an iPhone simulator or your device, press Run
@@ -80,7 +80,7 @@ open by themselves while a picture is selected.
 - **Clip speed** (timeline): 0.25× to 3×. The clip keeps its start; sound keeps its pitch in the preview and the export.
 - **Export**: HD (1080 wide) or 4K (2160 × 3840 for a Story), at 30 or 60 fps.
 
-## Ads and CollageMagik Pro
+## Ads and Collage Magic Pro
 
 The app is free and shows **Google AdMob** ads (`Ads/GoogleAdsManager.swift`): a small banner above the bottom dock, and
 one full-screen ad after an export finishes, before the result is shown. `Ads/AdsSwitch.swift` turns ads on or off. Debug builds use Google's test ad units. Meta's
@@ -88,10 +88,10 @@ ads SDK (Audience Network) was removed; the Facebook SDK stays only to count ins
 (`Ads/MetaInstallTracking.swift`).
 
 At first launch the order is: Google's consent form (EU/UK only, nothing is requested before it is answered), then Apple's
-tracking prompt, then the ad SDK starts. A one-time "Thank you for using CollageMagik" note comes before the first
+tracking prompt, then the ad SDK starts. A one-time "Thank you for using Collage Magic" note comes before the first
 full-screen ad. EU/UK users can reopen the consent form from About & Privacy → Ad privacy choices.
 
-**CollageMagik Pro** removes all ads and unlocks nothing else (`Store/ProStore.swift`, `Store/ProPaywall.swift`,
+**Collage Magic Pro** removes all ads and unlocks nothing else (`Store/ProStore.swift`, `Store/ProPaywall.swift`,
 StoreKit 2, verified on the device, no server):
 
 | Plan | Product ID |
@@ -183,7 +183,7 @@ right. AVI, MKV, WebM, MPEG-1/2 can't be decoded by iOS: the app says so and ask
 | `Export/` | Frame renderer (Core Graphics), per-clip frame reader, audio mix, MP4 writer |
 | `UI/` | Stage, panels, timeline, crop editor, export sheet, glass components |
 | `Ads/` | Google AdMob, the ads on/off switch, ad unit IDs, install tracking for Google Ads (Firebase) and Meta (Facebook SDK) |
-| `Store/` | CollageMagik Pro: StoreKit 2 purchases and the Pro page |
+| `Store/` | Collage Magic Pro: StoreKit 2 purchases and the Pro page |
 | `DebugHarness.swift` | Debug builds only: drives the app from environment variables (below) |
 
 ### Debug environment variables

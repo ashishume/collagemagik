@@ -1,4 +1,4 @@
-# CollageMagik: App Store submission pack
+# Collage Magic: App Store submission pack
 
 Everything App Store Connect asks for, with the answers that match what the app does. Bundle ID `com.axpo.collagemagik`,
 version 1.0 (build 1), iPhone only, iOS 26+, free with ads (Meta Audience Network), no account, no in-app purchases.
@@ -33,7 +33,7 @@ The same links are inside the app (More ••• → About & Privacy). After th
 
 **Description** (4000 max):
 ```
-CollageMagik turns your photos and videos into one collage that actually moves.
+Collage Magic turns your photos and videos into one collage that actually moves.
 
 TWO WAYS TO CREATE
 Collage: one picture or video with up to 9 photos and 2 videos.
@@ -103,14 +103,14 @@ asked on each upload.
 - **Contact**: Ashish Debnath, aaxpocreation@gmail.com, plus a phone number (required by Apple, not shown publicly).
 - **Notes**:
 ```
-CollageMagik has no account, login or purchases. Everything runs on the device.
+Collage Magic has no account, login or purchases. Everything runs on the device.
 To test a collage: tap "Add" (or the ••• menu → Add from Photos), choose 2-4 photos and/or a short video from the photo library, then tap
 the Export button (top right) → Export video or Export picture. The result is saved to My Library (••• → My Library).
 To test a carousel: tap "Carousel" at the top, add 4-6 photos, swipe the preview or tap the slide numbers under it, then Export (one image per slide).
 "Save to Photos" asks for add-only photo permission. Music is optional: Audio tab → Add background music (needs a video in the collage).
 Privacy, Terms, Support and "Delete all my data" are in ••• → About & Privacy.
 ADS: the app is free and shows one full-screen Meta Audience Network ad after an export (never while editing, and not after the first export). After your
-first finished export and closing the export sheet, an "Ads keep CollageMagik free" notice appears, then Apple's tracking prompt. Choices can be changed in
+first finished export and closing the export sheet, an "Ads keep Collage Magic free" notice appears, then Apple's tracking prompt. Choices can be changed in
 ••• → About & Privacy → Ads. In the EU/UK/Switzerland the notice asks to Allow ads or choose No ads. If no ad is available (no fill), nothing is shown.
 ```
 - The review device needs a few photos/videos in Photos. Apple's reviewers have them; if you test on a simulator, add some with
@@ -165,7 +165,7 @@ The debug build can pre-load files for you: `SIMCTL_CHILD_CM_BATCH=/path/a.jpg,/
 - **No account-deletion requirement.** Guideline 5.1.1(v) applies to apps that let you create an account. This one doesn't;
   the in-app "Delete all my data" and the deletion page cover the spirit of it anyway.
 - **The landing site loads Google AdSense** on every page (it is in `landing-page/index.html`), including the CollageMagik
-  pages. The policy links to the site's own policy for that. If you want the CollageMagik legal pages free of the site's
+  pages. The policy links to the site's own policy for that. If you want the Collage Magic legal pages free of the site's
   ad script, move them to static HTML under `public/` like the `mindstrike` and `figureout` pages.
 - **The web version** (`collagemagik-web`, the PWA) is unchanged and still saves nothing: refresh clears the project. My
   Library exists only in the iPhone app.

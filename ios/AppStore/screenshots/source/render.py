@@ -1,4 +1,4 @@
-"""Compose CollageMagik's real simulator captures into App Store posters (1320 x 2868, 6.9" iPhone slot).
+"""Compose Collage Magic's real simulator captures into App Store posters (1320 x 2868, 6.9" iPhone slot).
 
 Same layout as the Figureout and Mindstrike sets: rounded two-line headline, pastel field,
 graphite phone frame. The raw captures are placed unmodified; the app's UI is never redrawn.
@@ -22,7 +22,7 @@ OUTPUT = ROOT / "png"
 WIDTH, HEIGHT = 1320, 2868
 SCALE = 2
 SCREEN = (180, 680, 960, 2086)
-BRAND = "CollageMagik"
+BRAND = "Collage Magic"
 INK, MUTED = "241A44", "645C7C"
 FONT = "/System/Library/Fonts/SFNSRounded.ttf"
 SRGB = ImageCms.ImageCmsProfile(ImageCms.createProfile("sRGB"))
@@ -72,7 +72,7 @@ def sparkle(draw, cx, cy, radius, color):
 
 
 def collage_mark(draw, cx, cy, kind, color):
-    # Small marks in the margins echo CollageMagik's picture cells.
+    # Small marks in the margins echo Collage Magic's picture cells.
     if kind == "+":
         lines = [(cx - 19, cy, cx + 19, cy), (cx, cy - 19, cx, cy + 19)]
         for line in lines:

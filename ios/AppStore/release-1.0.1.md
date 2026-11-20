@@ -1,4 +1,4 @@
-# CollageMagik 1.0.1: App Store Connect checklist
+# Collage Magic 1.0.1: App Store Connect checklist
 
 Everything to enter in App Store Connect for version **1.0.1 (build 2)**: the new Pro plans (in-app purchases), the ads, the privacy answers, and the text for the release. Copy the text blocks as they are.
 
@@ -34,7 +34,7 @@ App Store Connect → your app → **Monetization → Subscriptions** → create
 
 | Field | Value |
 |---|---|
-| Reference name | `CollageMagik Pro` |
+| Reference name | `Collage Magic Pro` |
 | Group display name (English) | `Insta Collage Pro` |
 | Custom app name (optional) | `Insta Collage` |
 
@@ -147,13 +147,13 @@ The app asks Apple's "Allow tracking?" question once, at first launch (after Goo
 
 ## 5. Google AdMob console (outside App Store Connect)
 
-1. **Apps → CollageMagik → App settings → Link to app store**: link it to App Store ID `6832640005` once 1.0.1 is live. Live ads stay limited until the app is linked.
+1. **Apps → Collage Magic → App settings → Link to app store**: link it to App Store ID `6832640005` once 1.0.1 is live. Live ads stay limited until the app is linked.
 2. **app-ads.txt**: publish `https://www.axpocreation.com/app-ads.txt` containing the line AdMob shows under **Apps → View all apps → app-ads.txt**. It looks like:
    ```
    google.com, pub-3743383597691737, DIRECT, f08c47fec0942fa0
    ```
    Also make sure the App Store listing's **Marketing URL** or **Support URL** is on `axpocreation.com`, so AdMob can find the file.
-3. **Privacy & messaging → European regulations (GDPR)**: create and **publish** a consent message for CollageMagik. Without it, people in the EU/UK see no ads (the app checks this at launch).
+3. **Privacy & messaging → European regulations (GDPR)**: create and **publish** a consent message for Collage Magic. Without it, people in the EU/UK see no ads (the app checks this at launch).
 4. **Privacy & messaging → IDFA explainer** is optional: the app asks Apple's tracking question itself at first launch.
 
 Ad unit IDs used by the app (release builds; debug builds use Google's test ads):

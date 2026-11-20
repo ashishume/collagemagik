@@ -1,4 +1,4 @@
-"""Generate scenic stand-in photos and short video clips for CollageMagik App Store screenshots.
+"""Generate scenic stand-in photos and short video clips for Collage Magic App Store screenshots.
 
 Everything here is procedurally drawn (no third-party imagery), so it is safe to publish.
 Usage: make_media.py OUT_DIR

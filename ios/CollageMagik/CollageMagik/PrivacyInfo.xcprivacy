@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- CollageMagik has no account and no server of its own. It shows Google AdMob ads (a banner, and a full-screen ad after an
+	<!-- Collage Magic has no account and no server of its own. It shows Google AdMob ads (a banner, and a full-screen ad after an
 	     export), and the Facebook SDK counts installs for Meta app install campaigns. So it declares tracking and the data
 	     those SDKs collect. Each SDK ships its own manifest with its tracking domains; the Meta ones are repeated below.
 	     Apple's tracking question is asked at launch (GoogleAdsManager.appDidLaunch). Photos, videos, music and collages are

@@ -1,4 +1,4 @@
-# CollageMagik App Store screenshots
+# Collage Magic App Store screenshots
 
 Ten portrait PNGs at **1320 × 2868 px** for the **6.9" iPhone** slot in App Store Connect
 (upload the files in `png/` in filename order; `overview.jpg` is only a contact sheet).
