@@ -35,6 +35,9 @@ final class ProStore {
     /// Trial / intro offer the person can still use on each subscription.
     private(set) var introEligible: Set<Plan> = []
     private(set) var purchasing: Plan?
+    /// True from the moment Apple's payment sheet closes with a payment until Pro is on: the Pro page shows
+    /// "Confirming your purchase…" instead of looking frozen.
+    private(set) var confirming = false
 
     /// Drives the Pro page (`ProPaywall`).
     var showPaywall = false
@@ -143,9 +146,14 @@ final class ProStore {
         do {
             switch try await product.purchase() {
             case .success(let verification):
+                withAnimation(.smooth) { confirming = true }
+                defer { withAnimation(.smooth) { confirming = false } }
                 guard case .verified(let t) = verification else { return .failed("The App Store couldn't confirm this purchase.") }
+                // Verified on the device: Pro is on now. The full check (renewal details) can take a few seconds over
+                // the network, so it runs afterwards instead of keeping the person waiting.
+                setPro(plan, renews: t.expirationDate, willRenew: true)
                 await t.finish()
-                await refreshEntitlements()
+                Task { await refreshEntitlements() }
                 return .purchased
             case .userCancelled:
                 return .cancelled

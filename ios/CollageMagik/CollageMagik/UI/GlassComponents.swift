@@ -420,7 +420,6 @@ let panelTabsHeight: CGFloat = 34
 /// The row of group tabs at the top of a selection panel. The chosen tab is glass that slides to the next one.
 struct SectionTabs<S: PanelSection>: View {
     @Binding var selection: S
-    @Namespace private var glass
 
     var body: some View {
         GlassEffectContainer(spacing: 4) {
@@ -438,10 +437,10 @@ struct SectionTabs<S: PanelSection>: View {
     /// Each tab is as wide as its title needs, so a long one ("Background") still has room inside the glass.
     private func tabs(padding: CGFloat) -> some View {
         TitleWidthRow {
-            ForEach(S.allCases) { s in
+            ForEach(Array(S.allCases.enumerated()), id: \.element) { i, s in
                 let on = s == selection
                 Button {
-                    withAnimation(.bouncy(duration: 0.4)) { selection = s }
+                    selection = s
                 } label: {
                     Label(s.title, systemImage: s.symbol)
                         .labelStyle(.titleAndIcon)
@@ -453,37 +452,99 @@ struct SectionTabs<S: PanelSection>: View {
                         .frame(maxWidth: .infinity)
                         .frame(height: 30)
                         .contentShape(Capsule())
-                        .slidingBubbleSlot(on, in: glass)
+                        .slidingTab(i)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(s.title)
                 .accessibilityAddTraits(on ? .isSelected : [])
             }
         }
-        .slidingBubble(in: glass)
+        .slidingTabs(selected: Array(S.allCases).firstIndex(of: selection)) { i in
+            let all = Array(S.allCases)
+            if all.indices.contains(i) { selection = all[i] }
+        }
     }
 }
 
 // MARK: - Sliding selection bubble
 
-/// One glass bubble behind a row of tabs that slides (and stretches) from the old tab to the new one, like the system
-/// tab bar, instead of a separate bubble fading out under one tab and in under the next. The selected tab marks its
-/// place with `slidingBubbleSlot`; the row draws the bubble there with `slidingBubble`.
+/// Where each tab of a row sits, by index, in the row's own space.
+private struct SlidingTabFrames: PreferenceKey {
+    static let defaultValue: [Int: CGRect] = [:]
+    static func reduce(value: inout [Int: CGRect], nextValue: () -> [Int: CGRect]) {
+        value.merge(nextValue(), uniquingKeysWith: { $1 })
+    }
+}
+
+private let slidingTabSpace = "slidingTabs"
+
+/// One glass bubble behind a row of tabs, like the system tab bar: it slides (and stretches) from the old tab to the
+/// new one, and it can be pressed and dragged along the row, following the finger a little lifted, choosing the tab it
+/// passes over and settling where it is let go. Each tab marks itself with `slidingTab(_:)` (its index); the row adds
+/// `slidingTabs(selected:select:)`.
 extension View {
-    func slidingBubbleSlot(_ selected: Bool, in ns: Namespace.ID) -> some View {
+    func slidingTab(_ index: Int) -> some View {
         background {
-            if selected { Color.clear.matchedGeometryEffect(id: "bubble", in: ns) }
+            GeometryReader { g in
+                Color.clear.preference(key: SlidingTabFrames.self, value: [index: g.frame(in: .named(slidingTabSpace))])
+            }
         }
     }
 
-    func slidingBubble(in ns: Namespace.ID) -> some View {
-        background {
-            Capsule()
-                .fill(.clear)
-                .glassEffect(.regular.tint(Color.brand.opacity(0.75)).interactive(), in: .capsule)
-                .matchedGeometryEffect(id: "bubble", in: ns, isSource: false)
-                .allowsHitTesting(false)
+    func slidingTabs(selected: Int?, select: @escaping (Int) -> Void) -> some View {
+        modifier(SlidingTabsRow(selected: selected, select: select))
+    }
+}
+
+private struct SlidingTabsRow: ViewModifier {
+    let selected: Int?
+    let select: (Int) -> Void
+    @State private var frames: [Int: CGRect] = [:]
+    /// The finger's x while the bubble is being dragged.
+    @State private var dragX: Double?
+
+    private static let slide = Animation.spring(response: 0.38, dampingFraction: 0.78)
+
+    private func nearest(_ x: Double) -> Int? {
+        frames.min { abs($0.value.midX - x) < abs($1.value.midX - x) }?.key
+    }
+
+    /// The bubble: on the selected tab, or under the finger (as wide as the tab it is over, kept inside the row).
+    private var bubble: CGRect? {
+        if let x = dragX, let i = nearest(x), let f = frames[i],
+           let lo = frames.values.map(\.minX).min(), let hi = frames.values.map(\.maxX).max() {
+            let cx = min(max(x, lo + f.width / 2), hi - f.width / 2)
+            return CGRect(x: cx - f.width / 2, y: f.minY, width: f.width, height: f.height)
         }
+        return selected.flatMap { frames[$0] }
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .coordinateSpace(.named(slidingTabSpace))
+            .onPreferenceChange(SlidingTabFrames.self) { frames = $0 }
+            .background(alignment: .topLeading) {
+                if let b = bubble {
+                    Capsule()
+                        .fill(.clear)
+                        .glassEffect(.regular.tint(Color.brand.opacity(0.75)).interactive(), in: .capsule)
+                        .frame(width: b.width, height: b.height)
+                        .scaleEffect(dragX == nil ? 1 : 1.08)
+                        .offset(x: b.minX, y: b.minY)
+                        .allowsHitTesting(false)
+                }
+            }
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 6, coordinateSpace: .named(slidingTabSpace))
+                    .onChanged { g in
+                        let first = dragX == nil
+                        withAnimation(first ? Self.slide : .interactiveSpring(response: 0.2, dampingFraction: 0.86)) { dragX = g.location.x }
+                        // the tab under the finger is chosen as it passes, like the system's segmented controls
+                        if let i = nearest(g.location.x), i != selected { select(i) }
+                    }
+                    .onEnded { _ in withAnimation(Self.slide) { dragX = nil } }
+            )
+            .animation(Self.slide, value: selected)
     }
 }
 

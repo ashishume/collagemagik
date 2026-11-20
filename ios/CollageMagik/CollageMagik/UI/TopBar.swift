@@ -68,12 +68,12 @@ struct TopBar: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             // what is being made; the kind is chosen on Home
+            // a title, not a control: no glass around it
             Label(store.project.mode.label, systemImage: store.isCarousel ? "rectangle.split.3x1" : "square.grid.2x2")
-                .font(.system(size: 13, weight: .semibold))
+                .font(.system(size: 17, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
-                .padding(.horizontal, 14)
-                .frame(height: 34)
-                .glassEffect(.regular, in: .capsule)
+                .labelStyle(.titleAndIcon)
+                .accessibilityAddTraits(.isHeader)
                 .layoutPriority(1)
 
             BarGroup {

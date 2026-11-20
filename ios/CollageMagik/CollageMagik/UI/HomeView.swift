@@ -270,7 +270,6 @@ private struct SettingsMenu: View {
 /// The Library tab: Collage and Carousel tabs at the top, each with its drafts and its exports.
 private struct LibraryHome: View {
     @State private var kind: EditMode = .collage
-    @Namespace private var glass
 
     var body: some View {
         ZStack {
@@ -279,10 +278,10 @@ private struct LibraryHome: View {
                 HomeHeader(title: "Library", subtitle: "Your drafts and exports, on this iPhone only")
                 GlassEffectContainer(spacing: 6) {
                     HStack(spacing: 0) {
-                        ForEach([EditMode.collage, .carousel], id: \.self) { k in
+                        ForEach(Array([EditMode.collage, .carousel].enumerated()), id: \.element) { i, k in
                             let on = kind == k
                             Button {
-                                withAnimation(.spring(response: 0.38, dampingFraction: 0.78)) { kind = k }
+                                kind = k
                             } label: {
                                 Label(k == .collage ? "Collages" : "Carousels", systemImage: k == .collage ? "square.grid.2x2" : "rectangle.split.3x1")
                                     .font(.subheadline.weight(.semibold))
@@ -290,13 +289,13 @@ private struct LibraryHome: View {
                                     .frame(maxWidth: .infinity)
                                     .frame(height: 36)
                                     .contentShape(Capsule())
-                                    .slidingBubbleSlot(on, in: glass)
+                                    .slidingTab(i)
                             }
                             .buttonStyle(.plain)
                             .accessibilityAddTraits(on ? .isSelected : [])
                         }
                     }
-                    .slidingBubble(in: glass)
+                    .slidingTabs(selected: kind == .collage ? 0 : 1) { kind = $0 == 0 ? .collage : .carousel }
                     .padding(3)
                     .glassEffect(.regular, in: .capsule)
                 }

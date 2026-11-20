@@ -13,24 +13,28 @@ struct ProPaywall: View {
     @State private var restoring = false
     @State private var showManage = false
     @State private var appeared = false
+    /// Shown over the page once a purchase goes through.
+    @State private var welcomed = false
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
             AuroraBackground().ignoresSafeArea()
-            ScrollView {
-                VStack(spacing: 18) {
-                    hero
-                    if pro.isPro { proActive } else {
-                        benefits
-                        plans
+            // the plans scroll above the button, never behind it
+            VStack(spacing: 0) {
+                ScrollView {
+                    VStack(spacing: 18) {
+                        hero
+                        if pro.isPro { proActive } else {
+                            benefits
+                            plans
+                        }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                    .padding(.bottom, 16)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
-                .padding(.bottom, 24)
-            }
-            .scrollIndicators(.hidden)
-            .safeAreaInset(edge: .bottom) {
+                .scrollIndicators(.hidden)
+                .scrollEdgeEffectStyle(.soft, for: .bottom)
                 if !pro.isPro { footer }
             }
 
@@ -42,7 +46,16 @@ struct ProPaywall: View {
             .padding(.trailing, 16)
             .padding(.top, 12)
             .accessibilityLabel("Close")
+
+            if pro.confirming || welcomed {
+                statusOverlay
+                    .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                    .zIndex(2)
+            }
         }
+        .animation(.smooth(duration: 0.3), value: pro.confirming)
+        .animation(.smooth(duration: 0.3), value: welcomed)
+        .interactiveDismissDisabled(pro.confirming)
         .task {
             await pro.loadProducts()
             if pro.products[.yearly] == nil, let first = available.first?.plan { selected = first }
@@ -261,7 +274,8 @@ struct ProPaywall: View {
             } label: {
                 HStack {
                     if pro.purchasing != nil { ProgressView().tint(.white) }
-                    Text(current?.cta ?? "Continue").font(.headline)
+                    // while Apple's payment sheet is opening or open, say so instead of a bare spinner
+                    Text(pro.purchasing != nil ? "Waiting for the App Store…" : (current?.cta ?? "Continue")).font(.headline)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 6)
@@ -287,12 +301,49 @@ struct ProPaywall: View {
             .font(.caption.weight(.medium))
         }
         .padding(.horizontal, 20)
-        .padding(.top, 12)
+        .padding(.top, 14)
         .padding(.bottom, 8)
-        .background {
-            Rectangle().fill(.ultraThinMaterial).mask(LinearGradient(colors: [.clear, .black, .black], startPoint: .top, endPoint: .bottom))
-                .ignoresSafeArea()
+    }
+
+    // MARK: Confirming / welcome
+
+    /// While the App Store confirms a payment: a clear "working on it" card, so the page never looks frozen.
+    /// Then a welcome card once Pro is on.
+    private var statusOverlay: some View {
+        ZStack {
+            Rectangle().fill(.black.opacity(0.45)).ignoresSafeArea()
+            VStack(spacing: 14) {
+                if welcomed {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 54, weight: .semibold))
+                        .foregroundStyle(Color.musicGreen)
+                        .symbolEffect(.bounce, value: welcomed)
+                    Text("You're Pro!").font(.title2.weight(.bold))
+                    Text("Ads are gone. Thank you for supporting Collage Magic 💜")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    Button { welcomed = false; dismiss() } label: {
+                        Text("Done").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 4)
+                    }
+                    .buttonStyle(.glassProminent)
+                    .controlSize(.large)
+                } else {
+                    ProgressView().controlSize(.large).tint(.white)
+                    Text("Confirming your purchase…").font(.headline)
+                    Text("This takes a moment. Please keep the app open.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+            }
+            .padding(24)
+            .frame(maxWidth: 320)
+            .glassEffect(.regular, in: .rect(cornerRadius: 28))
+            .padding(32)
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityAddTraits(.isModal)
     }
 
     // MARK: Already Pro
@@ -338,7 +389,7 @@ struct ProPaywall: View {
     private func buy() async {
         switch await pro.purchase(selected) {
         case .purchased:
-            message = "Welcome to Pro! Ads are gone. Thank you for supporting Collage Magic 💜"
+            welcomed = true
         case .pending:
             message = "Your purchase is waiting for approval. Pro turns on by itself once it's approved."
         case .failed(let why):

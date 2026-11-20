@@ -15,12 +15,8 @@ struct RootView: View {
     @State private var confirmCarousel = false
     /// The one-time ads notice, shown after the first finished export.
 
-    /// Replacing a picture takes one item; adding to the collage (or filling an empty cell) takes as many as there is room for.
-    private var pickLimit: Int {
-        if store.pickOverlay != nil { return 1 }
-        if let t = store.pickTarget, store.project.cells.indices.contains(t), store.project.cells[t].mediaId != nil { return 1 }
-        return max(1, maxTrayItems - store.items.count)
-    }
+    /// What the picker allows (see `CollageStore.pickLimit`): one to replace a picture, a template's free slots, or a tray.
+    private var pickLimit: Int { store.pickLimit }
 
     var body: some View {
         @Bindable var store = store
@@ -71,7 +67,11 @@ struct RootView: View {
                     }
                     .padding(.horizontal, 12)
                     .padding(.top, 2)
-                    .padding(.bottom, 4)
+                    // The dock sits in the home-indicator area, like the system's floating tab bar: close to the
+                    // bottom edge, but always clear of the indicator so taps never fight the swipe-home gesture.
+                    // Phones with a Home button (no indicator) keep a small margin.
+                    .padding(.bottom, Self.dockGap(bottomInset: geo.safeAreaInsets.bottom))
+                    .ignoresSafeArea(.container, edges: .bottom)
                     .animation(.smooth(duration: 0.35), value: UpdateChecker.shared.availableVersion)
                 }
                 // the caption keyboard opens over the editor; it must not squeeze the preview behind it
@@ -183,6 +183,12 @@ struct RootView: View {
         } message: { _ in
             Text("Your current design is kept in My Library, under Drafts.")
         }
+    }
+
+    /// Space under the dock: 14 pt above the screen edge on phones with a home indicator (the indicator itself is about
+    /// 8 pt up), and 6 pt on phones or iPads without one.
+    static func dockGap(bottomInset: CGFloat) -> CGFloat {
+        bottomInset > 0 ? max(6, min(bottomInset, 14)) : 6
     }
 
     private var stage: some View {

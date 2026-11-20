@@ -21,7 +21,7 @@ struct ModeSwitch: View {
     private func modes(titles: Bool) -> some View {
         GlassEffectContainer(spacing: 6) {
             HStack(spacing: 0) {
-                ForEach(EditMode.allCases) { mode in
+                ForEach(Array(EditMode.allCases.enumerated()), id: \.element) { i, mode in
                     let on = store.project.mode == mode
                     Button {
                         withAnimation(.bouncy(duration: 0.45)) { request(mode) }
@@ -34,14 +34,14 @@ struct ModeSwitch: View {
                             .padding(.horizontal, on ? 11 : 10)
                             .frame(height: 30)
                             .contentShape(Capsule())
-                            .slidingBubbleSlot(on, in: glass)
+                            .slidingTab(i)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(mode.label)
                     .accessibilityAddTraits(on ? .isSelected : [])
                 }
             }
-            .slidingBubble(in: glass)
+            .slidingTabs(selected: EditMode.allCases.firstIndex(of: store.project.mode)) { i in request(EditMode.allCases[i]) }
             .padding(2)
             .glassEffect(.regular, in: .capsule)
         }

@@ -160,15 +160,53 @@ final class CollageStore {
         return true
     }
 
+    /// How many photos the picker lets someone select: one when replacing a picture, a template's free slots (so a
+    /// template never takes more than it can show, and the picker itself says so), otherwise a full tray's worth;
+    /// older tray photos make room for new ones (`makeRoom`).
+    var pickLimit: Int {
+        if pickOverlay != nil { return 1 }
+        if let t = pickTarget, project.cells.indices.contains(t), project.cells[t].mediaId != nil { return 1 }
+        if let tpl = activeTemplate {
+            if tpl.mode == .collage {
+                return max(1, project.cells.prefix(project.cellCount).filter { $0.mediaId == nil }.count)
+            }
+            return max(1, maxCarouselPhotos - placedMediaCount)
+        }
+        return maxTrayItems
+    }
+
+    /// Frees tray room for `incoming` new photos instead of refusing them: the oldest photos the design doesn't use go
+    /// first, then (only if that isn't enough) the oldest ones it does use. Their cells stay, empty, and the new photos
+    /// fill them. Returns how many were removed.
+    func makeRoom(for incoming: Int) -> Int {
+        var over = items.count + min(incoming, maxTrayItems) - maxTrayItems
+        guard over > 0 else { return 0 }
+        var used = Set(project.cells.prefix(project.cellCount).compactMap(\.mediaId))
+        used.formUnion(project.overlays.map(\.mediaId))
+        if let b = project.backdrop.blurMediaId { used.insert(b) }
+        let order = items.filter { !used.contains($0.id) } + items.filter { used.contains($0.id) }
+        var removed = 0
+        for old in order where over > 0 {
+            playback.dispose(old.id)
+            items.removeAll { $0.id == old.id }
+            project.cells = project.cells.map { $0.mediaId == old.id ? CellState() : $0 }
+            project.lanes.removeAll { $0.mediaId == old.id }
+            project.overlays.removeAll { $0.mediaId == old.id }
+            if project.backdrop.blurMediaId == old.id { project.backdrop.blurMediaId = nil }
+            over -= 1
+            removed += 1
+        }
+        if let s = selectedOverlay, overlay(s) == nil { selectOverlay(nil) }
+        return removed
+    }
+
     func openAdd(cell: Int? = nil, overlay: String? = nil) {
-        guard !refuseIfTrayFull() else { return }
         pickTarget = cell
         pickOverlay = overlay
         showPhotoPicker = true
     }
 
     func openFiles(cell: Int? = nil, overlay: String? = nil) {
-        guard !refuseIfTrayFull() else { return }
         pickTarget = cell
         pickOverlay = overlay
         importerIsMusic = false
@@ -223,6 +261,8 @@ final class CollageStore {
             importing = false
             withAnimation(.smooth) { importProgress = nil }
         }
+        // a full tray never refuses new photos: the oldest ones make room (unused first)
+        let madeRoom = makeRoom(for: sources.count)
         let fresh = items.isEmpty
         // replacing a picture (in a cell or on top) leaves the layout and the open tool alone
         let replacing = pickOverlay != nil || (pickTarget.map { project.cells.indices.contains($0) && project.cells[$0].mediaId != nil } ?? false)
@@ -325,6 +365,9 @@ final class CollageStore {
             target = nil
             added += 1
             importProgress?.finishItem(added: added)
+        }
+        if madeRoom > 0, !cancelled {
+            notify("Your tray holds \(maxTrayItems). \(madeRoom) older \(madeRoom == 1 ? "photo was" : "photos were") replaced by the new \(madeRoom == 1 ? "one" : "ones").")
         }
         if cancelled {
             notify(added == 0 ? "Adding stopped. Nothing was added." : "Adding stopped. \(added) of \(sources.count) added.")

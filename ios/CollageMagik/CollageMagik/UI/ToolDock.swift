@@ -29,9 +29,9 @@ struct ToolDock: View {
                     } label: {
                         VStack(spacing: 1) {
                             Image(systemName: tab.symbol(in: store.project.mode))
-                                .font(.system(size: 16, weight: .medium))
+                                .font(.system(size: 20, weight: .medium))
                                 .symbolVariant(on ? .fill : .none)
-                                .frame(height: 19)
+                                .frame(height: 22)
                             Text(tab.label(in: store.project.mode))
                                 .font(.system(size: 9.5, weight: .medium))
                                 .lineLimit(1)
@@ -39,7 +39,7 @@ struct ToolDock: View {
                         }
                         .foregroundStyle(on ? Color.white : Color.white.opacity(0.7))
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 9)
+                        .padding(.vertical, 7.5)
                         .contentShape(Capsule())
                     }
                     .buttonStyle(.plain)
