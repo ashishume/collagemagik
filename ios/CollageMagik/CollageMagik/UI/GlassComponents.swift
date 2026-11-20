@@ -1,29 +1,176 @@
 import SwiftUI
 
-/// A soft, slowly drifting colour field. Liquid Glass bends and refracts what is behind it, so the background gives it something to show.
+// MARK: - App themes
+
+/// The colour field behind every screen (editor, splash, Pro page, crop, Choose part). People pick one under
+/// More → Theme; the choice is kept on the device. All are dark so photos read the same whichever is chosen.
+enum AppTheme: String, CaseIterable, Identifiable {
+    case magic, blackGlass, midnight, ocean, aurora, forest, sunset, rose, ember
+
+    static let storageKey = "appTheme"
+    static let fallback: AppTheme = .magic
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .magic: "Magic"
+        case .blackGlass: "Black Glass"
+        case .midnight: "Midnight"
+        case .ocean: "Ocean"
+        case .aurora: "Aurora"
+        case .forest: "Forest"
+        case .sunset: "Sunset"
+        case .rose: "Rose"
+        case .ember: "Ember"
+        }
+    }
+
+    /// The 3 × 3 mesh colours, row by row from the top-left.
+    var colors: [Color] {
+        func c(_ r: Double, _ g: Double, _ b: Double) -> Color { Color(red: r, green: g, blue: b) }
+        switch self {
+        case .magic: return [
+            c(0.10, 0.05, 0.25), c(0.32, 0.14, 0.62), c(0.07, 0.10, 0.30),
+            c(0.45, 0.10, 0.45), c(0.12, 0.06, 0.22), c(0.10, 0.30, 0.55),
+            c(0.06, 0.04, 0.14), c(0.55, 0.15, 0.40), c(0.05, 0.08, 0.22),
+        ]
+        case .blackGlass: return [
+            c(0.10, 0.10, 0.10), c(0.17, 0.17, 0.19), c(0.07, 0.07, 0.07),
+            c(0.05, 0.05, 0.05), c(0.11, 0.11, 0.13), c(0.04, 0.04, 0.04),
+            c(0.02, 0.02, 0.02), c(0.06, 0.06, 0.06), c(0.02, 0.02, 0.02),
+        ]
+        case .midnight: return [
+            c(0.03, 0.05, 0.16), c(0.10, 0.16, 0.42), c(0.04, 0.06, 0.20),
+            c(0.08, 0.10, 0.30), c(0.03, 0.04, 0.12), c(0.16, 0.22, 0.55),
+            c(0.02, 0.03, 0.09), c(0.08, 0.12, 0.34), c(0.02, 0.03, 0.10),
+        ]
+        case .ocean: return [
+            c(0.02, 0.12, 0.22), c(0.04, 0.36, 0.55), c(0.03, 0.14, 0.26),
+            c(0.02, 0.30, 0.38), c(0.02, 0.09, 0.16), c(0.10, 0.42, 0.62),
+            c(0.01, 0.06, 0.12), c(0.04, 0.28, 0.40), c(0.02, 0.07, 0.14),
+        ]
+        case .aurora: return [
+            c(0.03, 0.12, 0.14), c(0.06, 0.45, 0.38), c(0.08, 0.06, 0.24),
+            c(0.10, 0.32, 0.30), c(0.03, 0.08, 0.12), c(0.30, 0.16, 0.55),
+            c(0.02, 0.05, 0.08), c(0.05, 0.38, 0.30), c(0.06, 0.04, 0.16),
+        ]
+        case .forest: return [
+            c(0.05, 0.12, 0.07), c(0.14, 0.34, 0.16), c(0.06, 0.10, 0.06),
+            c(0.10, 0.26, 0.12), c(0.04, 0.08, 0.05), c(0.22, 0.36, 0.14),
+            c(0.02, 0.05, 0.03), c(0.12, 0.28, 0.14), c(0.03, 0.06, 0.04),
+        ]
+        case .sunset: return [
+            c(0.20, 0.06, 0.18), c(0.60, 0.22, 0.20), c(0.18, 0.05, 0.14),
+            c(0.48, 0.12, 0.30), c(0.14, 0.04, 0.12), c(0.66, 0.34, 0.16),
+            c(0.08, 0.03, 0.10), c(0.42, 0.10, 0.26), c(0.10, 0.03, 0.08),
+        ]
+        case .rose: return [
+            c(0.20, 0.05, 0.12), c(0.55, 0.16, 0.36), c(0.16, 0.05, 0.12),
+            c(0.40, 0.10, 0.26), c(0.12, 0.04, 0.09), c(0.62, 0.26, 0.44),
+            c(0.07, 0.02, 0.06), c(0.36, 0.10, 0.24), c(0.08, 0.03, 0.07),
+        ]
+        case .ember: return [
+            c(0.16, 0.05, 0.02), c(0.55, 0.20, 0.04), c(0.12, 0.04, 0.02),
+            c(0.40, 0.10, 0.04), c(0.10, 0.03, 0.02), c(0.62, 0.32, 0.06),
+            c(0.06, 0.02, 0.01), c(0.36, 0.10, 0.03), c(0.07, 0.02, 0.02),
+        ]
+        }
+    }
+
+    /// A little darker overall, so captions and controls stay easy to read on the brighter themes.
+    var dim: Double { self == .blackGlass ? 0 : 0.18 }
+}
+
+/// A soft, slowly drifting colour field in the chosen theme. Liquid Glass bends and refracts what is behind it, so the
+/// background gives it something to show.
 struct AuroraBackground: View {
     var paused = false
+    @AppStorage(AppTheme.storageKey) private var themeId = AppTheme.fallback.rawValue
 
     var body: some View {
+        let theme = AppTheme(rawValue: themeId) ?? .fallback
         TimelineView(.animation(minimumInterval: 1.0 / 20.0, paused: paused)) { context in
             let t = context.date.timeIntervalSinceReferenceDate
             let a = Float(sin(t / 5.0) * 0.07)
             let b = Float(cos(t / 6.5) * 0.07)
-            MeshGradient(
-                width: 3, height: 3,
-                points: [
-                    [0, 0], [0.5 + a, 0], [1, 0],
-                    [0, 0.5 + b], [0.5 + b, 0.5 - a], [1, 0.5 - b],
-                    [0, 1], [0.5 - a, 1], [1, 1],
-                ],
-                colors: [
-                    Color(red: 0.10, green: 0.05, blue: 0.25), Color(red: 0.32, green: 0.14, blue: 0.62), Color(red: 0.07, green: 0.10, blue: 0.30),
-                    Color(red: 0.45, green: 0.10, blue: 0.45), Color(red: 0.12, green: 0.06, blue: 0.22), Color(red: 0.10, green: 0.30, blue: 0.55),
-                    Color(red: 0.06, green: 0.04, blue: 0.14), Color(red: 0.55, green: 0.15, blue: 0.40), Color(red: 0.05, green: 0.08, blue: 0.22),
-                ]
-            )
-            .overlay(Color.black.opacity(0.18))
+            ThemeMesh(theme: theme, a: a, b: b)
         }
+        .animation(.easeInOut(duration: 0.5), value: themeId)
+    }
+}
+
+/// The theme's mesh, drifted by `a` and `b` (0 = still, as in the swatches).
+struct ThemeMesh: View {
+    let theme: AppTheme
+    var a: Float = 0
+    var b: Float = 0
+
+    var body: some View {
+        MeshGradient(
+            width: 3, height: 3,
+            points: [
+                [0, 0], [0.5 + a, 0], [1, 0],
+                [0, 0.5 + b], [0.5 + b, 0.5 - a], [1, 0.5 - b],
+                [0, 1], [0.5 - a, 1], [1, 1],
+            ],
+            colors: theme.colors
+        )
+        .overlay(Color.black.opacity(theme.dim))
+    }
+}
+
+/// More → Theme: a row of swatches; the app behind changes as soon as one is tapped.
+struct ThemePicker: View {
+    @AppStorage(AppTheme.storageKey) private var themeId = AppTheme.fallback.rawValue
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Theme").font(.title3.weight(.semibold))
+                Spacer()
+                Button("Done") { dismiss() }
+                    .buttonStyle(.glassProminent)
+                    .tint(Color.brand)
+            }
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 14) {
+                ForEach(AppTheme.allCases) { theme in
+                    let on = themeId == theme.rawValue
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.4)) { themeId = theme.rawValue }
+                    } label: {
+                        VStack(spacing: 6) {
+                            ThemeMesh(theme: theme)
+                                .frame(height: 64)
+                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(.white.opacity(0.15), lineWidth: 1))
+                                .overlay(RoundedRectangle(cornerRadius: 17, style: .continuous).strokeBorder(Color.brand, lineWidth: on ? 3 : 0).padding(-4))
+                                .overlay(alignment: .bottomTrailing) {
+                                    if on {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .font(.system(size: 16, weight: .semibold))
+                                            .foregroundStyle(.white, Color.brand)
+                                            .padding(6)
+                                    }
+                                }
+                            Text(theme.title)
+                                .font(.footnote.weight(on ? .semibold : .regular))
+                                .foregroundStyle(on ? .primary : .secondary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(theme.title) theme")
+                    .accessibilityAddTraits(on ? .isSelected : [])
+                }
+            }
+        }
+        .padding(20)
+        .presentationDetents([.height(420)])
+        .presentationBackground(.ultraThinMaterial)
+        // no dimming behind the sheet, so the new theme shows on the app straight away
+        .presentationBackgroundInteraction(.enabled)
+        .sensoryFeedback(.selection, trigger: themeId)
     }
 }
 

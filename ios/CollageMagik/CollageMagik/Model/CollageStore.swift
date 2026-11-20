@@ -340,8 +340,8 @@ final class CollageStore {
             let lastFilled = project.cells.lastIndex { $0.mediaId != nil } ?? 0
             setCellCount(lastFilled + 1)
             if isCarousel {
-                // the slide count follows the pictures on its own; start in the style that suits that many
-                project.layoutId = defaultLayoutId(for: project)
+                // the slide count follows the pictures on its own; start in the size and style that suit them
+                fitCarouselToPictures()
                 carouselOffset = 0
             }
             if added >= 2 {
@@ -501,6 +501,28 @@ final class CollageStore {
         clampCarouselOffset()
     }
 
+    /// Set once the person picks Post or Square for a carousel themselves; from then on only the style is chosen for them.
+    var carouselFormatChosen = false
+
+    /// Picks the carousel's slide size and strip style from its pictures' shapes, so it opens with the least empty
+    /// background and the least trimmed off each picture (`bestCarouselFit`). A size the person chose is kept.
+    func fitCarouselToPictures() {
+        guard isCarousel else { return }
+        let aspects = project.cells.prefix(project.cellCount).compactMap { cell -> Double? in
+            guard let id = cell.mediaId, let item = item(id), item.height > 0 else { return nil }
+            return item.width / item.height
+        }
+        guard aspects.count == project.cellCount,
+              let fit = bestCarouselFit(aspects: aspects, formats: carouselFormatChosen ? [project.format] : FormatId.carouselFormats)
+        else {
+            project.layoutId = defaultLayoutId(for: project)
+            return
+        }
+        project.format = fit.format
+        project.layoutId = carouselLayoutId(fit.style)
+        clampCarouselOffset()
+    }
+
     func setLayout(_ id: String) {
         project.layoutId = id
         clampCarouselOffset()
@@ -551,6 +573,8 @@ final class CollageStore {
         project.cellCount = n
         project.cells = (0..<n).map { CellState(mediaId: ids.indices.contains($0) ? ids[$0] : nil) }
         project.layoutId = defaultLayoutId(for: project)
+        carouselFormatChosen = false
+        if mode == .carousel { fitCarouselToPictures() }
         selectedCell = nil
         selectedClip = nil
         swapFrom = nil
@@ -986,6 +1010,7 @@ final class CollageStore {
             project.layoutId = defaultLayoutId(for: project)
             project.backdrop = Backdrop(kind: .blur)
         }
+        carouselFormatChosen = false
         carouselOffset = 0
         selectedCell = nil
         selectedClip = nil

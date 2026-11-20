@@ -358,7 +358,10 @@ extension StylePanel {
             HStack(spacing: 8) {
                 ForEach(formats) { f in
                     let on = f == store.project.format
-                    Button { withAnimation(.smooth) { store.project.format = f } } label: {
+                    Button {
+                        withAnimation(.smooth) { store.project.format = f }
+                        if store.isCarousel { store.carouselFormatChosen = true }
+                    } label: {
                         formatCard(f, on: on)
                     }
                     .buttonStyle(.plain)

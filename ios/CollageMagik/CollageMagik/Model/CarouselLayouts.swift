@@ -209,6 +209,36 @@ func stripRects(_ plan: StripPlan, count n: Int) -> [LayoutRect] {
     }
 }
 
+/// The slide size and strip style that suit a set of pictures best, so a new carousel opens with as little empty
+/// background and as little of each picture trimmed off as possible. `aspects` are the pictures' width ÷ height, in
+/// order. Each option is scored as the share of the carousel left empty plus the average share of a picture cut off to
+/// fill its frame; Post wins a near tie (it is Instagram's tallest feed size). Pass one format to keep a size the
+/// person picked themselves. nil for fewer than two pictures.
+func bestCarouselFit(aspects: [Double], formats: [FormatId] = FormatId.carouselFormats) -> (format: FormatId, style: CarouselStyle)? {
+    let n = aspects.count
+    guard n >= 2, !formats.isEmpty else { return nil }
+    var best: (format: FormatId, style: CarouselStyle, score: Double)?
+    for format in formats {
+        for style in [CarouselStyle.flow, .squareFlow] where carouselStyles(for: n).contains(style) {
+            let slides = autoSlides(count: n, style: style, format: format)
+            let rects = carouselLayout(style, count: n, slides: slides, format: format).rects
+            guard rects.count == n else { continue }
+            let canvasW = format.width * Double(slides), canvasH = format.height
+            let covered = rects.reduce(0) { $0 + $1.w * $1.h }
+            let empty = max(0, 1 - covered)
+            let trimmed = zip(rects, aspects).reduce(0.0) { sum, pair in
+                let (r, a) = pair
+                let frame = (r.w * canvasW) / (r.h * canvasH)
+                guard frame > 0, a > 0 else { return sum }
+                return sum + (1 - min(a / frame, frame / a))
+            } / Double(n)
+            let score = empty + trimmed + (format == .post ? 0 : 0.02)
+            if best == nil || score < best!.score { best = (format, style, score) }
+        }
+    }
+    return best.map { ($0.format, $0.style) }
+}
+
 /// The style a project starts in for its number of pictures.
 func defaultCarouselStyle(count: Int) -> CarouselStyle {
     count <= 1 ? .panorama : .flow

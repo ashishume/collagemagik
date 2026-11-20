@@ -49,7 +49,10 @@ The Collage | Carousel switch in the top bar changes what you are making. A caro
 slides side by side (4:5 or square, 2 to 10 slides, up to 10 photos, photos only), with pictures laid out so they cross the
 seams between slides. `Model/CarouselLayouts.swift` builds the layouts (Flow, Two rows, Stagger, Mosaic, Scatter, Wave,
 Wall, Panorama) and guarantees every seam cuts through a picture. A new carousel starts in **Flow** (`defaultCarouselStyle`);
-a single picture uses Panorama. The preview (`StageView`) shows one slide and a peek of the next: a drag on an
+a single picture uses Panorama. When a set of pictures is added, `bestCarouselFit` picks the slide size (Post or Square)
+and strip (Flow 4:5 or Square flow 1:1) that leave the least empty background plus the least trimmed off each picture
+(Post wins a near tie); once the person picks Post or Square themselves, that size is kept and only the strip is chosen.
+Leading strips start flush at the left edge of slide 1; any spare room is at the far end. The preview (`StageView`) shows one slide and a peek of the next: a drag on an
 unselected area swipes, a drag inside the selected picture moves it, and the numbered bar jumps between slides. Export draws
 the whole design once and cuts it into one JPEG per slide (`CollageExporter.exportSlides`); My Library keeps them as one entry.
 
@@ -75,6 +78,9 @@ open by themselves while a picture is selected.
   pattern (dots, grid, stripes, checks, confetti, hearts) over the colour. One renderer draws the preview and every export.
   Carousels start on **Blur → Auto** (✨): each gap shows a blur of the picture beside it, over a gradient of the pictures'
   average colours, so the empty space around and after the pictures matches them. Picking one picture blurs that instead.
+- **App theme** (More → Theme; `AppTheme` in `UI/GlassComponents.swift`): the drifting colour field behind every screen.
+  Nine dark themes (Magic, the default, plus Black Glass, Midnight, Ocean, Aurora, Forest, Sunset, Rose, Ember), kept on
+  the device. Add one by adding a case with its 3 × 3 mesh colours.
 - **Stickers** (in the Text tab, next to captions; `Model/Stickers.swift`, `UI/StickerPanel.swift`): emoji (Faces, Love, Fun)
   and colourable shapes, up to 30. Drag, pinch and twist like captions; size, tilt, colour, flip, layer order, copy, delete.
 - **Clip speed** (timeline): 0.25× to 3×. The clip keeps its start; sound keeps its pitch in the preview and the export.

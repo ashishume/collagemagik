@@ -44,6 +44,7 @@ private struct BarGroup<Content: View>: View {
 /// full screen, export and the rest on the right. Everything is icon-only and one size.
 struct TopBar: View {
     @Environment(CollageStore.self) private var store
+    @State private var themeOpen = false
     @Environment(LibraryStore.self) private var library
     let openLibrary: () -> Void
     let requestNew: (EditMode) -> Void
@@ -103,6 +104,7 @@ struct TopBar: View {
                     Button { store.openAdd() } label: { Label("Add from Photos", systemImage: "photo.on.rectangle") }
                     Button { store.openFiles() } label: { Label("Add from Files", systemImage: "folder") }
                     Divider()
+                    Button { themeOpen = true } label: { Label("Theme", systemImage: "paintpalette") }
                     Button { store.helpOpen = true } label: { Label("How it works", systemImage: "questionmark.circle") }
                     Button { store.aboutOpen = true } label: { Label("About & Privacy", systemImage: "hand.raised") }
                     Link(destination: AppLinks.writeReview) { Label("Rate Collage Magic", systemImage: "star") }
@@ -117,6 +119,7 @@ struct TopBar: View {
                         }
                 }
                 .accessibilityLabel("More")
+                .sheet(isPresented: $themeOpen) { ThemePicker() }
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
         }
