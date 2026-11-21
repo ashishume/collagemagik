@@ -210,7 +210,7 @@ struct LayoutPanel: View {
                     // nobody picks the cell count either: one cell per picture, and the layouts follow
                     let photos = store.project.cells.filter { $0.mediaId != nil }.count
                     Label(
-                        photos == 0 ? "Add up to \(maxCells) pictures, the layouts fit how many you add"
+                        photos == 0 ? "Add photos and up to \(maxVideos) videos, the layouts fit how many you add"
                             : "\(photos) \(photos == 1 ? "picture" : "pictures") · up to \(maxCells) fit in a collage",
                         systemImage: "info.circle"
                     )
@@ -303,7 +303,7 @@ enum StyleSection: String, PanelSection {
         case .size: "The shape of the picture you'll post"
         case .spacing: "Space between pictures, and how round their corners are"
         case .background: "What shows behind and between your pictures"
-        case .frame: "A frame around every photo in the layout"
+        case .frame: "A frame around every photo and video in the layout"
         }
     }
 }

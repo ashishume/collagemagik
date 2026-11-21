@@ -103,7 +103,7 @@ struct ProPaywall: View {
             Text("Collage Magic Pro")
                 .font(.system(size: 28, weight: .bold, design: .rounded))
                 .foregroundStyle(LinearGradient(colors: [.white, Color(red: 0.85, green: 0.8, blue: 1)], startPoint: .top, endPoint: .bottom))
-            Text(pro.isPro ? "Thank you for supporting Collage Magic." : "Make collages with no ads, and help a tiny team keep the app going.")
+            Text(pro.isPro ? "Thank you for supporting Collage Magic." : "Make photo and video collages with no ads, and help a tiny team keep the app going.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

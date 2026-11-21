@@ -23,6 +23,17 @@ struct TemplateCard: View {
                     }
                 }
                 .frame(height: height)
+                .overlay {
+                    // made for videos: say so on the card itself
+                    if template.category == .video {
+                        Image(systemName: "play.fill")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 44, height: 44)
+                            .background(.black.opacity(0.45), in: Circle())
+                            .overlay(Circle().stroke(.white.opacity(0.7), lineWidth: 1.5))
+                    }
+                }
                 // drawn after the card is on screen, so opening a list of 60+ templates never waits for all of them
                 .task(id: pictures.map(\.id)) {
                     guard TemplatePreview.cached(template, pictures: pictures) == nil else { return }
@@ -38,11 +49,16 @@ struct TemplateCard: View {
                         .background(.black.opacity(0.45), in: Circle())
                         .padding(6)
                 }
-                Text(template.name)
+                HStack(spacing: 4) {
+                    if template.category == .video {
+                        Image(systemName: "play.fill").font(.system(size: 9, weight: .bold)).foregroundStyle(Color.brand)
+                    }
+                    Text(template.name)
+                }
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
-                Text(template.mode == .carousel ? "Carousel" : "\(template.slots) photos · \(template.format.short)")
+                Text(template.mode == .carousel ? "Carousel" : "\(template.slots) photos or videos · \(template.format.short)")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -114,7 +130,7 @@ struct TemplateBrowserSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    Text("Your pictures go into the template in order. Everything stays editable, and Undo brings your design back.")
+                    Text("Your photos and videos go into the template in order. Everything stays editable, and Undo brings your design back.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 16)

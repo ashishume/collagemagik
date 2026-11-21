@@ -5,12 +5,13 @@ import UIKit
 
 /// What a template is for, shown as chips in the Templates browser.
 enum TemplateCategory: String, CaseIterable, Identifiable {
-    case photoDump, travel, birthday, love, wedding, baby, friends, pets, food, fitness, graduation, holidays, business,
+    case video, photoDump, travel, birthday, love, wedding, baby, friends, pets, food, fitness, graduation, holidays, business,
          quote, minimal, moodboard, beforeAfter, scrapbook
 
     var id: String { rawValue }
     var title: String {
         switch self {
+        case .video: "With video"
         case .photoDump: "Photo dump"
         case .travel: "Travel"
         case .birthday: "Birthday"
@@ -140,6 +141,35 @@ private func pattern(_ p: BackdropPattern) -> Backdrop { Backdrop(kind: .pattern
 
 /// Every template that ships with the app. Add one by adding an entry: the browser, previews and filters pick it up.
 let allTemplates: [DesignTemplate] = [
+    // MARK: With video (first: playing videos inside a collage is what the app is for)
+    DesignTemplate(
+        id: "v-hero-clip", name: "Hero clip", category: .video, mode: .collage, format: .story,
+        layoutId: "3-big-top", gap: 8, radius: 16, bg: "#0e0e12",
+        captions: [caption("▶ press play", .rounded, x: 0.5, y: 0.04, size: 40, color: "#ffffff", look: .plate)]
+    ),
+    DesignTemplate(
+        id: "v-reel-mix", name: "Reel mix", category: .video, mode: .collage, format: .story,
+        layoutId: "3-rows", gap: 6, bg: "#07070b", frame: .neon, frameColor: "#ff4fd8",
+        captions: [caption("REEL MIX", .poster, x: 0.5, y: 0.5, size: 90, color: "#3de0ff", look: .neon, allCaps: true)]
+    ),
+    DesignTemplate(
+        id: "v-vlog", name: "Vlog grid", category: .video, mode: .collage, format: .post,
+        layoutId: "4-grid", gap: 10, radius: 14, bg: "#111114",
+        captions: [caption("day in my life", .marker, x: 0.5, y: 0.5, size: 60, look: .label)],
+        stickers: [shape("play.circle.fill", color: "#ffffff", x: 0.92, y: 0.07, w: 0.09)]
+    ),
+    DesignTemplate(
+        id: "v-film-clips", name: "Film clips", category: .video, mode: .collage, format: .story,
+        layoutId: "3-filmstrip", bg: "#0b0b0d", frame: .film, frameColor: "#141416", frameWidth: 24,
+        captions: [caption("REC ●", .typewriter, x: 0.86, y: 0.05, size: 36, color: "#ff3b30")]
+    ),
+    DesignTemplate(
+        id: "v-moments", name: "Moving moments", category: .video, mode: .collage, format: .post,
+        layoutId: "4-hero-prints", bg: "#efe6d8", frameColor: "#fbfaf6", frameWidth: 12,
+        cellFrames: [.shadow, .instant, .instant, .instant],
+        captions: [caption("moments that move", .vows, x: 0.5, y: 0.05, size: 72, color: "#3b2f2a")]
+    ),
+
     // MARK: Collages
     DesignTemplate(
         id: "c-photo-dump", name: "Photo dump", category: .photoDump, mode: .collage, format: .post,
@@ -431,6 +461,126 @@ let allTemplates: [DesignTemplate] = [
         captions: [caption("Retro", .retro, x: 0.5, y: 0.5, size: 120, color: "#ff5fa2", look: .sticker)]
     ),
 
+    // MARK: Mixed & overlapping collages
+    DesignTemplate(
+        id: "c-photo-pile", name: "Photo pile", category: .photoDump, mode: .collage, format: .post,
+        layoutId: "5-pile", bg: "#b98f62", backdrop: pattern(.dots), frameColor: "#fbfaf6", frameWidth: 14,
+        cellFrames: [.instant, .torn, .tape, .stamp, .instant], filter: .film,
+        captions: [caption("the best of\nSUMMER", .poster, x: 0.5, y: 0.5, size: 96, color: "#ffffff", look: .label,
+                           rotation: -4, allCaps: false, mix: .lead, accent: .hand)],
+        stickers: [emoji("📌", x: 0.28, y: 0.05, w: 0.07), emoji("📌", x: 0.7, y: 0.06, w: 0.07, tilt: 20)]
+    ),
+    DesignTemplate(
+        id: "c-fan", name: "Fan of three", category: .friends, mode: .collage, format: .post,
+        layoutId: "3-fan", backdrop: gradient(6), frame: .instant, frameColor: "#ffffff", frameWidth: 14,
+        captions: [
+            caption("us, lately", .vows, x: 0.5, y: 0.1, size: 96, color: "#5a3a00"),
+            caption("no. 07", .typewriter, x: 0.5, y: 0.9, size: 36, color: "#5a3a00"),
+        ],
+        stickers: [emoji("🌼", x: 0.12, y: 0.86, w: 0.1, tilt: -12), emoji("🌼", x: 0.88, y: 0.84, w: 0.08, tilt: 14)]
+    ),
+    DesignTemplate(
+        id: "c-two-of-us", name: "Two of us", category: .love, mode: .collage, format: .post,
+        layoutId: "2-pile", bg: "#f6e8e4", backdrop: pattern(.hearts), frameColor: "#ffffff", frameWidth: 16,
+        cellFrames: [.instant, .tape],
+        captions: [caption("you + me", .signature, x: 0.83, y: 0.2, size: 76, color: "#b23a5b", rotation: 8)],
+        stickers: [shape("heart.fill", color: "#e2557a", x: 0.13, y: 0.9, w: 0.08, tilt: -14)]
+    ),
+    DesignTemplate(
+        id: "c-heart", name: "Heart of photos", category: .love, mode: .collage, format: .post,
+        layoutId: "8-heart", backdrop: gradient(7), frame: .circle,
+        captions: [caption("love", .romance, x: 0.83, y: 0.9, size: 84, color: "#ffffff", look: .plain)],
+        stickers: [emoji("💗", x: 0.9, y: 0.06, w: 0.07, tilt: 12)]
+    ),
+    DesignTemplate(
+        id: "c-hero-prints", name: "Hero & prints", category: .travel, mode: .collage, format: .story,
+        layoutId: "4-hero-prints", bg: "#111114", frameColor: "#fbfaf6", frameWidth: 12,
+        cellFrames: [.shadow, .instant, .instant, .instant],
+        captions: [
+            caption("LISBON", .poster, x: 0.5, y: 0.045, size: 90, color: "#ffffff", allCaps: true),
+            caption("38.72° N · 9.13° W", .typewriter, x: 0.5, y: 0.09, size: 30, color: "#ffd84d"),
+        ]
+    ),
+    DesignTemplate(
+        id: "c-cascade", name: "Cascade", category: .minimal, mode: .collage, format: .post,
+        layoutId: "3-cascade", bg: "#efeae3", frameColor: "#101016", frameWidth: 20,
+        cellFrames: [.border, .film, .border], filter: .chrome,
+        captions: [
+            caption("SEQUENCE", .poster, x: 0.04, y: 0.75, size: 34, color: "#101016", allCaps: true, vertical: true),
+            caption("01 — 03", .engraved, x: 0.22, y: 0.93, size: 34, color: "#101016"),
+        ]
+    ),
+    DesignTemplate(
+        id: "c-pinboard", name: "Pinboard", category: .moodboard, mode: .collage, format: .story,
+        layoutId: "7-board", bg: "#c9a77c", backdrop: pattern(.confetti), frameColor: "#fbfaf6", frameWidth: 10,
+        cellFrames: [.instant, .tape, .stamp, .instant, .torn, .tape, .instant],
+        captions: [caption("mood: \nsoft & sunny", .note, x: 0.18, y: 0.97, size: 44, color: "#3b2416", look: .label, rotation: -3)],
+        stickers: [emoji("📌", x: 0.24, y: 0.04, w: 0.06), emoji("📍", x: 0.6, y: 0.04, w: 0.06, tilt: 10),
+                   emoji("📌", x: 0.86, y: 0.08, w: 0.06, tilt: -14), emoji("✨", x: 0.94, y: 0.6, w: 0.07)]
+    ),
+    DesignTemplate(
+        id: "c-zigzag", name: "Zigzag trip", category: .travel, mode: .collage, format: .story,
+        layoutId: "4-zigzag", bg: "#e9dfcf", backdrop: pattern(.dots), frameColor: "#fbfaf6", frameWidth: 14,
+        cellFrames: [.stamp, .instant, .stamp, .instant], filter: .vintage,
+        captions: [
+            caption("day 1", .hand, x: 0.78, y: 0.12, size: 64, color: "#2b4a8b", rotation: 6),
+            caption("day 2", .hand, x: 0.22, y: 0.42, size: 64, color: "#2b4a8b", rotation: -6),
+            caption("day 3", .hand, x: 0.78, y: 0.56, size: 64, color: "#2b4a8b", rotation: 6),
+            caption("day 4", .hand, x: 0.22, y: 0.86, size: 64, color: "#2b4a8b", rotation: -6),
+        ],
+        stickers: [emoji("✈️", x: 0.9, y: 0.97, w: 0.08, tilt: -20)]
+    ),
+    DesignTemplate(
+        id: "c-plus", name: "Five senses", category: .minimal, mode: .collage, format: .square,
+        layoutId: "5-cross", bg: "#f7f4ee", frame: .shadow,
+        captions: [
+            caption("see", .serif, x: 0.17, y: 0.17, size: 46, color: "#1b1b1f"),
+            caption("feel", .serif, x: 0.83, y: 0.17, size: 46, color: "#1b1b1f"),
+            caption("taste", .serif, x: 0.17, y: 0.83, size: 46, color: "#1b1b1f"),
+            caption("hear", .serif, x: 0.83, y: 0.83, size: 46, color: "#1b1b1f"),
+        ]
+    ),
+    DesignTemplate(
+        id: "c-party-fan", name: "Party fan", category: .birthday, mode: .collage, format: .story,
+        layoutId: "3-fan", backdrop: gradient(5), frame: .neon, frameColor: "#ffd23f", filter: .vivid,
+        captions: [
+            caption("it's my\nBIRTHDAY", .poster, x: 0.5, y: 0.12, size: 120, color: "#ffffff", look: .neon, mix: .lead, accent: .retro),
+            caption("bring cake", .marker, x: 0.5, y: 0.88, size: 60, color: "#101016", look: .sticker),
+        ],
+        stickers: [emoji("🎈", x: 0.1, y: 0.8, w: 0.12, tilt: -10), emoji("🎉", x: 0.9, y: 0.78, w: 0.12, tilt: 12)]
+    ),
+    DesignTemplate(
+        id: "c-recipe", name: "Recipe card", category: .food, mode: .collage, format: .post,
+        layoutId: "4-hero-prints", bg: "#fff8ee", backdrop: pattern(.checks), frameColor: "#ffffff", frameWidth: 14,
+        cellFrames: [.gallery, .tape, .tape, .tape], filter: .warm,
+        captions: [caption("Sunday pasta", .script, x: 0.5, y: 0.06, size: 84, color: "#a3392b", look: .plate)]
+    ),
+    DesignTemplate(
+        id: "c-headline", name: "Headline", category: .moodboard, mode: .collage, format: .post,
+        layoutId: "4-magazine", bg: "#f2efe8", filter: .mono,
+        captions: [
+            caption("The Daily Edit", .magazine, x: 0.5, y: 0.07, size: 92, color: "#111114"),
+            caption("WEEKEND EDITION · NO. 12", .typewriter, x: 0.5, y: 0.135, size: 24, color: "#111114"),
+            caption("BREAKING:\nbest day ever", .poster, x: 0.34, y: 0.86, size: 54, color: "#ffffff", look: .plate, mix: .lead, accent: .typewriter),
+        ]
+    ),
+    DesignTemplate(
+        id: "c-neon-pile", name: "Concert night", category: .friends, mode: .collage, format: .story,
+        layoutId: "5-pile", bg: "#07070b", frame: .neon, frameColor: "#ff4fd8", filter: .chrome,
+        captions: [caption("LIVE", .poster, x: 0.5, y: 0.5, size: 150, color: "#3de0ff", look: .neon, allCaps: true, vertical: false)],
+        stickers: [emoji("🎸", x: 0.9, y: 0.95, w: 0.09, tilt: 14), emoji("⚡️", x: 0.1, y: 0.95, w: 0.08)]
+    ),
+    DesignTemplate(
+        id: "c-pet-passport", name: "Pet passport", category: .pets, mode: .collage, format: .post,
+        layoutId: "2-pile", bg: "#dfe7d8", backdrop: pattern(.grid), frameColor: "#fbfaf6", frameWidth: 18,
+        cellFrames: [.stamp, .border],
+        captions: [
+            caption("PASSPORT", .engraved, x: 0.73, y: 0.08, size: 46, color: "#2f4a3a"),
+            caption("name: best boy\nfavourite: treats", .typewriter, x: 0.25, y: 0.84, size: 34, color: "#2f4a3a", look: .label),
+        ],
+        stickers: [emoji("🐾", x: 0.88, y: 0.92, w: 0.1, tilt: 12)]
+    ),
+
     // MARK: Carousels
     DesignTemplate(
         id: "k-swipe-story", name: "Swipe story", category: .photoDump, mode: .carousel,
@@ -512,6 +662,51 @@ let allTemplates: [DesignTemplate] = [
         style: .wall, gap: 20, bg: "#d9cdb8", backdrop: pattern(.grid), frame: .torn, frameColor: "#fbfaf6",
         cellFrames: [.torn, .tape, .instant],
         captions: [caption("collected moments", .note, x: 0.5, y: 0.5, size: 72, color: "#3b2416", look: .label)]
+    ),
+    DesignTemplate(
+        id: "k-chapters", name: "Chapters", category: .travel, mode: .carousel,
+        style: .flow, bg: "#0e0e12", filter: .film,
+        captions: [
+            caption("chapter one\nArrival", .magazine, x: 0.5, y: 0.1, size: 70, color: "#ffffff", look: .plate, mix: .lead, accent: .typewriter),
+            caption("chapter two\nWandering", .magazine, x: 1.5, y: 0.1, size: 70, color: "#ffffff", look: .plate, mix: .lead, accent: .typewriter),
+            caption("chapter three\nGoodbye", .magazine, x: 2.5, y: 0.1, size: 70, color: "#ffffff", look: .plate, mix: .lead, accent: .typewriter),
+        ]
+    ),
+    DesignTemplate(
+        id: "k-scrap-journey", name: "Scrapbook journey", category: .scrapbook, mode: .carousel,
+        style: .scatter, bg: "#efe6d8", backdrop: pattern(.grid), frameColor: "#fbfaf6", frameWidth: 14,
+        cellFrames: [.instant, .tape, .stamp, .torn],
+        captions: [caption("where we\nwandered", .note, x: 0.5, y: 0.52, size: 72, color: "#7a3b2e", look: .label, rotation: -4)],
+        stickers: [emoji("✂️", x: 1.0, y: 0.06, w: 0.1, tilt: 30), emoji("🗺️", x: 2.0, y: 0.92, w: 0.12, tilt: -10),
+                   emoji("📎", x: 0.12, y: 0.1, w: 0.08, tilt: -20)]
+    ),
+    DesignTemplate(
+        id: "k-film-diary", name: "Film diary", category: .photoDump, mode: .carousel,
+        style: .squareFlow, bg: "#141416", frameColor: "#101016", frameWidth: 26,
+        cellFrames: [.film, .date], filter: .film,
+        captions: [caption("roll 02 · 36 exp", .typewriter, x: 0.5, y: 0.04, size: 30, color: "#ff9a3c")]
+    ),
+    DesignTemplate(
+        id: "k-postcards", name: "Postcards", category: .travel, mode: .carousel,
+        style: .stagger, gap: 22, bg: "#e9dfcf", backdrop: pattern(.stripes), frameColor: "#fbfaf6", frameWidth: 16,
+        cellFrames: [.stamp, .border], filter: .vintage,
+        captions: [caption("greetings\nfrom far away", .script, x: 0.5, y: 0.55, size: 90, color: "#2b4a8b", look: .label,
+                           rotation: -5, mix: .tail, accent: .typewriter)],
+        stickers: [shape("seal.fill", color: "#c0392b", x: 0.9, y: 0.08, w: 0.1, tilt: 12)]
+    ),
+    DesignTemplate(
+        id: "k-party-wall", name: "Party wall", category: .birthday, mode: .carousel,
+        style: .wall, gap: 18, bg: "#1b1030", backdrop: pattern(.confetti), frameColor: "#ffffff", frameWidth: 10,
+        cellFrames: [.instant, .shadow, .neon], filter: .vivid,
+        captions: [caption("best night\nEVER", .retro, x: 0.5, y: 0.5, size: 140, color: "#ff4fd8", look: .neon, mix: .tail, accent: .poster)]
+    ),
+    DesignTemplate(
+        id: "k-moodboard", name: "Mood swipe", category: .moodboard, mode: .carousel,
+        style: .mosaic, gap: 8, bg: "#e9e2d6", cellFrames: [.none, .none, .circle, .none, .arch], filter: .fade,
+        captions: [
+            caption("MOOD", .poster, x: 0.06, y: 0.5, size: 40, color: "#ffffff", allCaps: true, vertical: true),
+            caption("soft season", .romance, x: 1.5, y: 0.5, size: 90, color: "#ffffff"),
+        ]
     ),
     DesignTemplate(
         id: "k-wave", name: "Summer wave", category: .friends, mode: .carousel,

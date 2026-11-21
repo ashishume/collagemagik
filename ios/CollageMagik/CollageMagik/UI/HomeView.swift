@@ -12,6 +12,8 @@ struct HomeView: View {
     @Environment(\.splashDone) private var splashDone
     @State private var section: HomeSection = .collage
     @State private var launched = false
+    /// The feature tour, shown once after the splash (and from Settings → Feature tour).
+    @State private var tourOpen = false
     /// The Templates tab opens filtered to the kind it was reached from.
     @State private var templateMode: EditMode?
 
@@ -38,14 +40,15 @@ struct HomeView: View {
         .sheet(isPresented: Binding(get: { store.aboutOpen && !store.editorOpen }, set: { store.aboutOpen = $0 })) { AboutSheet() }
         .sheet(isPresented: Binding(get: { store.helpOpen && !store.editorOpen }, set: { store.helpOpen = $0 })) { HelpSheet() }
         .proPaywallHost(active: !store.editorOpen)
-        // The consent and tracking questions wait until the splash has gone, so they never pop up over the animation.
+        .fullScreenCover(isPresented: $tourOpen, onDismiss: startLaunchWork) {
+            FeatureTour { tourOpen = false }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showFeatureTour)) { _ in tourOpen = true }
+        // The tour comes first after the splash; the consent and tracking questions and the weekly Pro page wait
+        // until it is closed, so nothing pops up over it (or over the splash).
         .onChange(of: splashDone, initial: true) { _, done in
             guard done, !launched else { return }
-            launched = true
-            ProStore.shared.start()
-            ProStore.shared.appDidLaunch()
-            GoogleAdsManager.shared.appDidLaunch()
-            UpdateChecker.shared.checkIfDue()
+            if FeatureTourState.shouldShow { tourOpen = true } else { startLaunchWork() }
         }
         .task {
             store.refreshDrafts()
@@ -58,6 +61,20 @@ struct HomeView: View {
             #endif
         }
     }
+
+    private func startLaunchWork() {
+        guard !launched else { return }
+        launched = true
+        ProStore.shared.start()
+        ProStore.shared.appDidLaunch()
+        GoogleAdsManager.shared.appDidLaunch()
+        UpdateChecker.shared.checkIfDue()
+    }
+}
+
+extension Notification.Name {
+    /// Settings → Feature tour.
+    static let showFeatureTour = Notification.Name("cm.showFeatureTour")
 }
 
 /// Starts a new design and opens the editor, then the photo picker (a moment later, once the editor is up).
@@ -85,7 +102,7 @@ private struct KindHome: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     HomeHeader(title: mode == .collage ? "Collage" : "Carousel",
-                               subtitle: mode == .collage ? "Photos and videos in one design" : "Pictures that flow across Instagram slides")
+                               subtitle: mode == .collage ? "Videos that play inside your photos" : "Pictures that flow across Instagram slides")
 
                     newCard
 
@@ -136,7 +153,7 @@ private struct KindHome: View {
                     Text(mode == .collage ? "New collage" : "New carousel")
                         .font(.headline)
                         .foregroundStyle(.white)
-                    Text(mode == .collage ? "Up to \(maxCells) photos and \(maxVideos) videos, with music" : "2 to \(maxCarouselPhotos) photos, slides added for you")
+                    Text(mode == .collage ? "Mix photos with up to \(maxVideos) playing videos, add music" : "2 to \(maxCarouselPhotos) photos, slides added for you")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -175,7 +192,7 @@ private struct TemplatesHome: View {
             AuroraBackground().ignoresSafeArea()
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    HomeHeader(title: "Templates", subtitle: "Pick a look, then add your photos")
+                    HomeHeader(title: "Templates", subtitle: "Pick a look, then add your photos and videos")
                     Picker("Kind", selection: $mode) {
                         Text("All").tag(EditMode?.none)
                         Text("Collage").tag(EditMode?.some(.collage))
@@ -248,6 +265,9 @@ private struct SettingsMenu: View {
     var body: some View {
         Menu {
             Button { themeOpen = true } label: { Label("Theme", systemImage: "paintpalette") }
+            Button { NotificationCenter.default.post(name: .showFeatureTour, object: nil) } label: {
+                Label("Feature tour", systemImage: "sparkles.tv")
+            }
             Button { store.helpOpen = true } label: { Label("How it works", systemImage: "questionmark.circle") }
             Button { store.aboutOpen = true } label: { Label("About & Privacy", systemImage: "hand.raised") }
             Link(destination: AppLinks.writeReview) { Label("Rate Collage Magic", systemImage: "star") }

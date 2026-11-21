@@ -601,6 +601,10 @@ final class CollageStore {
     func applyTemplate(_ t: DesignTemplate) {
         let placed = project.cells.prefix(project.cellCount).compactMap(\.mediaId)
         var order = placed + items.map(\.id).filter { !placed.contains($0) }
+        // a "With video" template puts the clips in its first (biggest) slots
+        if t.category == .video {
+            order = order.filter { item($0)?.kind == .video } + order.filter { item($0)?.kind != .video }
+        }
         if t.mode == .carousel {
             order = order.filter { item($0)?.kind == .photo }
             for v in items where v.kind == .video { removeMedia(v.id) }
