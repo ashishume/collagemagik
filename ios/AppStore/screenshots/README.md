@@ -37,6 +37,20 @@ App Store Connect's **required** iPhone slot is "iPhone with Dynamic Island (med
 **1206 × 2622**. Those versions are in `png-6.3/` (made from `png/` by `source/export_63.py`) and are the set uploaded to
 App Store Connect. The 1320 × 2868 set in `png/` is for the optional "large display" 6.9" slot (Media Manager).
 
+## iPad 13-inch screenshots
+
+The designed iPad set is in `ipad/png/` at **2064 × 2752 px**, accepted for the 13-inch iPad slot.
+It follows the `png-6.3/` poster style (brand lockup, pastel backgrounds, rounded headline and graphite device frame),
+with genuine 13-inch iPad simulator screens. Unframed simulator captures are in `ipad/raw/`; `ipad/overview.jpg`
+is a contact sheet. `ipad/manifest.json` records dimensions, source captures and file hashes.
+
+Rebuild after changing the iPad captures or poster copy:
+
+```sh
+python3 -m pip install pillow numpy
+python3 ios/AppStore/screenshots/ipad/render.py
+```
+
 ## Rebuild the posters
 
 ```sh

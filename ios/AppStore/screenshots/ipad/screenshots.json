@@ -1,0 +1,80 @@
+[
+  {
+    "id": "01-photos-and-videos",
+    "feature": "Photos and videos in one collage",
+    "source": "raw/01-mix.png",
+    "title": [
+      "Photos + videos.",
+      "One collage."
+    ],
+    "subtitle": "Mix your favourite photos and videos in one design.",
+    "background": "F6F1FD",
+    "wash": "E3D8F6",
+    "accent": "6D4FD6"
+  },
+  {
+    "id": "02-photos-that-flow",
+    "feature": "Carousel with photos flowing across slide seams",
+    "source": "raw/02-carousel.png",
+    "title": [
+      "Photos that flow.",
+      "Slide to slide."
+    ],
+    "subtitle": "Make carousels with pictures that cross the edges.",
+    "background": "EEF6FB",
+    "wash": "D3E7F3",
+    "accent": "2F7AA8"
+  },
+  {
+    "id": "03-layouts",
+    "feature": "Layouts with adjustable cells",
+    "source": "raw/03-layout.png",
+    "title": [
+      "A layout",
+      "that fits."
+    ],
+    "subtitle": "Choose a grid and adjust every cell to suit your photos.",
+    "background": "F8F0FB",
+    "wash": "EBD5F3",
+    "accent": "8E3FAF"
+  },
+  {
+    "id": "04-backgrounds",
+    "feature": "Customisable backgrounds and spacing",
+    "source": "raw/04-style.png",
+    "title": [
+      "Backgrounds",
+      "that pop."
+    ],
+    "subtitle": "Set the mood with colours, gradients, blur and patterns.",
+    "background": "F0F5FD",
+    "wash": "D9E6F8",
+    "accent": "3F6DB5"
+  },
+  {
+    "id": "05-captions-and-stickers",
+    "feature": "Captions and stickers",
+    "source": "raw/05-captions.png",
+    "title": [
+      "Captions",
+      "& stickers."
+    ],
+    "subtitle": "Add expressive text and stickers to your collage.",
+    "background": "FDF1F6",
+    "wash": "F5D7E5",
+    "accent": "B8386F"
+  },
+  {
+    "id": "06-photo-frames",
+    "feature": "Photo overlays with frames",
+    "source": "raw/06-frames.png",
+    "title": [
+      "Photos on photos.",
+      "With frames."
+    ],
+    "subtitle": "Layer pictures with instant, torn or border frames.",
+    "background": "EFF9F5",
+    "wash": "CDEBE1",
+    "accent": "177F70"
+  }
+]

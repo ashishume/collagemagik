@@ -1,0 +1,121 @@
+{
+  "design_reference": "App Store iPhone 6.3-inch poster set",
+  "method": "Local composition of 13-inch iPad simulator captures",
+  "device": "iPad 13-inch",
+  "screen_rect": {
+    "x": 213,
+    "y": 465,
+    "width": 1638,
+    "height": 2184
+  },
+  "assets": [
+    {
+      "file": "png/01-photos-and-videos-2064x2752.png",
+      "source": "raw/01-mix.png",
+      "feature": "Photos and videos in one collage",
+      "title": "Photos + videos. One collage.",
+      "subtitle": "Mix your favourite photos and videos in one design.",
+      "width": 2064,
+      "height": 2752,
+      "mode": "RGB",
+      "color_profile": "sRGB",
+      "source_sha256": "b6d894f449fd7073a9315a985509b956bc7273682098a288001a47d729f7b388",
+      "sha256": "808e0e2acf009d11c1f20e7c07599f10300a02823c85858f3be23bebed97b3ce",
+      "screen_opaque_pixels_match_resized_source": true,
+      "headline_font_sizes": [
+        100,
+        100
+      ]
+    },
+    {
+      "file": "png/02-photos-that-flow-2064x2752.png",
+      "source": "raw/02-carousel.png",
+      "feature": "Carousel with photos flowing across slide seams",
+      "title": "Photos that flow. Slide to slide.",
+      "subtitle": "Make carousels with pictures that cross the edges.",
+      "width": 2064,
+      "height": 2752,
+      "mode": "RGB",
+      "color_profile": "sRGB",
+      "source_sha256": "9072b53d135ddef622a0036e8efdde394342ee9afc86db763612490585083a75",
+      "sha256": "84854e72a75e527a0fba095c4e9d51e0aa592a020e862564ea3eb69c6117901b",
+      "screen_opaque_pixels_match_resized_source": true,
+      "headline_font_sizes": [
+        100,
+        100
+      ]
+    },
+    {
+      "file": "png/03-layouts-2064x2752.png",
+      "source": "raw/03-layout.png",
+      "feature": "Layouts with adjustable cells",
+      "title": "A layout that fits.",
+      "subtitle": "Choose a grid and adjust every cell to suit your photos.",
+      "width": 2064,
+      "height": 2752,
+      "mode": "RGB",
+      "color_profile": "sRGB",
+      "source_sha256": "e4b8eba428e203c19a7da271f3a49dc2dc9ab234f913609f7d7f2fd8ca2dea2b",
+      "sha256": "ec4bb87fe41c860bf5089da260be3470045484584ba834ad7c13dd6107e9495c",
+      "screen_opaque_pixels_match_resized_source": true,
+      "headline_font_sizes": [
+        100,
+        100
+      ]
+    },
+    {
+      "file": "png/04-backgrounds-2064x2752.png",
+      "source": "raw/04-style.png",
+      "feature": "Customisable backgrounds and spacing",
+      "title": "Backgrounds that pop.",
+      "subtitle": "Set the mood with colours, gradients, blur and patterns.",
+      "width": 2064,
+      "height": 2752,
+      "mode": "RGB",
+      "color_profile": "sRGB",
+      "source_sha256": "5820288ee3c93f80c960ace5d514ea74226a81f3d49c1f55cd627ef725f9c519",
+      "sha256": "b76b863ad21c6bea0255e044592053fc421dae9092fe5e1cd00f55b6533691d9",
+      "screen_opaque_pixels_match_resized_source": true,
+      "headline_font_sizes": [
+        100,
+        100
+      ]
+    },
+    {
+      "file": "png/05-captions-and-stickers-2064x2752.png",
+      "source": "raw/05-captions.png",
+      "feature": "Captions and stickers",
+      "title": "Captions & stickers.",
+      "subtitle": "Add expressive text and stickers to your collage.",
+      "width": 2064,
+      "height": 2752,
+      "mode": "RGB",
+      "color_profile": "sRGB",
+      "source_sha256": "336471fe6198ce5e2fe571467cb6ea3c63541176c85f218602eed9197ac73520",
+      "sha256": "5670ddf807388fbb88965fb6e398a96dcee1068bcbf0b5ddaf47e8e063ad7570",
+      "screen_opaque_pixels_match_resized_source": true,
+      "headline_font_sizes": [
+        100,
+        100
+      ]
+    },
+    {
+      "file": "png/06-photo-frames-2064x2752.png",
+      "source": "raw/06-frames.png",
+      "feature": "Photo overlays with frames",
+      "title": "Photos on photos. With frames.",
+      "subtitle": "Layer pictures with instant, torn or border frames.",
+      "width": 2064,
+      "height": 2752,
+      "mode": "RGB",
+      "color_profile": "sRGB",
+      "source_sha256": "4fc51455bc3fbb910e2c6df04dce3bdcca3d7424713723cc00d6a2b38db15a15",
+      "sha256": "7332c07bec3e7b9b7ef7dcd35aefb821d99a37cb85392e4a440070d2ac687d3a",
+      "screen_opaque_pixels_match_resized_source": true,
+      "headline_font_sizes": [
+        100,
+        100
+      ]
+    }
+  ]
+}
