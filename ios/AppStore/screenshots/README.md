@@ -6,6 +6,8 @@ The style follows the Figureout and Mindstrike sets: pastel field, two-line roun
 
 | # | Poster | Raw capture | Shows |
 |---|---|---|---|
+| 0 | Videos that play. Inside your collage. | `raw/00-video-mix.png` | "Moving moments" (With video) template: two playing clips and two photos, Video tab showing clips A and B (new; upload first) |
+| 0b | 90 templates. Just add photos. | `raw/00b-templates.png` | Templates sheet in the editor, Scrapbook category, every preview drawn with the user's own photos (new; upload second) |
 | 1 | Photos + videos. One collage. | `raw/01-mix.png` | Two photos and two videos in one collage (tray shows the video badges) |
 | 2 | Photos that flow. Slide to slide. | `raw/02-carousel.png` | Carousel in the Flow style, a picture crossing the slide seam |
 | 3 | Portrait shot? Fit it whole. | `raw/03-fit.png` | New Resize tool: portrait photos fitted whole with blurred sides |

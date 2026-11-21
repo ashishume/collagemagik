@@ -1,9 +1,38 @@
 [
   {
+    "id": "00-videos-play-inside",
+    "feature": "Videos playing inside a photo collage (With video template)",
+    "source": "../raw/00-video-mix.png",
+    "title": [
+      "Videos that play.",
+      "Inside your collage."
+    ],
+    "subtitle": "Mix up to 3 clips with your photos. Trim them, add a song.",
+    "background": "F4EEFF",
+    "wash": "E0D2FA",
+    "accent": "7A3FE0"
+  },
+  {
+    "id": "00b-templates",
+    "feature": "Templates browser, Scrapbook category, previewed with the user's own photos",
+    "source": "../raw/00b-templates.png",
+    "title": [
+      "90 templates.",
+      "Just add photos."
+    ],
+    "subtitle": "Scrapbook, film, travel, birthdays. Tap one and it's done.",
+    "background": "FFF5EC",
+    "wash": "F7DCC6",
+    "accent": "D0602E"
+  },
+  {
     "id": "01-photos-and-videos",
     "feature": "Photos + videos in one collage",
     "source": "../raw/01-mix.png",
-    "title": ["Photos + videos.", "One collage."],
+    "title": [
+      "Photos + videos.",
+      "One collage."
+    ],
     "subtitle": "Add up to 2 videos. Clips play right beside your photos.",
     "background": "F6F1FD",
     "wash": "E3D8F6",
@@ -13,7 +42,10 @@
     "id": "02-photos-that-flow",
     "feature": "Carousel (Flow style)",
     "source": "../raw/02-carousel.png",
-    "title": ["Photos that flow.", "Slide to slide."],
+    "title": [
+      "Photos that flow.",
+      "Slide to slide."
+    ],
     "subtitle": "Carousels up to 10 slides. Pictures cross the edges.",
     "background": "EEF6FB",
     "wash": "D3E7F3",
@@ -23,7 +55,10 @@
     "id": "03-fit-the-whole-picture",
     "feature": "Resize: fit with blurred sides (new)",
     "source": "../raw/03-fit.png",
-    "title": ["Portrait shot?", "Fit it whole."],
+    "title": [
+      "Portrait shot?",
+      "Fit it whole."
+    ],
     "subtitle": "New Resize: nothing cut off. Blurred or coloured sides.",
     "background": "FFF3EC",
     "wash": "F8DBCC",
@@ -33,7 +68,10 @@
     "id": "04-captions-and-stickers",
     "feature": "Captions and stickers",
     "source": "../raw/04-captions.png",
-    "title": ["Captions", "& stickers."],
+    "title": [
+      "Captions",
+      "& stickers."
+    ],
     "subtitle": "14 lettering styles, emoji and shapes. Drag, pinch, twist.",
     "background": "FDF1F6",
     "wash": "F5D7E5",
@@ -43,7 +81,10 @@
     "id": "05-photo-on-photo",
     "feature": "Photos on top, with frames",
     "source": "../raw/05-on-top.png",
-    "title": ["Photo on photo.", "Framed."],
+    "title": [
+      "Photo on photo.",
+      "Framed."
+    ],
     "subtitle": "Lay a photo on top in an instant, torn or border frame.",
     "background": "EFF9F5",
     "wash": "CDEBE1",
@@ -53,7 +94,10 @@
     "id": "06-backgrounds",
     "feature": "Style: backgrounds (new)",
     "source": "../raw/06-backgrounds.png",
-    "title": ["Backgrounds", "that pop."],
+    "title": [
+      "Backgrounds",
+      "that pop."
+    ],
     "subtitle": "Colours, gradients, blur or patterns. Set gap and corners.",
     "background": "F0F5FD",
     "wash": "D9E6F8",
@@ -63,7 +107,10 @@
     "id": "07-resize-any-cell",
     "feature": "Layouts and adjustable cells",
     "source": "../raw/07-resize.png",
-    "title": ["Drag a border.", "Resize any cell."],
+    "title": [
+      "Drag a border.",
+      "Resize any cell."
+    ],
     "subtitle": "35 layouts, up to 9 pictures. Story, Post or Square.",
     "background": "F8F0FB",
     "wash": "EBD5F3",
@@ -73,7 +120,10 @@
     "id": "08-trim-and-speed",
     "feature": "Video timeline and clip speed (new)",
     "source": "../raw/08-timeline.png",
-    "title": ["Trim, split,", "change speed."],
+    "title": [
+      "Trim, split,",
+      "change speed."
+    ],
     "subtitle": "Pick each clip's moment. Play it from 0.25× to 3×.",
     "background": "FDF3F0",
     "wash": "F6DAD1",
@@ -83,7 +133,10 @@
     "id": "09-add-a-song",
     "feature": "Music",
     "source": "../raw/09-sound.png",
-    "title": ["Add a song", "underneath."],
+    "title": [
+      "Add a song",
+      "underneath."
+    ],
     "subtitle": "Import music, set the volume, fade out at the end.",
     "background": "F3F9EE",
     "wash": "DCECCD",
@@ -93,7 +146,10 @@
     "id": "10-export-4k-60fps",
     "feature": "Export in 4K at 60 fps (new)",
     "source": "../raw/10-export.png",
-    "title": ["Export in 4K", "at 60 fps."],
+    "title": [
+      "Export in 4K",
+      "at 60 fps."
+    ],
     "subtitle": "Smooth MP4 for Reels, Stories and TikTok, or a PNG.",
     "background": "FFFAED",
     "wash": "F4E7BC",
