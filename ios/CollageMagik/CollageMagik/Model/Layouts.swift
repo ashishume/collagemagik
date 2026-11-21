@@ -96,7 +96,26 @@ let allLayouts: [CollageLayout] = [
     rowsOf("12-wide", "Grid 4×3", [4, 4, 4]),
     rowsOf("12-hero", "Hero and eleven", [1, 3, 4, 4], [0.34, 0.22, 0.22, 0.22]),
     rowsOf("12-tall", "Grid 2×6", [2, 2, 2, 2, 2, 2]),
+
+    // Free-form layouts: pictures laid like prints on a table, some overlapping or turned. Later ones sit on top.
+    L("1-tilt", "Tilted print", [R(0.12, 0.12, 0.76, 0.66, -4)]),
+    L("2-overlap", "Picture in picture", [R(0.04, 0.04, 0.72, 0.62), R(0.4, 0.48, 0.56, 0.48, 4)]),
+    L("3-tossed", "Tossed prints", [R(0.05, 0.06, 0.54, 0.42, -6), R(0.42, 0.29, 0.53, 0.41, 5), R(0.08, 0.54, 0.54, 0.41, -3)]),
+    L("3-stairs", "Staircase", [R(0.04, 0.04, 0.52, 0.32), R(0.24, 0.34, 0.52, 0.32), R(0.44, 0.64, 0.52, 0.32)]),
+    L("3-filmstrip", "Film strip", [R(0.07, 0.12, 0.86, 0.25), R(0.07, 0.38, 0.86, 0.25), R(0.07, 0.64, 0.86, 0.25)]),
+    L("4-tossed", "Tossed four", [R(0.04, 0.05, 0.5, 0.4, -5), R(0.47, 0.09, 0.49, 0.38, 6), R(0.06, 0.5, 0.47, 0.41, 4), R(0.46, 0.54, 0.5, 0.4, -4)]),
+    L("4-magazine", "Magazine", [R(0.04, 0.17, 0.6, 0.79), R(0.67, 0.17, 0.29, 0.255), R(0.67, 0.44, 0.29, 0.255), R(0.67, 0.71, 0.29, 0.25)]),
+    L("4-offset", "Offset", [R(0.04, 0.03, 0.45, 0.44), R(0.04, 0.5, 0.45, 0.44), R(0.51, 0.09, 0.45, 0.44), R(0.51, 0.56, 0.45, 0.41)]),
+    L("4-cluster", "Bubbles", [R(0.06, 0.08, 0.5, 0.4), R(0.44, 0.19, 0.5, 0.4), R(0.08, 0.46, 0.5, 0.4), R(0.45, 0.56, 0.5, 0.4)]),
+    L("5-scrapbook", "Scrapbook", [R(0.05, 0.04, 0.5, 0.36, -4), R(0.52, 0.06, 0.43, 0.3, 5), R(0.5, 0.36, 0.44, 0.25, -2),
+                                    R(0.04, 0.6, 0.44, 0.34, 3), R(0.52, 0.62, 0.44, 0.33, -5)]),
+    L("6-wall", "Print wall", [R(0.04, 0.05, 0.3, 0.27, -3), R(0.35, 0.03, 0.3, 0.27, 2), R(0.66, 0.06, 0.3, 0.27, -2),
+                               R(0.05, 0.38, 0.3, 0.27, 2), R(0.36, 0.4, 0.3, 0.27, -3), R(0.66, 0.37, 0.3, 0.27, 3)]),
 ]
+
+private func R(_ x: Double, _ y: Double, _ w: Double, _ h: Double, _ tilt: Double = 0) -> LayoutRect {
+    LayoutRect(x: x, y: y, w: w, h: h, tilt: tilt)
+}
 
 let maxCells = 12
 /// A new collage opens with four slots showing (a 2x2-style layout). It resizes to the number actually picked.

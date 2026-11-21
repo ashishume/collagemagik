@@ -158,11 +158,8 @@ private struct DraftCell: View {
             Color.clear
                 .frame(width: width, height: height)
                 .overlay {
-                    if let img = UIImage(contentsOfFile: draft.thumbURL.path) {
-                        Image(uiImage: img).resizable().scaledToFill()
-                    } else {
-                        Rectangle().fill(.quaternary)
-                    }
+                    AsyncFileImage(url: draft.thumbURL, maxSide: max(width, height), contentMode: .fill,
+                                   version: "\(draft.updatedAt.timeIntervalSince1970)")
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay {
@@ -245,12 +242,12 @@ private struct LibraryDetail: View {
             VStack(spacing: 16) {
                 if entry.isCarousel {
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 6) {
+                        // up to 20 slides: each is decoded at the size shown, only when it scrolls into view
+                        LazyHStack(spacing: 6) {
                             ForEach(Array(library.urls(for: entry).enumerated()), id: \.offset) { i, u in
-                                if let img = UIImage(contentsOfFile: u.path) {
-                                    Image(uiImage: img)
-                                        .resizable()
-                                        .scaledToFit()
+                                Group {
+                                    AsyncFileImage(url: u, maxSide: 340)
+                                        .aspectRatio(Double(entry.width) / Double(max(1, entry.height)), contentMode: .fit)
                                         .frame(height: 340)
                                         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                                         .overlay(alignment: .topLeading) {
@@ -269,8 +266,8 @@ private struct LibraryDetail: View {
                     Group {
                         if entry.isVideo, let player {
                             VideoPlayer(player: player)
-                        } else if let img = UIImage(contentsOfFile: url.path) {
-                            Image(uiImage: img).resizable().scaledToFit()
+                        } else if FileManager.default.fileExists(atPath: url.path) {
+                            AsyncFileImage(url: url, maxSide: 460)
                         } else {
                             ContentUnavailableView("Can't open this collage", systemImage: "exclamationmark.triangle")
                         }

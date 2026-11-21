@@ -29,7 +29,7 @@ support can be submitted.
 
 ## What it does
 
-Everything the web app does: up to 12 cells (photos + at most 3 videos) in the collage (20 photos in a carousel), picked from a **media tray** that holds up to 25 pictures and videos (extras wait in the tray as "In tray" and can be swapped in). When the tray is full, adding shows an alert that says to press and hold a tray picture and tap Remove, 45 layouts (up to 12 pictures), Story / Post / Square, gap,
+Everything the web app does: up to 12 cells (photos + at most 3 videos) in the collage (20 photos in a carousel), picked from a **media tray** that holds up to 25 pictures and videos (extras wait in the tray as "In tray" and can be swapped in). When the tray is full, adding shows an alert that says to press and hold a tray picture and tap Remove, 56 layouts (up to 12 pictures; 11 free-form ones with overlapping or turned prints via `LayoutRect.tilt`), Story / Post / Square, gap,
 corners, background colour (swatches + colour picker), Instagram safe-area overlay, tap / drag / pinch /
 press-and-hold-to-swap, rotate / flip / crop / straighten, a timeline (trim, move, split, delete, loop, mute), your
 own background music (volume, trim, repeat, fade out), and export to MP4 (H.264 + AAC, 30 fps, 1080 wide or 2x) or PNG,
@@ -57,7 +57,7 @@ editor's top bar shows it as a title instead of a switch. A carousel's dock read
 
 **Templates** (`Model/Templates.swift`, `UI/TemplateViews.swift`): a `DesignTemplate` is a design without pictures
 (layout or carousel style, size, gap, corners, background, frame, placeholder captions and stickers). `allTemplates`
-holds 44 (35 collage, 9 carousel) in 18 categories; add one by adding an entry. Previews are drawn by the real
+holds 65 (49 collage, 16 carousel) in 18 categories, including free-form ones (tossed and tilted prints, magazine, film strip, bubbles, staircase) and ones that set a filter or a different frame per photo (`filter`, `cellFrames`); add one by adding an entry. Previews are drawn by the real
 renderer (`TemplatePreview`), with sample scenes on Home and the person's own pictures in the editor
 (Layout / Slides → Templates). Picking one from Home starts a design with it and opens the photo picker; in the editor
 it re-lays the pictures already there, and Undo brings the previous design back. A collage template keeps its slots as

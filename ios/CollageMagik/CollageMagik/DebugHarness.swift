@@ -7,7 +7,13 @@ import SwiftUI
 /// Drafts: CM_OPEN=n opens the n-th draft, CM_NEW=1 starts a new collage after the last draft reopens. CM_SHEET=export|help|about.
 @MainActor
 enum DebugHarness {
+    /// Set once the harness has run: the editor is shown again every time a design is opened from Home, and the test
+    /// set-up must not be loaded into the new design.
+    @MainActor private static var done = false
+
     static func run(_ store: CollageStore) async {
+        guard !done else { return }
+        done = true
         let env = ProcessInfo.processInfo.environment
         if env["CM_MODE"] == "carousel" { store.setMode(.carousel) }
         if let list = env["CM_AUTOLOAD"] {
@@ -45,6 +51,8 @@ enum DebugHarness {
         }
         // CM_LAYOUT_ID=2-inset picks a collage layout by id; CM_FRAME=border|instant|torn|shadow, CM_FRAME_COLOR=#f4ecdc.
         if let id = env["CM_LAYOUT_ID"] { store.setLayout(id) }
+        // CM_TEMPLATE=c-tossed applies that template to the loaded pictures
+        if let id = env["CM_TEMPLATE"], let t = allTemplates.first(where: { $0.id == id }) { store.applyTemplate(t) }
         if let f = env["CM_FRAME"].flatMap(PhotoFrame.init(rawValue:)) { store.project.frame = f }
         // CM_LOOK=vivid etc. puts that filter on every picture; CM_LOOK_CELL=1 on that cell only
         if let f = env["CM_LOOK"].flatMap(PhotoFilter.init(rawValue:)) {

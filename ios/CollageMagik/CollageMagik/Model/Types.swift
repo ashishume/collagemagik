@@ -16,8 +16,23 @@ struct MediaItem: Identifiable {
     let duration: Double
     let hasAudio: Bool
     let thumbnail: UIImage
-    /// Photos: a light copy used by the live preview.
-    let preview: UIImage?
+    /// A preview handed in ready-made (template sample pictures); real photos leave this nil.
+    let fixedPreview: UIImage?
+
+    init(id: String, kind: MediaKind, url: URL, name: String, width: Double, height: Double, duration: Double,
+         hasAudio: Bool, thumbnail: UIImage, preview: UIImage?) {
+        self.id = id; self.kind = kind; self.url = url; self.name = name
+        self.width = width; self.height = height; self.duration = duration; self.hasAudio = hasAudio
+        self.thumbnail = thumbnail; self.fixedPreview = preview
+    }
+
+    /// Photos: the copy the live preview draws, decoded from the file only when a cell shows it (and cached), so a
+    /// full tray holds just small thumbnails. Videos: nil (they show their thumbnail and player).
+    var preview: UIImage? {
+        if let fixedPreview { return fixedPreview }
+        guard kind == .photo else { return nil }
+        return ImagePipeline.preview(id: id, url: url)
+    }
 }
 
 /// x, y, width, height as fractions (0...1) of the collage area.
@@ -26,6 +41,8 @@ struct LayoutRect: Hashable {
     var y: Double
     var w: Double
     var h: Double
+    /// Degrees the slot is turned about its centre (free-form "tossed prints" layouts); 0 for grids.
+    var tilt: Double = 0
 }
 
 /// What goes around a photo: nothing, a printed border, an instant-photo border (deeper at the bottom), a torn paper

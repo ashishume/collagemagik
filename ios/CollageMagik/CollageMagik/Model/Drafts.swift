@@ -201,7 +201,8 @@ enum DraftDisk {
         let snapshot = ExportSnapshot(project: project, items: byId)
         CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot) { id in
             guard let item = byId[id] else { return nil }
-            return (item.preview ?? item.thumbnail).cgImage
+            // a 420 px picture: the tray thumbnail is enough, and a save never decodes previews
+            return item.thumbnail.cgImage
         }
         guard let img = ctx.makeImage() else { return nil }
         return UIImage(cgImage: img).jpegData(compressionQuality: 0.8)

@@ -409,10 +409,10 @@ struct ExportSheet: View {
                     .aspectRatio(project.format.width / project.format.height, contentMode: .fit)
                     .frame(maxHeight: 340)
                     .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-            } else if let img = UIImage(contentsOfFile: url.path) {
-                Image(uiImage: img)
-                    .resizable()
-                    .scaledToFit()
+            } else {
+                // a 4K export is decoded at the size it is shown, in the background
+                AsyncFileImage(url: url, maxSide: 360)
+                    .aspectRatio(project.format.width / project.format.height, contentMode: .fit)
                     .frame(maxHeight: 360)
                     .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
             }
@@ -489,12 +489,11 @@ struct ExportSheet: View {
     private func doneSlides(_ urls: [URL]) -> some View {
         VStack(spacing: 14) {
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
+                LazyHStack(spacing: 6) {
                     ForEach(Array(urls.enumerated()), id: \.offset) { i, url in
-                        if let img = UIImage(contentsOfFile: url.path) {
-                            Image(uiImage: img)
-                                .resizable()
-                                .scaledToFit()
+                        Group {
+                            AsyncFileImage(url: url, maxSide: 250)
+                                .aspectRatio(project.format.width / project.format.height, contentMode: .fit)
                                 .frame(height: 250)
                                 .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                                 .overlay(alignment: .topLeading) {

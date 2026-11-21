@@ -6,13 +6,14 @@ struct TemplateCard: View {
     var pictures: [MediaItem] = []
     var height: CGFloat = 170
     let action: () -> Void
+    @State private var image: UIImage?
 
     var body: some View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 6) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 16, style: .continuous).fill(.white.opacity(0.06))
-                    if let img = TemplatePreview.image(template, pictures: pictures) {
+                    if let img = image ?? TemplatePreview.cached(template, pictures: pictures) {
                         Image(uiImage: img)
                             .resizable()
                             .scaledToFit()
@@ -22,6 +23,13 @@ struct TemplateCard: View {
                     }
                 }
                 .frame(height: height)
+                // drawn after the card is on screen, so opening a list of 60+ templates never waits for all of them
+                .task(id: pictures.map(\.id)) {
+                    guard TemplatePreview.cached(template, pictures: pictures) == nil else { return }
+                    await Task.yield()
+                    let img = TemplatePreview.image(template, pictures: pictures)
+                    withAnimation(.easeOut(duration: 0.15)) { image = img }
+                }
                 .overlay(alignment: .topLeading) {
                     Image(systemName: template.mode == .carousel ? "rectangle.split.3x1" : "square.grid.2x2")
                         .font(.system(size: 10, weight: .bold))

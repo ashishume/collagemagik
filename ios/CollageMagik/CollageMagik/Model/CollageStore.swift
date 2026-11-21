@@ -409,7 +409,14 @@ final class CollageStore {
                 withAnimation(.smooth) { tab = .layout }
             }
         }
+        warmPreviews()
         playback.projectChanged()
+    }
+
+    /// Decodes the previews of the pictures in the design in the background, so cells show them without a hitch.
+    func warmPreviews() {
+        let ids = Set(project.cells.prefix(project.cellCount).compactMap(\.mediaId) + project.overlays.map(\.mediaId))
+        ImagePipeline.warm(items.filter { ids.contains($0.id) && $0.kind == .photo }.map { ($0.id, $0.url) })
     }
 
     func importMusic(_ url: URL) async {
@@ -457,7 +464,10 @@ final class CollageStore {
             cells.append(CellState())
             idx = count - 1
         }
-        cells[idx] = CellState(mediaId: mediaId)
+        // a slot keeps its own frame and filter (a template's) when a picture goes into it
+        var placed = CellState(mediaId: mediaId)
+        if cells.indices.contains(idx) { placed.frame = cells[idx].frame; placed.look = cells[idx].look }
+        cells[idx] = placed
         project.cells = cells
         if count != project.cellCount {
             project.cellCount = count
@@ -602,12 +612,7 @@ final class CollageStore {
         activeTemplate = t
         carouselFormatChosen = t.mode == .carousel
         project = t.project(basedOn: project, pictures: pictures)
-        selectedCell = nil
-        selectedOverlay = nil
-        selectedCaption = nil
-        selectedSticker = nil
-        swapFrom = nil
-        carouselOffset = 0
+        resetEditorUI(tab: tab.inDock ? tab : .layout)
         clampCarouselOffset()
         if kindChanged { resetHistory() }
         playback.projectChanged()
@@ -621,6 +626,8 @@ final class CollageStore {
         if let t = activeTemplate, t.mode == .carousel {
             let n = project.cellCount
             project.layoutId = carouselLayoutId(carouselStyles(for: n).contains(t.style) ? t.style : defaultCarouselStyle(count: n))
+            // new slides' pictures get the template's filter and frames too
+            for i in project.cells.indices { t.dress(&project.cells[i], index: i) }
             clampCarouselOffset()
             return
         }
@@ -691,17 +698,11 @@ final class CollageStore {
         project.layoutId = defaultLayoutId(for: project)
         carouselFormatChosen = false; activeTemplate = nil
         if mode == .carousel { fitCarouselToPictures() }
-        selectedCell = nil
-        selectedClip = nil
-        swapFrom = nil
-        selectedCaption = nil
-        if tab == .overlay { tab = .layout }
-        selectedOverlay = nil
+        // the dock tab stays when it still exists; picture, photo-on-top and video tools close
+        resetEditorUI(tab: tab.inDock ? tab : .layout)
         // captions stay; any that were further right than the design now reaches move back onto it
         for c in project.captions { updateCaption(c.id) { _ in } }
         for o in project.overlays { updateOverlay(o.id) { _ in } }
-        carouselOffset = 0
-        if tab == .picture || (tab == .video && mode == .carousel) { tab = .layout }
         playback.projectChanged()
         resetHistory()
     }
@@ -1127,7 +1128,14 @@ final class CollageStore {
             project.backdrop = Backdrop(kind: .blur)
         }
         carouselFormatChosen = false; activeTemplate = nil
-        carouselOffset = 0
+        resetEditorUI(tab: .media)
+        playback.projectChanged()
+        resetHistory()
+    }
+
+    /// Everything the editor remembers about the design on screen: selections, open panels and sub-tabs, the swipe
+    /// position. A new, opened or switched design starts from here, so nothing from the last one carries over.
+    func resetEditorUI(tab newTab: Tab) {
         selectedCell = nil
         selectedClip = nil
         swapFrom = nil
@@ -1135,9 +1143,18 @@ final class CollageStore {
         editingCaption = nil
         selectedOverlay = nil
         selectedSticker = nil
-        tab = .media
-        playback.projectChanged()
-        resetHistory()
+        resizeOpen = false
+        adjustOpen = false
+        styleSection = .size
+        videoSection = .timeline
+        returnTab = newTab
+        pickTarget = nil
+        pickOverlay = nil
+        cropCell = nil
+        cropOverlay = nil
+        partClip = nil
+        carouselOffset = 0
+        tab = newTab
     }
 }
 
@@ -1244,18 +1261,12 @@ extension CollageStore {
         draftId = file.id
         draftCreated = file.createdAt; activeTemplate = nil
         lastSaved = (p, loaded.map(\.id))
-        selectedCell = nil
-        selectedClip = nil
-        swapFrom = nil
-        selectedCaption = nil
-        editingCaption = nil
-        selectedOverlay = nil
-        carouselOffset = 0
         playback.playhead = 0
-        tab = .media
+        // an opened design with pictures lands on its layouts, an empty one on adding pictures
+        resetEditorUI(tab: loaded.isEmpty ? .media : .layout)
         importing = false
         withAnimation(.smooth) { importProgress = nil }
-        selectedSticker = nil
+        warmPreviews()
         playback.projectChanged()
         resetHistory()
         if loaded.count < file.items.count {

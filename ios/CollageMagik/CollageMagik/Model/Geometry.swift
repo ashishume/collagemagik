@@ -45,7 +45,8 @@ func cellPixelRects(_ rects: [LayoutRect], W: Double, H: Double, gap: Double, un
             x: half + r.x * areaW + half,
             y: half + r.y * areaH + half,
             w: max(1, r.w * areaW - g),
-            h: max(1, r.h * areaH - g)
+            h: max(1, r.h * areaH - g),
+            tilt: r.tilt
         )
     }
 }

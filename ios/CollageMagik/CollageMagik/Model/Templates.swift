@@ -53,8 +53,18 @@ struct DesignTemplate: Identifiable {
     var frame: PhotoFrame = .none
     var frameColor: String = "#ffffff"
     var frameWidth: Double = 22
+    /// Frames for the pictures in turn (the first picture gets the first, and so on, repeating); empty = `frame` for all.
+    var cellFrames: [PhotoFrame] = []
+    /// A filter on every picture (a "look" for the whole design).
+    var filter: PhotoFilter = .none
     var captions: [Caption] = []
     var stickers: [Sticker] = []
+
+    /// Gives slot `index` the template's own frame and filter.
+    func dress(_ cell: inout CellState, index: Int) {
+        if !cellFrames.isEmpty { cell.frame = cellFrames[index % cellFrames.count] }
+        if filter != .none { cell.look.filter = filter }
+    }
 
     /// Picture slots: fixed for a collage, the usual opening count for a carousel.
     var slots: Int { mode == .collage ? layout(byId: layoutId).count : initialCarouselCells }
@@ -72,7 +82,11 @@ struct DesignTemplate: Identifiable {
             count = min(max(1, pictures.isEmpty ? initialCarouselCells : pictures.count), maxCarouselPhotos)
         }
         p.cellCount = count
-        p.cells = (0..<count).map { CellState(mediaId: pictures.indices.contains($0) ? pictures[$0] : nil) }
+        p.cells = (0..<count).map { i in
+            var c = CellState(mediaId: pictures.indices.contains(i) ? pictures[i] : nil)
+            dress(&c, index: i)
+            return c
+        }
         p.layoutId = mode == .collage ? layoutId : carouselLayoutId(carouselStyles(for: count).contains(style) ? style : defaultCarouselStyle(count: count))
         p.cellSizes = nil
         p.gap = gap
@@ -94,7 +108,8 @@ struct DesignTemplate: Identifiable {
 
 private func caption(_ text: String, _ font: CaptionFont, x: Double = 0.5, y: Double, size: Double = 76,
                      color: String = "#ffffff", look: CaptionLook = .plain, rotation: Double = 0,
-                     ornament: CaptionOrnament = .none, allCaps: Bool = false) -> Caption {
+                     ornament: CaptionOrnament = .none, allCaps: Bool = false, vertical: Bool = false,
+                     mix: CaptionMix = .none, accent: CaptionFont = .diary) -> Caption {
     var c = Caption()
     c.text = text
     c.font = font
@@ -106,6 +121,9 @@ private func caption(_ text: String, _ font: CaptionFont, x: Double = 0.5, y: Do
     c.rotation = rotation
     c.ornament = ornament
     c.allCaps = allCaps
+    c.vertical = vertical
+    c.mix = mix
+    c.accentFont = accent
     return c
 }
 
@@ -325,6 +343,94 @@ let allTemplates: [DesignTemplate] = [
         captions: [caption("be mine", .script, y: 0.5, size: 100, color: "#d6336c")]
     ),
 
+    // MARK: Creative collages
+    DesignTemplate(
+        id: "c-tossed", name: "Tossed prints", category: .scrapbook, mode: .collage, format: .post,
+        layoutId: "3-tossed", bg: "#e8dcc6", backdrop: pattern(.dots), frame: .instant, frameColor: "#fbfaf6", frameWidth: 18,
+        captions: [caption("weekend", .hand, x: 0.76, y: 0.93, size: 66, color: "#3b2f2a", rotation: -6)],
+        stickers: [emoji("📌", x: 0.3, y: 0.07, w: 0.08), emoji("🌿", x: 0.9, y: 0.8, w: 0.1, tilt: 12)]
+    ),
+    DesignTemplate(
+        id: "c-summer-tape", name: "Summer memories", category: .travel, mode: .collage, format: .post,
+        layoutId: "4-tossed", backdrop: gradient(2), frame: .tape, frameColor: "#fffaf2", frameWidth: 14, filter: .warm,
+        captions: [caption("summer memories", .vows, y: 0.475, size: 80, color: "#ffffff", look: .plate, rotation: -4)],
+        stickers: [emoji("☀️", x: 0.92, y: 0.05, w: 0.1)]
+    ),
+    DesignTemplate(
+        id: "c-scrapbook-page", name: "Scrapbook page", category: .scrapbook, mode: .collage, format: .story,
+        layoutId: "5-scrapbook", bg: "#efe6d8", backdrop: pattern(.grid), frameColor: "#fbfaf6", frameWidth: 14,
+        cellFrames: [.instant, .stamp, .tape, .torn, .instant],
+        captions: [caption("our little\nadventure", .note, x: 0.25, y: 0.49, size: 58, color: "#7a3b2e", rotation: -5)],
+        stickers: [emoji("✈️", x: 0.84, y: 0.5, w: 0.1, tilt: -15), shape("heart.fill", color: "#e2557a", x: 0.5, y: 0.97, w: 0.05)]
+    ),
+    DesignTemplate(
+        id: "c-magazine", name: "Magazine cover", category: .moodboard, mode: .collage, format: .post,
+        layoutId: "4-magazine", bg: "#f6f1ea",
+        captions: [
+            caption("THE EDIT", .magazine, x: 0.5, y: 0.075, size: 120, color: "#111114", allCaps: true),
+            caption("ISSUE 01", .engraved, x: 0.33, y: 0.9, size: 34, color: "#ffffff"),
+            caption("STYLE", .poster, x: 0.97, y: 0.55, size: 30, color: "#111114", allCaps: true, vertical: true),
+        ]
+    ),
+    DesignTemplate(
+        id: "c-noir-strip", name: "Noir film", category: .minimal, mode: .collage, format: .post,
+        layoutId: "3-filmstrip", bg: "#0b0b0d", frame: .film, frameColor: "#141416", frameWidth: 24, filter: .noir,
+        captions: [
+            caption("after hours", .typewriter, x: 0.5, y: 0.055, size: 46, color: "#f2f2f2"),
+            caption("frames 24—26", .typewriter, x: 0.5, y: 0.955, size: 30, color: "#ff9a3c"),
+        ]
+    ),
+    DesignTemplate(
+        id: "c-bubbles", name: "Bubbles", category: .friends, mode: .collage, format: .post,
+        layoutId: "4-cluster", backdrop: gradient(8), frame: .circle,
+        captions: [caption("good vibes", .retro, x: 0.27, y: 0.935, size: 74, color: "#ffffff", look: .neon)],
+        stickers: [emoji("✨", x: 0.88, y: 0.07, w: 0.09), emoji("💫", x: 0.1, y: 0.92, w: 0.08)]
+    ),
+    DesignTemplate(
+        id: "c-staircase", name: "Staircase", category: .minimal, mode: .collage, format: .post,
+        layoutId: "3-stairs", bg: "#f3efe8", frame: .shadow,
+        captions: [caption("step by step", .serif, x: 0.26, y: 0.82, size: 52, color: "#1b1b1f")]
+    ),
+    DesignTemplate(
+        id: "c-pip", name: "Picture in picture", category: .love, mode: .collage, format: .post,
+        layoutId: "2-overlap", bg: "#1a1418", frame: .border, frameColor: "#ffffff", frameWidth: 12,
+        captions: [caption("you, always", .signature, x: 0.2, y: 0.86, size: 74, color: "#ffd6e7")]
+    ),
+    DesignTemplate(
+        id: "c-golden-hour", name: "Golden hour", category: .travel, mode: .collage, format: .story,
+        layoutId: "4-offset", radius: 22, backdrop: gradient(1), filter: .warm,
+        captions: [caption("golden hour", .romance, x: 0.5, y: 0.965, size: 92, color: "#fff3e0")]
+    ),
+    DesignTemplate(
+        id: "c-neon-grid", name: "Neon nights", category: .friends, mode: .collage, format: .story,
+        layoutId: "4-grid", gap: 48, bg: "#07070b", frame: .neon, frameColor: "#ff4fd8",
+        captions: [caption("NEON NIGHTS", .poster, x: 0.5, y: 0.5, size: 110, color: "#3de0ff", look: .neon, allCaps: true)]
+    ),
+    DesignTemplate(
+        id: "c-postcard-vintage", name: "Wish you were here", category: .travel, mode: .collage, format: .post,
+        layoutId: "1-tilt", bg: "#e9dfcf", backdrop: pattern(.stripes), frame: .stamp, frameColor: "#fbfaf6", frameWidth: 22, filter: .vintage,
+        captions: [caption("wish you were here", .script, x: 0.5, y: 0.9, size: 84, color: "#2b4a8b", rotation: -3)],
+        stickers: [shape("seal.fill", color: "#c0392b", x: 0.86, y: 0.1, w: 0.12, tilt: 12)]
+    ),
+    DesignTemplate(
+        id: "c-print-wall", name: "Print wall", category: .photoDump, mode: .collage, format: .post,
+        layoutId: "6-wall", bg: "#c9a77c", backdrop: pattern(.confetti), frame: .instant, frameColor: "#fbfaf6", frameWidth: 12, filter: .film,
+        captions: [caption("the good days", .note, x: 0.5, y: 0.86, size: 72, color: "#3b2416", look: .label)]
+    ),
+    DesignTemplate(
+        id: "c-lookbook", name: "Lookbook", category: .moodboard, mode: .collage, format: .story,
+        layoutId: "3-big-left", gap: 14, bg: "#111114", filter: .chrome,
+        captions: [
+            caption("LOOKBOOK", .poster, x: 0.06, y: 0.5, size: 54, color: "#ffffff", allCaps: true, vertical: true),
+            caption("autumn '26", .magazine, x: 0.7, y: 0.965, size: 48, color: "#e9e2d6"),
+        ]
+    ),
+    DesignTemplate(
+        id: "c-retro-chrome", name: "Retro", category: .friends, mode: .collage, format: .square,
+        layoutId: "4-grid", gap: 20, radius: 26, backdrop: gradient(4), filter: .vivid,
+        captions: [caption("Retro", .retro, x: 0.5, y: 0.5, size: 120, color: "#ff5fa2", look: .sticker)]
+    ),
+
     // MARK: Carousels
     DesignTemplate(
         id: "k-swipe-story", name: "Swipe story", category: .photoDump, mode: .carousel,
@@ -365,6 +471,49 @@ let allTemplates: [DesignTemplate] = [
         captions: [caption("holiday dump", .hand, x: 0.5, y: 0.5, size: 80, color: "#3b2f2a", look: .label)]
     ),
     DesignTemplate(
+        id: "k-noir", name: "Noir story", category: .minimal, mode: .carousel,
+        style: .flow, bg: "#0b0b0d", filter: .noir,
+        captions: [
+            caption("chapter one", .magazine, x: 0.5, y: 0.06, size: 70, color: "#f2f2f2"),
+            caption("swipe →", .typewriter, x: 1.82, y: 0.95, size: 34, color: "#bdbdbd"),
+        ]
+    ),
+    DesignTemplate(
+        id: "k-polaroid-tour", name: "Polaroid tour", category: .travel, mode: .carousel,
+        style: .scatter, bg: "#e8dcc6", backdrop: pattern(.dots), frame: .instant, frameColor: "#fbfaf6", filter: .film,
+        captions: [caption("the trip", .hand, x: 0.5, y: 0.5, size: 96, color: "#3b2f2a", rotation: -6)],
+        stickers: [emoji("🗺️", x: 1.5, y: 0.9, w: 0.12, tilt: 8), emoji("📍", x: 0.85, y: 0.12, w: 0.08)]
+    ),
+    DesignTemplate(
+        id: "k-neon-wave", name: "Neon wave", category: .friends, mode: .carousel,
+        style: .wave, bg: "#07070b", frame: .neon, frameColor: "#3de0ff",
+        captions: [caption("night out", .retro, x: 0.5, y: 0.9, size: 92, color: "#ff4fd8", look: .neon)]
+    ),
+    DesignTemplate(
+        id: "k-magazine", name: "Magazine spread", category: .moodboard, mode: .carousel,
+        style: .mosaic, gap: 10, bg: "#f6f1ea", filter: .chrome,
+        captions: [
+            caption("THE EDIT", .magazine, x: 0.5, y: 0.5, size: 110, color: "#ffffff", allCaps: true),
+            caption("VOL. 2", .poster, x: 0.06, y: 0.5, size: 30, color: "#ffffff", allCaps: true, vertical: true),
+        ]
+    ),
+    DesignTemplate(
+        id: "k-golden", name: "Golden days", category: .travel, mode: .carousel,
+        style: .duo, gap: 12, radius: 20, backdrop: gradient(1), filter: .warm,
+        captions: [caption("golden days", .romance, x: 0.5, y: 0.5, size: 100, color: "#fff3e0")]
+    ),
+    DesignTemplate(
+        id: "k-stamps", name: "Stamp journey", category: .travel, mode: .carousel,
+        style: .stagger, gap: 24, bg: "#e9dfcf", frame: .stamp, frameColor: "#fbfaf6", frameWidth: 16, filter: .vintage,
+        captions: [caption("par avion", .typewriter, x: 0.5, y: 0.6, size: 44, color: "#2b4a8b", look: .label, rotation: -5)]
+    ),
+    DesignTemplate(
+        id: "k-torn-wall", name: "Torn wall", category: .scrapbook, mode: .carousel,
+        style: .wall, gap: 20, bg: "#d9cdb8", backdrop: pattern(.grid), frame: .torn, frameColor: "#fbfaf6",
+        cellFrames: [.torn, .tape, .instant],
+        captions: [caption("collected moments", .note, x: 0.5, y: 0.5, size: 72, color: "#3b2416", look: .label)]
+    ),
+    DesignTemplate(
         id: "k-wave", name: "Summer wave", category: .friends, mode: .carousel,
         style: .wave, radius: 18, backdrop: gradient(6),
         captions: [caption("summer", .dreamy, x: 0.5, y: 0.1, size: 96, color: "#5a3a00")],
@@ -384,9 +533,18 @@ func templates(for mode: EditMode?, category: TemplateCategory? = nil) -> [Desig
 enum TemplatePreview {
     private static let cache = NSCache<NSString, UIImage>()
 
+    private static func key(_ t: DesignTemplate, _ photos: [MediaItem]) -> NSString {
+        "\(t.id)|\(photos.map(\.id).joined(separator: ","))" as NSString
+    }
+
+    /// A preview already drawn, if there is one (so a card that scrolls back into view shows it at once).
+    static func cached(_ t: DesignTemplate, pictures: [MediaItem] = []) -> UIImage? {
+        cache.object(forKey: key(t, pictures.filter { $0.kind == .photo }))
+    }
+
     static func image(_ t: DesignTemplate, pictures: [MediaItem] = []) -> UIImage? {
         let photos = pictures.filter { $0.kind == .photo }
-        let key = "\(t.id)|\(photos.map(\.id).joined(separator: ","))" as NSString
+        let key = key(t, photos)
         if let hit = cache.object(forKey: key) { return hit }
         let items = photos.isEmpty ? samples : photos
         // a carousel preview stays readable: four sample pictures (about three slides), or the person's own pictures
@@ -400,8 +558,9 @@ enum TemplatePreview {
         let w = max(1, Int((project.canvasWidth * k).rounded())), h = max(1, Int((project.canvasHeight * k).rounded()))
         guard let ctx = CollageRenderer.makeContext(width: w, height: h) else { return nil }
         CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: ExportSnapshot(project: project, items: byId)) { id in
+            // a small card: the 420 px tray thumbnail is plenty, and decodes nothing new
             guard let item = byId[id] else { return nil }
-            return (item.preview ?? item.thumbnail).cgImage
+            return (item.fixedPreview ?? item.thumbnail).cgImage
         }
         guard let cg = ctx.makeImage() else { return nil }
         let img = UIImage(cgImage: cg)

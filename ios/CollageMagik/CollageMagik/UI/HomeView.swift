@@ -92,7 +92,7 @@ private struct KindHome: View {
                     VStack(alignment: .leading, spacing: 10) {
                         sectionTitle("Start from a template", action: ("See all", seeAllTemplates))
                         ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(alignment: .top, spacing: 14) {
+                            LazyHStack(alignment: .top, spacing: 14) {
                                 ForEach(templates(for: mode).prefix(8)) { t in
                                     TemplateCard(template: t, height: 150) { startDesign(store, mode: mode, template: t) }
                                         .frame(width: mode == .carousel ? 220 : 140)
@@ -323,13 +323,9 @@ private struct DraftTile: View {
             VStack(alignment: .leading, spacing: 6) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 16, style: .continuous).fill(.white.opacity(0.06))
-                    if let img = UIImage(contentsOfFile: draft.thumbURL.path) {
-                        Image(uiImage: img)
-                            .resizable()
-                            .scaledToFit()
-                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                            .padding(10)
-                    }
+                    AsyncFileImage(url: draft.thumbURL, maxSide: 320, version: "\(draft.updatedAt.timeIntervalSince1970)")
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .padding(10)
                 }
                 .frame(height: 170)
                 Text(draft.summary).font(.footnote.weight(.semibold)).lineLimit(1)

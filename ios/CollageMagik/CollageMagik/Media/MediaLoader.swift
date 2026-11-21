@@ -74,11 +74,12 @@ enum MediaLoader {
             guard let cg = CGImageSourceCreateThumbnailAtIndex(src, 0, opts as CFDictionary) else { return nil }
             return UIImage(cgImage: cg)
         }
-        guard let preview = thumb(1600), let small = thumb(420) else { throw ImportError("\(name): this picture couldn't be read.") }
+        // only the small tray thumbnail now; the editor's preview is decoded when a cell first shows the photo
+        guard let small = thumb(420) else { throw ImportError("\(name): this picture couldn't be read.") }
         return MediaItem(
             id: id, kind: .photo, url: url, name: name,
             width: swapped ? ph : pw, height: swapped ? pw : ph,
-            duration: 0, hasAudio: false, thumbnail: small, preview: preview
+            duration: 0, hasAudio: false, thumbnail: small, preview: nil
         )
     }
 
