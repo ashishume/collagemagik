@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "templates": [
+    {
+      "id": "hosted-weekend",
+      "base": "living-weekend",
+      "background": "#edd5ba",
+      "frameColor": "#fff5df",
+      "name": "Golden Weekend"
+    },
+    {
+      "id": "hosted-before-after",
+      "base": "living-before-after",
+      "background": "#232b3e",
+      "gap": 18,
+      "name": "Side-by-Side Stories"
+    },
+    {
+      "id": "hosted-film-roll",
+      "base": "k-film",
+      "background": "#26211f",
+      "frameColor": "#edddc3",
+      "gap": 16,
+      "name": "Sepia Film Roll"
+    },
+    {
+      "id": "hosted-gallery-wall",
+      "base": "k-gallery",
+      "background": "#e8ded0",
+      "frameColor": "#fff8ed",
+      "gap": 24,
+      "name": "Warm Gallery"
+    }
+  ]
+}
