@@ -199,6 +199,14 @@ enum DebugHarness {
                     try FileManager.default.copyItem(at: url, to: URL(fileURLWithPath: out + ".png"))
                 } else {
                     let q: ExportQuality = e == "ultra" ? .ultra : .standard
+                    // CM_EXPORT_CANCEL=s taps Cancel s seconds into the export
+                    if let s = env["CM_EXPORT_CANCEL"].flatMap(Double.init) {
+                        Task {
+                            try? await Task.sleep(for: .seconds(s))
+                            NSLog("CM_DEBUG export cancel")
+                            exporter.cancel()
+                        }
+                    }
                     let url = try await exporter.exportVideo(quality: q, hdr: env["CM_HDR"] == "1", fps: Int(env["CM_FPS"] ?? "30") ?? 30) { p in
                         if Int(p * 100) % 25 == 0 { NSLog("CM_DEBUG progress %.2f", p) }
                     }

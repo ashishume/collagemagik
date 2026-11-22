@@ -101,7 +101,10 @@ private final class VideoExportFrames: @unchecked Sendable {
     private enum Composer {
         case cpu(CPUVideoComposer)
         case gpu(GPUFrameComposer)
+        case closed
     }
+
+    private struct Closed: Error {}
 
     private var makeCPU: (() throws -> CPUVideoComposer)?
     private let makeFeeders: (Bool) -> [String: LaneFrameFeeder]
@@ -110,16 +113,26 @@ private final class VideoExportFrames: @unchecked Sendable {
     private var feeders: [String: LaneFrameFeeder]
     private var preparedFrame: CVPixelBuffer?
     #if DEBUG
-    private let forceGPUFailure = ProcessInfo.processInfo.environment["CM_EXPORT_FORCE_GPU_FAILURE"] == "1"
+    /// `1` fails every GPU frame (the first-frame fallback catches it); `late` fails from half a second in, after the
+    /// writer has started, which makes the whole export start again on the CPU.
+    private let forceGPUFailure = ProcessInfo.processInfo.environment["CM_EXPORT_FORCE_GPU_FAILURE"]
     private var referenceFeeders: [String: LaneFrameFeeder] = [:]
     private(set) var comparedTimestamps = 0
     #endif
 
-    var engine: ExportEngine {
-        switch composer {
-        case .cpu: .cpu
-        case .gpu: .gpu
-        }
+    /// The engine drawing the frames; it stays readable after `close()`.
+    private(set) var engine: ExportEngine
+
+    /// Drops the composer and closes the video readers, so a stopped export frees its memory even when the encoder
+    /// never calls back again. Call it on the video queue, so it can't run in the middle of a frame.
+    func close() {
+        composer = .closed
+        feeders.removeAll()
+        preparedFrame = nil
+        makeCPU = nil
+        #if DEBUG
+        referenceFeeders.removeAll()
+        #endif
     }
 
     init(engine: ExportEngine, snapshot: ExportSnapshot, photos: [String: CGImage], captions: CaptionLayers,
@@ -135,6 +148,7 @@ private final class VideoExportFrames: @unchecked Sendable {
                                                      width: width, height: height, hdr: hdr))
                 feeders = makeFeeders(true)
                 self.makeCPU = makeCPU
+                self.engine = .gpu
                 #if DEBUG
                 if ProcessInfo.processInfo.environment["CM_EXPORT_VERIFY_TIMESTAMPS"] == "1" {
                     referenceFeeders = makeFeeders(false)
@@ -147,6 +161,7 @@ private final class VideoExportFrames: @unchecked Sendable {
         }
         composer = .cpu(try makeCPU())
         feeders = makeFeeders(false)
+        self.engine = .cpu
     }
 
     /// Validate a planar GPU frame before creating the writer pool so fallback can keep the RGB CPU path.
@@ -170,6 +185,7 @@ private final class VideoExportFrames: @unchecked Sendable {
         Self.logFallback(error)
         composer = .cpu(try makeCPU())
         feeders = makeFeeders(false)
+        engine = .cpu
         self.makeCPU = nil
         #if DEBUG
         referenceFeeders.removeAll()
@@ -181,7 +197,9 @@ private final class VideoExportFrames: @unchecked Sendable {
         case .gpu(let gpu):
             do {
                 #if DEBUG
-                if forceGPUFailure { throw GPUFrameComposer.SetupError.simulatedFailure }
+                if forceGPUFailure == "1" || (forceGPUFailure == "late" && time >= 0.5) {
+                    throw GPUFrameComposer.SetupError.simulatedFailure
+                }
                 #endif
                 try gpu.render(at: time, to: buffer) { id in
                     guard let feeder = self.feeders[id] else { return nil }
@@ -205,6 +223,8 @@ private final class VideoExportFrames: @unchecked Sendable {
             }
         case .cpu(let cpu):
             try cpu.render(at: time, to: buffer, feeders: feeders)
+        case .closed:
+            throw Closed()
         }
         if hdr {
             CVBufferSetAttachment(buffer, kCVImageBufferColorPrimariesKey, kCVImageBufferColorPrimaries_ITU_R_2020, .shouldPropagate)
@@ -227,15 +247,25 @@ private struct VideoEncoder: @unchecked Sendable {
     let adaptor: AVAssetWriterInputPixelBufferAdaptor
 }
 
+/// Shared by the waiting export and its video and audio queues. Any reason to stop (Cancel, a cancelled task, a failed
+/// frame or encoder) sets `shouldStop`, which both queues check before each sample.
 private final class ExportQueueState: @unchecked Sendable {
     private let lock = NSLock()
     private var error: Error?
+    private var stopped = false
     private var finished = false
 
     var failure: Error? { lock.withLock { error } }
+    var shouldStop: Bool { lock.withLock { stopped || error != nil } }
     var isFinished: Bool { lock.withLock { finished } }
-    func fail(_ error: Error) { lock.withLock { self.error = error } }
+    func fail(_ error: Error) { lock.withLock { if self.error == nil { self.error = error } } }
+    func stop() { lock.withLock { stopped = true } }
     func finish() { lock.withLock { finished = true } }
+}
+
+/// The GPU export failed after it had started writing. The whole export is made again with the CPU engine.
+private struct GPUExportFailed: Error {
+    let underlying: Error
 }
 
 enum ExportQuality: String, CaseIterable, Identifiable {
@@ -404,7 +434,23 @@ final class CollageExporter: @unchecked Sendable {
 
     // MARK: MP4
 
-    func exportVideo(quality: ExportQuality, hdr: Bool = false, fps requestedFPS: Int = 30, progress: @escaping @Sendable (Double) -> Void) async throws -> URL {
+    /// Writes the MP4 with the GPU engine (Debug builds can pick one with `CM_EXPORT_ENGINE`). If the GPU export fails
+    /// once it has started writing, the whole video is made again with the CPU engine, so engines never mix in one file.
+    func exportVideo(quality: ExportQuality, hdr: Bool = false, fps: Int = 30, progress: @escaping @Sendable (Double) -> Void) async throws -> URL {
+        do {
+            return try await writeVideo(engine: .requested, quality: quality, hdr: hdr, fps: fps, progress: progress)
+        } catch let failed as GPUExportFailed {
+            if isCancelled || Task.isCancelled { throw CancellationError() }
+            #if DEBUG
+            NSLog("CM_EXPORT engine=cpu (retry after GPU failure: %@)", String(describing: failed.underlying))
+            #endif
+            progress(0)
+            return try await writeVideo(engine: .cpu, quality: quality, hdr: hdr, fps: fps, progress: progress)
+        }
+    }
+
+    private func writeVideo(engine: ExportEngine, quality: ExportQuality, hdr: Bool, fps requestedFPS: Int,
+                            progress: @escaping @Sendable (Double) -> Void) async throws -> URL {
         #if DEBUG
         let measurement = ExportMeasurement()
         #endif
@@ -478,7 +524,7 @@ final class CollageExporter: @unchecked Sendable {
         #endif
         let photos = CollageRenderer.decodePhotos(snapshot: snapshot, W: Double(w), H: Double(h))
         let captionLayers = CaptionRenderer.layers(project: snapshot.project, W: w, H: h)
-        let frames = try VideoExportFrames(engine: .requested, snapshot: snapshot, photos: photos, captions: captionLayers,
+        let frames = try VideoExportFrames(engine: engine, snapshot: snapshot, photos: photos, captions: captionLayers,
                                            width: w, height: h, hdr: hdr) { [self, planarSDR] metalCompatible in
             makeFeeders(W: Double(w), H: Double(h), hdr: hdr, fps: fps,
                         metalCompatible: metalCompatible, planarSDR: planarSDR)
@@ -515,6 +561,12 @@ final class CollageExporter: @unchecked Sendable {
         let group = DispatchGroup()
         let videoQueue = DispatchQueue(label: "collagemagik.export.video")
         let audioQueue = DispatchQueue(label: "collagemagik.export.audio")
+        let audioReader = aReader
+        // However the export ends, drop the composer and close the readers. Queued, so it never runs mid-frame.
+        defer {
+            videoQueue.async { frames.close() }
+            audioQueue.async { audioReader?.cancelReading() }
+        }
         let encoder = VideoEncoder(writer: writer, input: vInput, adaptor: adaptor)
         var frameIndex = 0
         let queues = ExportQueueState()
@@ -522,7 +574,7 @@ final class CollageExporter: @unchecked Sendable {
         group.enter()
         vInput.requestMediaDataWhenReady(on: videoQueue) { [self] in
             while encoder.input.isReadyForMoreMediaData {
-                if isCancelled || queues.failure != nil || frameIndex >= frameCount {
+                if isCancelled || queues.shouldStop || frameIndex >= frameCount {
                     encoder.input.markAsFinished()
                     group.leave()
                     return
@@ -568,7 +620,7 @@ final class CollageExporter: @unchecked Sendable {
             group.enter()
             aInput.requestMediaDataWhenReady(on: audioQueue) { [self] in
                 while aInput.isReadyForMoreMediaData {
-                    if isCancelled || queues.failure != nil { aInput.markAsFinished(); group.leave(); return }
+                    if isCancelled || queues.shouldStop { aInput.markAsFinished(); group.leave(); return }
                     if let sb = aOutput.copyNextSampleBuffer() {
                         if !aInput.append(sb) { aInput.markAsFinished(); group.leave(); return }
                     } else {
@@ -585,10 +637,23 @@ final class CollageExporter: @unchecked Sendable {
         group.notify(queue: .global()) { queues.finish() }
         while !queues.isFinished {
             if isCancelled || Task.isCancelled || queues.failure != nil ||
-                writer.status == .failed || writer.status == .cancelled { break }
-            try? await Task.sleep(for: .milliseconds(25))
+                writer.status == .failed || writer.status == .cancelled {
+                queues.stop()
+                break
+            }
+            await Self.pause(milliseconds: 25)
+        }
+        // Stopping early: let both queues finish the sample they're on and mark their inputs finished, so the writer
+        // is never cancelled under an append. A failed writer may never call them again, so wait two seconds at most.
+        let deadline = CACurrentMediaTime() + 2
+        while !queues.isFinished && CACurrentMediaTime() < deadline {
+            await Self.pause(milliseconds: 25)
         }
 
+        // A GPU export that fails after writing started is made again with the CPU engine (see `exportVideo`).
+        func failed(_ error: Error) -> Error {
+            frames.engine == .gpu ? GPUExportFailed(underlying: error) : error
+        }
         if isCancelled || Task.isCancelled {
             if writer.status == .writing { writer.cancelWriting() }
             try? FileManager.default.removeItem(at: url)
@@ -597,16 +662,16 @@ final class CollageExporter: @unchecked Sendable {
         if let error = queues.failure ?? writer.error {
             if writer.status == .writing { writer.cancelWriting() }
             try? FileManager.default.removeItem(at: url)
-            throw error
+            throw failed(error)
         }
         guard writer.status == .writing else {
             try? FileManager.default.removeItem(at: url)
-            throw ExportFailure(String(localized: "The export didn't finish."))
+            throw failed(ExportFailure(String(localized: "The export didn't finish.")))
         }
         await writer.finishWriting()
         guard writer.status == .completed else {
             try? FileManager.default.removeItem(at: url)
-            throw ExportFailure(writer.error?.localizedDescription ?? String(localized: "The export didn't finish."))
+            throw failed(ExportFailure(writer.error?.localizedDescription ?? String(localized: "The export didn't finish.")))
         }
         #if DEBUG
         measurement.finish(engine: frames.engine.rawValue, width: w, height: h, fps: fps, frames: frameIndex)
@@ -616,6 +681,14 @@ final class CollageExporter: @unchecked Sendable {
         #endif
         progress(1)
         return url
+    }
+
+    /// Waits without throwing: `Task.sleep` returns at once in a cancelled task, which would turn the waits above
+    /// into a busy loop.
+    private static func pause(milliseconds: Int) async {
+        await withCheckedContinuation { (c: CheckedContinuation<Void, Never>) in
+            DispatchQueue.global().asyncAfter(deadline: .now() + .milliseconds(milliseconds)) { c.resume() }
+        }
     }
 
     // MARK: Audio mix

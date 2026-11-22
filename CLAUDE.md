@@ -46,6 +46,7 @@ SIMCTL_CHILD_CM_PRO=1 SIMCTL_CHILD_CM_AUTOLOAD=a.jpg,b.jpg xcrun simctl launch b
 | `CM_CAPTIONS=1` | Adds sample captions |
 | `CM_EXPORT=video\|png\|ultra`, `CM_OUT=/path` | Exports without the UI |
 | `CM_EXPORT_ENGINE=cpu\|gpu` | Selects the video export engine and logs timing and peak memory as `CM_EXPORT` |
+| `CM_EXPORT_CANCEL=s` | Cancels a harness export s seconds in |
 | `CM_PRO=1` / `CM_PRO=0` | Forces Pro on (no ads, no consent or tracking prompt) or off |
 | `CM_PAYWALL=1`, `CM_PRO_MOCK=1` | Opens the Pro page; shows it with placeholder plans |
 | `CM_CONSENT_EEA=1`, `CM_LIVE_ADS=1` | Tests the EU consent form; uses live ad units (don't tap them) |

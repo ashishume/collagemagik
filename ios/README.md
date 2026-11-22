@@ -281,7 +281,7 @@ All are ignored in release builds.
 | `CM_EXPORT=video\|png\|ultra`, `CM_OUT=/path` | Exports without the UI |
 | `CM_EXPORT_ENGINE=cpu\|gpu` | Chooses a video export engine for comparison |
 | `CM_EXPORT_VERIFY_TIMESTAMPS=1` | Checks the GPU reader's selected timestamps against the CPU reader |
-| `CM_EXPORT_FORCE_GPU_FAILURE=1` | Exercises CPU fallback before the first encoded frame |
+| `CM_EXPORT_FORCE_GPU_FAILURE=1` / `=late` | Fails every GPU frame (CPU fallback before the first frame), or from 0.5 s in (the whole video is made again with the CPU) |
 | `CM_FIT=i`, `CM_ROTATE=i`, `CM_FLIP=i`, `CM_ANGLE=i:deg` | Applies fit with blurred bars, a 90° turn, a flip, or straightening to the indexed cell |
 | `CM_PRO=1` / `CM_PRO=0` | Forces Pro on (no ads, no consent or tracking prompt) or off |
 | `CM_PAYWALL=1`, `CM_PRO_MOCK=1` | Opens the Pro page; shows it with placeholder plans |
