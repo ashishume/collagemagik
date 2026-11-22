@@ -92,7 +92,9 @@ final class PlaybackEngine {
             isPlaying = false
             timer?.invalidate()
             timer = nil
-            playhead = 0
+            // a motion design rests on its last frame (every picture in place; its first moment may still be empty
+            // while pictures come in); anything else goes back to the start. Play starts over from the beginning.
+            playhead = store.project.isMotion ? store.totalDuration : 0
             sync()
             return
         }

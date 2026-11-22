@@ -422,18 +422,23 @@ final class CollageStore {
             }
         }
         // When the selection is done, land on the tool that matters most: the timeline if there is a video to cut,
-        // otherwise the layouts for the new cell count.
+        // otherwise the layouts for the new cell count (a template's layout or scenes, even for a single photo), never
+        // the tray the pictures just went into. No animation: the picker is still closing, and a tab change animated
+        // under it can leave the dock showing the old tab.
         if !replacing, added > 0 {
-            if hasPlacedVideo {
-                openVideo(.timeline)
-            } else if added >= 2 {
-                withAnimation(.smooth) { tab = .layout }
-            }
+            if added >= 2 || activeTemplate != nil { tab = .layout }
+            // closing the timeline then comes back to the layout, not the tray
+            if hasPlacedVideo { openVideo(.timeline) }
         }
         warmPreviews()
         playback.projectChanged()
-        if isLivingFirstImport, !cancelled, editorOpen, playsOverTime, !UIAccessibility.isReduceMotionEnabled {
-            playback.play()
+        if isLivingFirstImport, !cancelled, editorOpen, playsOverTime {
+            if UIAccessibility.isReduceMotionEnabled {
+                // not played for you: a motion design is shown at its end, with every picture in place
+                if project.isMotion { playback.seek(to: totalDuration) }
+            } else {
+                playback.play()
+            }
         }
     }
 
