@@ -47,6 +47,7 @@ struct DesignTemplate: Identifiable {
     /// number of slots follows the pictures.
     var layoutId: String = ""
     var style: CarouselStyle = .flow
+    var isLiving = false
     var gap: Double = 0
     var radius: Double = 0
     var bg: String = "#101016"
@@ -141,6 +142,31 @@ private func pattern(_ p: BackdropPattern) -> Backdrop { Backdrop(kind: .pattern
 
 /// Every template that ships with the app. Add one by adding an entry: the browser, previews and filters pick it up.
 let allTemplates: [DesignTemplate] = [
+    // Living templates put the main clip in the first slot. Their sample cards show motion before media is added.
+    DesignTemplate(
+        id: "living-weekend", name: String(localized: "weekend"), category: .video, mode: .collage,
+        format: .story, layoutId: "4-hero-prints", isLiving: true, bg: "#f0ddbe",
+        frameColor: "#fff6e5", frameWidth: 18, cellFrames: [.shadow, .instant, .instant, .instant],
+        captions: [caption(String(localized: "WEEKEND EDITION · NO. 12"), .typewriter, y: 0.05, size: 48, color: "#442b24")]
+    ),
+    DesignTemplate(
+        id: "living-night", name: String(localized: "Neon nights"), category: .video, mode: .collage,
+        format: .story, layoutId: "3-big-top", isLiving: true, gap: 14, radius: 18, bg: "#120d29",
+        backdrop: gradient(5), frame: .neon, frameColor: "#a85eff", frameWidth: 16,
+        captions: [caption(String(localized: "NEON NIGHTS"), .poster, y: 0.55, size: 80, color: "#e5b6ff", look: .neon)]
+    ),
+    DesignTemplate(
+        id: "living-before-after", name: String(localized: "Before & after"), category: .video, mode: .collage,
+        format: .post, layoutId: "2-side", isLiving: true, gap: 24, radius: 14, bg: "#102327",
+        captions: [caption(String(localized: "Before & after"), .rounded, y: 0.88, size: 62, look: .plate)]
+    ),
+    DesignTemplate(
+        id: "living-postcard", name: String(localized: "Postcards"), category: .video, mode: .collage,
+        format: .post, layoutId: "4-magazine", isLiving: true, bg: "#d5e7de", backdrop: pattern(.dots),
+        frameColor: "#fff9ea", frameWidth: 14, cellFrames: [.border, .stamp, .stamp, .stamp],
+        captions: [caption(String(localized: "greetings from"), .script, y: 0.08, size: 95, color: "#224d46", ornament: .swash)]
+    ),
+
     // MARK: With video (first: playing videos inside a collage is what the app is for)
     DesignTemplate(
         id: "v-hero-clip", name: String(localized: "Hero clip"), category: .video, mode: .collage, format: .story,
@@ -737,18 +763,48 @@ enum TemplatePreview {
         cache.object(forKey: key(t, pictures.filter { $0.kind == .photo }))
     }
 
+    private static let motionCache: NSCache<NSString, NSArray> = {
+        let cache = NSCache<NSString, NSArray>()
+        cache.countLimit = 4
+        return cache
+    }()
+    static let motionFrameCount = 12
+
+    static func motionFrames(_ t: DesignTemplate) async -> [UIImage] {
+        if let frames = motionCache.object(forKey: t.id as NSString) as? [UIImage] { return frames }
+        var frames: [UIImage] = []
+        for index in 0..<motionFrameCount {
+            guard !Task.isCancelled else { return [] }
+            let phase = Double(index) * 2 * .pi / Double(motionFrameCount)
+            if let frame = draw(t, photos: [], phase: phase) { frames.append(frame) }
+            await Task.yield()
+        }
+        if !frames.isEmpty { motionCache.setObject(frames as NSArray, forKey: t.id as NSString) }
+        return frames
+    }
+
     static func image(_ t: DesignTemplate, pictures: [MediaItem] = []) -> UIImage? {
         let photos = pictures.filter { $0.kind == .photo }
         let key = key(t, photos)
         if let hit = cache.object(forKey: key) { return hit }
+        let img = draw(t, photos: photos)
+        if let img { cache.setObject(img, forKey: key) }
+        return img
+    }
+
+    private static func draw(_ t: DesignTemplate, photos: [MediaItem], phase: Double? = nil) -> UIImage? {
         let items = photos.isEmpty ? samples : photos
         // a carousel preview stays readable: four sample pictures (about three slides), or the person's own pictures
         let wanted = t.mode == .collage ? t.slots : (photos.isEmpty ? 4 : min(items.count, maxCarouselPhotos))
         let ids = (0..<wanted).map { items[$0 % items.count].id }
         let unique = t.mode == .collage ? ids : Array(ids.prefix(items.count))
-        let project = t.project(basedOn: Project(), pictures: unique)
+        var project = t.project(basedOn: Project(), pictures: unique)
+        if let phase, !project.cells.isEmpty {
+            project.cells[0].zoom = 1.24 + 0.12 * cos(phase)
+            project.cells[0].panX = 0.55 * sin(phase)
+        }
         let byId = Dictionary(items.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-        let maxSide = 520.0
+        let maxSide = phase == nil ? 520.0 : 360.0
         let k = maxSide / max(project.canvasWidth, project.canvasHeight)
         let w = max(1, Int((project.canvasWidth * k).rounded())), h = max(1, Int((project.canvasHeight * k).rounded()))
         guard let ctx = CollageRenderer.makeContext(width: w, height: h) else { return nil }
@@ -758,9 +814,7 @@ enum TemplatePreview {
             return (item.fixedPreview ?? item.thumbnail).cgImage
         }
         guard let cg = ctx.makeImage() else { return nil }
-        let img = UIImage(cgImage: cg)
-        cache.setObject(img, forKey: key)
-        return img
+        return UIImage(cgImage: cg)
     }
 
     /// Stand-in pictures: a few calm colour scenes (sky, sun and hills), different enough to tell the slots apart.

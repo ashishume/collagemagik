@@ -266,6 +266,7 @@ final class CollageStore {
         let fresh = items.isEmpty
         // replacing a picture (in a cell or on top) leaves the layout and the open tool alone
         let replacing = pickOverlay != nil || (pickTarget.map { project.cells.indices.contains($0) && project.cells[$0].mediaId != nil } ?? false)
+        let isLivingFirstImport = fresh && pickTarget == nil && pickOverlay == nil && activeTemplate?.isLiving == true
         var target = pickTarget
         var overlayTarget = pickOverlay
         var added = 0
@@ -384,6 +385,16 @@ final class CollageStore {
         } else if leftInTray > 0 {
             notify(String(localized: "The design is full (\(cellLimit)). Pictures in your tray: \(leftInTray). Tap a cell, then a tray picture, to swap it in."))
         }
+        if isLivingFirstImport, added > 0 {
+            let ordered = videoFirst(items.map(\.id))
+            var cells = project.cells
+            for index in 0..<project.cellCount {
+                cells[index].mediaId = ordered.indices.contains(index) ? ordered[index] : nil
+            }
+            project.cells = cells
+            selectedCell = nil
+            swapFrom = nil
+        }
         // The collage follows the selection: pick N photos / videos and you get an N-cell collage, with the
         // formats for N cells ready to choose from. (A single add to a collage already in progress leaves it alone.)
         if !replacing, added > 0, fresh || added >= 2 {
@@ -411,6 +422,9 @@ final class CollageStore {
         }
         warmPreviews()
         playback.projectChanged()
+        if isLivingFirstImport, !cancelled, editorOpen, hasPlacedVideo, !UIAccessibility.isReduceMotionEnabled {
+            playback.play()
+        }
     }
 
     /// Decodes the previews of the pictures in the design in the background, so cells show them without a hitch.
@@ -603,7 +617,7 @@ final class CollageStore {
         var order = placed + items.map(\.id).filter { !placed.contains($0) }
         // a "With video" template puts the clips in its first (biggest) slots
         if t.category == .video {
-            order = order.filter { item($0)?.kind == .video } + order.filter { item($0)?.kind != .video }
+            order = videoFirst(order)
         }
         if t.mode == .carousel {
             order = order.filter { item($0)?.kind == .photo }
@@ -620,6 +634,11 @@ final class CollageStore {
         clampCarouselOffset()
         if kindChanged { resetHistory() }
         playback.projectChanged()
+    }
+
+    private func videoFirst(_ ids: [String]) -> [String] {
+        let videos = Set(items.filter { $0.kind == .video }.map(\.id))
+        return ids.filter { videos.contains($0) } + ids.filter { !videos.contains($0) }
     }
 
     /// Picks the carousel's slide size and strip style from its pictures' shapes, so it opens with the least empty

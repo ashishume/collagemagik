@@ -25,9 +25,19 @@ enum DebugHarness {
                 NSLog("CM_DEBUG import %@ -> %@", u.lastPathComponent, store.items.count > before ? "OK" : "REJECTED (toast: \(store.toast?.text ?? "none"))")
             }
         }
+        // CM_START_TEMPLATE=id covers the Home flow: choose a template before importing the batch.
+        if let id = env["CM_START_TEMPLATE"], let template = allTemplates.first(where: { $0.id == id }) {
+            store.applyTemplate(template)
+        }
         if let list = env["CM_BATCH"] {
             await store.addFiles(list.split(separator: ",").map { URL(fileURLWithPath: String($0)) })
             NSLog("CM_DEBUG batch -> cells=%d items=%d tab=%@", store.project.cellCount, store.items.count, store.tab.rawValue)
+            if env["CM_START_TEMPLATE"] != nil {
+                let slots = store.project.cells.prefix(store.project.cellCount).map { cell in
+                    cell.mediaId.flatMap { store.item($0) }.map { $0.kind == .video ? "video" : "photo" } ?? "empty"
+                }
+                NSLog("CM_DEBUG template slots=%@ playing=%@", slots.joined(separator: ","), store.playback.isPlaying ? "yes" : "no")
+            }
         }
         // CM_IMPORT=a,b,c: the Files import path with its loader; logs each "N of M" step until it hides.
         if let list = env["CM_IMPORT"] {

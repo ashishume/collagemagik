@@ -65,11 +65,16 @@ editor's top bar shows it as a title instead of a switch. A carousel's dock read
 
 **Templates** (`Model/Templates.swift`, `UI/TemplateViews.swift`): a `DesignTemplate` is a design without pictures
 (layout or carousel style, size, gap, corners, background, frame, placeholder captions and stickers). `allTemplates`
-holds 90 (68 collage, 22 carousel) in 19 categories (a "With video" category comes first: its clips go into the first, biggest slots), including free-form ones (tossed and tilted prints, piles, fans, a heart of photos, pinboard, magazine, film strip, bubbles, staircase) and ones that set a filter or a different frame per photo (`filter`, `cellFrames`); add one by adding an entry. Previews are drawn by the real
+holds 94 (72 collage, 22 carousel) in 19 categories (a "With video" category comes first: its clips go into the first, biggest slots), including free-form ones (tossed and tilted prints, piles, fans, a heart of photos, pinboard, magazine, film strip, bubbles, staircase) and ones that set a filter or a different frame per photo (`filter`, `cellFrames`); add one by adding an entry. Previews are drawn by the real
 renderer (`TemplatePreview`), with sample scenes on Home and the person's own pictures in the editor
 (Layout / Slides → Templates). Picking one from Home starts a design with it and opens the photo picker; in the editor
 it re-lays the pictures already there, and Undo brings the previous design back. A collage template keeps its slots as
 pictures are added (extras wait in the tray); a carousel template keeps its style as the slide count changes.
+
+Four living templates lead the Collage tab: Weekend, Neon Nights, Before & After, and Postcards. Their sample cards
+loop a silent animation in the main slot. On the first import into a new living template, videos go into the first
+slots in selection order and the timeline starts playing when a video is present. Later imports and targeted
+replacements follow the normal editor behavior. Reduce Motion keeps the sample cards and initial playback still.
 
 ## Frames, captions and photo looks
 
@@ -249,6 +254,7 @@ All are ignored in release builds.
 |---|---|
 | `CM_AUTOLOAD=a,b` | Loads files one by one (`CM_BATCH` all at once, `CM_IMPORT` through the progress loader) |
 | `CM_MODE=carousel`, `CM_STYLE=flow`, `CM_OFFSET=1.1` | Carousel mode, style, and how far it is swiped |
+| `CM_START_TEMPLATE=id` | Applies a template before `CM_BATCH` and logs slot order and playback |
 | `CM_LAYOUT=n`, `CM_SIZES=0.6,0.4` | Number of cells; moves the first borders as if dragged |
 | `CM_TAB=layout`, `CM_SELECT=i`, `CM_CROP=i`, `CM_PART=1` | Opens a tab, selects a cell, opens crop or Choose part |
 | `CM_CAPTIONS=1` | Adds sample captions |

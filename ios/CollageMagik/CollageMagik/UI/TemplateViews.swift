@@ -6,26 +6,32 @@ struct TemplateCard: View {
     var pictures: [MediaItem] = []
     var height: CGFloat = 170
     let action: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     @State private var image: UIImage?
+    @State private var motionFrames: [UIImage] = []
+
+    private var showsMotion: Bool {
+        template.isLiving && pictures.isEmpty && !reduceMotion && scenePhase == .active
+    }
 
     var body: some View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 6) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 16, style: .continuous).fill(.white.opacity(0.06))
-                    if let img = image ?? TemplatePreview.cached(template, pictures: pictures) {
-                        Image(uiImage: img)
-                            .resizable()
-                            .scaledToFit()
-                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                            .shadow(color: .black.opacity(0.35), radius: 8, y: 4)
-                            .padding(10)
+                    if showsMotion && !motionFrames.isEmpty {
+                        TimelineView(.periodic(from: .now, by: 0.16)) { context in
+                            let offset = Int(context.date.timeIntervalSinceReferenceDate / 0.16)
+                            artwork(motionFrames[offset % motionFrames.count])
+                        }
+                    } else if let img = image ?? TemplatePreview.cached(template, pictures: pictures) {
+                        artwork(img)
                     }
                 }
                 .frame(height: height)
                 .overlay {
-                    // made for videos: say so on the card itself
-                    if template.category == .video {
+                    if template.category == .video && !template.isLiving {
                         Image(systemName: "play.fill")
                             .font(.system(size: 18, weight: .bold))
                             .foregroundStyle(.white)
@@ -33,6 +39,10 @@ struct TemplateCard: View {
                             .background(.black.opacity(0.45), in: Circle())
                             .overlay(Circle().stroke(.white.opacity(0.7), lineWidth: 1.5))
                     }
+                }
+                .task(id: showsMotion) {
+                    guard showsMotion, motionFrames.isEmpty else { return }
+                    motionFrames = await TemplatePreview.motionFrames(template)
                 }
                 // drawn after the card is on screen, so opening a list of 60+ templates never waits for all of them
                 .task(id: pictures.map(\.id)) {
@@ -67,6 +77,16 @@ struct TemplateCard: View {
         .buttonStyle(.plain)
         .accessibilityLabel((template.mode == .carousel ? String(localized: "\(template.name) carousel template") : String(localized: "\(template.name) template, \(template.slots) photos")))
     }
+    private func artwork(_ image: UIImage) -> some View {
+        Image(uiImage: image)
+            .resizable()
+            .scaledToFit()
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .shadow(color: .black.opacity(0.35), radius: 8, y: 4)
+            .padding(10)
+            .accessibilityHidden(true)
+    }
+
 }
 
 /// Category chips: All plus one per category that has templates for the current kind.
