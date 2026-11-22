@@ -114,6 +114,7 @@ final class CollageStore {
 
     init() {
         playback.store = self
+        PreviewCopies.shared.onReady = { [weak self] id, url in self?.playback.useCopy(id, url) }
         drafts = DraftDisk.list()
     }
 

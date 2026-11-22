@@ -243,7 +243,7 @@ extension MediaLoader {
         let fm = FileManager.default
         let tmp = fm.temporaryDirectory
         guard let names = try? fm.contentsOfDirectory(atPath: tmp.path) else { return }
-        for name in names where name == "Imports" || name.hasPrefix("Collage-") || name.hasPrefix("Carousel-") || name.hasPrefix("probe-") {
+        for name in names where name == "Imports" || name == "PreviewCopies" || name.hasPrefix("Collage-") || name.hasPrefix("Carousel-") || name.hasPrefix("probe-") {
             try? fm.removeItem(at: tmp.appendingPathComponent(name))
         }
     }

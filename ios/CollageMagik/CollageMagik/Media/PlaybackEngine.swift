@@ -11,6 +11,8 @@ final class PlaybackEngine {
     @ObservationIgnored weak var store: CollageStore?
     @ObservationIgnored private var players: [String: AVPlayer] = [:]
     @ObservationIgnored private var seeking: Set<String> = []
+    /// When each player was last jumped back into step while playing (see `sync`).
+    @ObservationIgnored private var lastPlayingSeek: [String: CFTimeInterval] = [:]
     @ObservationIgnored private var musicPlayer: AVAudioPlayer?
     @ObservationIgnored private var musicURL: URL?
     @ObservationIgnored private var timer: Timer?
@@ -19,7 +21,9 @@ final class PlaybackEngine {
 
     func player(for item: MediaItem) -> AVPlayer {
         if let p = players[item.id] { return p }
-        let playerItem = AVPlayerItem(url: item.url)
+        // the live preview plays a small copy of big or HDR videos once it's ready (exports use the original)
+        PreviewCopies.shared.request(item)
+        let playerItem = AVPlayerItem(url: PreviewCopies.shared.playbackURL(for: item))
         // slowed or sped-up clips keep their natural pitch
         playerItem.audioTimePitchAlgorithm = .spectral
         let p = AVPlayer(playerItem: playerItem)
@@ -27,6 +31,16 @@ final class PlaybackEngine {
         p.actionAtItemEnd = .pause
         players[item.id] = p
         return p
+    }
+
+    /// A video's small preview copy is ready: its player switches to it and catches up with the timeline.
+    func useCopy(_ mediaId: String, _ url: URL) {
+        guard let p = players[mediaId] else { return }
+        let playerItem = AVPlayerItem(url: url)
+        playerItem.audioTimePitchAlgorithm = .spectral
+        p.replaceCurrentItem(with: playerItem)
+        seeking.remove(mediaId)
+        sync()
     }
 
     func dispose(_ mediaId: String) {
@@ -106,20 +120,37 @@ final class PlaybackEngine {
         let active = Set(lanes.map(\.mediaId))
 
         for (id, p) in players where !active.contains(id) && p.rate != 0 { p.pause() }
+        // a motion design: the videos on screen now or within half a second; the others needn't decode
+        let onScreenSoon = isPlaying && project.isMotion ? videosOnScreen(project, from: playhead, ahead: 0.6) : nil
+        let now = CACurrentMediaTime()
 
         for lane in lanes {
             guard let item = store.item(lane.mediaId), let r = resolveLane(lane, playhead) else { continue }
             let p = player(for: item)
             p.volume = Float(lane.volume)
             p.isMuted = lane.volume <= 0
+            // hidden and silent: pause it (one whose sound is heard keeps playing, so the preview sounds like the export).
+            // It is put back in step just before its scene comes in.
+            if let onScreenSoon, !onScreenSoon.contains(lane.mediaId), lane.volume <= 0 || !item.hasAudio {
+                if p.rate != 0 {
+                    p.pause()
+                    syncLog("hide \(laneLabel(lane)) at \(String(format: "%.2f", playhead))")
+                }
+                continue
+            }
             let cur = p.currentTime().seconds
             let drift = abs(cur - r.time)
 
             let rate = Float(r.clip.speed)
             if isPlaying && r.active {
                 if seeking.contains(item.id) { continue }
-                if !cur.isFinite || drift > 0.35 * max(1, r.clip.speed) {
-                    seek(p, id: item.id, to: r.time, thenPlay: true, rate: rate)
+                // Jumping a player back into step costs a decode, and a busy phone drifts again while it does: so
+                // while playing, a player just jumped is left to run for a second unless it's far off.
+                let recentlyJumped = now - (lastPlayingSeek[item.id] ?? 0) < 1.0
+                if !cur.isFinite || (drift > 0.35 * max(1, r.clip.speed) && (!recentlyJumped || drift > 1.0)) {
+                    lastPlayingSeek[item.id] = now
+                    syncLog("jump \(laneLabel(lane)) at \(String(format: "%.2f", playhead)) drift \(String(format: "%.2f", cur.isFinite ? drift : -1))")
+                    seek(p, id: item.id, to: r.time, thenPlay: true, rate: rate, exact: false)
                 } else if p.timeControlStatus == .paused || abs(p.rate - rate) > 0.01 {
                     p.playImmediately(atRate: rate)
                 }
@@ -133,15 +164,42 @@ final class PlaybackEngine {
         syncMusic(project, total: store.totalDuration)
     }
 
-    private func seek(_ p: AVPlayer, id: String, to t: Double, thenPlay: Bool, rate: Float = 1) {
+    /// `exact: false` (while playing) lets the player land within a few frames, which needs far less decoding than an
+    /// exact frame; a paused preview always shows the exact frame.
+    private func seek(_ p: AVPlayer, id: String, to t: Double, thenPlay: Bool, rate: Float = 1, exact: Bool = true) {
         seeking.insert(id)
-        p.seek(to: CMTime(seconds: t, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero) { [weak self, weak p] _ in
+        let tolerance = exact ? CMTime.zero : CMTime(value: 1, timescale: 10)
+        p.seek(to: CMTime(seconds: t, preferredTimescale: 600), toleranceBefore: tolerance, toleranceAfter: tolerance) { [weak self, weak p] _ in
             Task { @MainActor in
                 guard let self else { return }
                 self.seeking.remove(id)
                 if thenPlay, self.isPlaying { p?.playImmediately(atRate: rate) } else if !self.isPlaying { self.sync() }
             }
         }
+    }
+
+    /// Debug builds: `CM_SYNC_LOG=1` logs when hidden videos pause and when players are jumped back into step.
+    private func syncLog(_ text: @autoclosure () -> String) {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["CM_SYNC_LOG"] == "1" { NSLog("CM_SYNC %@", text()) }
+        #endif
+    }
+
+    private func laneLabel(_ lane: Lane) -> String {
+        let i = store?.project.lanes.firstIndex { $0.mediaId == lane.mediaId } ?? 0
+        return laneName(i)
+    }
+
+    /// Videos shown (even partly faded) in a motion design between `t` and `t + ahead`.
+    private func videosOnScreen(_ project: Project, from t: Double, ahead: Double) -> Set<String> {
+        var ids: Set<String> = []
+        for time in [t, t + ahead / 2, t + ahead] {
+            let posed = project.posed(at: time)
+            for i in 0..<min(posed.cellCount, posed.cells.count) where posed.cellAlpha(i) > 0.001 {
+                if let id = posed.cells[i].mediaId { ids.insert(id) }
+            }
+        }
+        return ids
     }
 
     private func syncMusic(_ project: Project, total: Double) {

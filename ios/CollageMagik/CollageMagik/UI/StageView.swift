@@ -282,8 +282,9 @@ struct StageView: View {
     /// Everything drawn on the design itself, in canvas coordinates.
     @ViewBuilder
     private func canvas(size: CGSize) -> some View {
+        // posed once per frame and shared by every cell (a motion design moves with the clock)
         let project = store.shown
-        let px = rects(size)
+        let px = project.cellRects(W: size.width, H: size.height)
         let radius = project.cornerRadius(W: size.width)
 
         ZStack(alignment: .topLeading) {
@@ -295,7 +296,7 @@ struct StageView: View {
                 let order = project.cellDrawOrder
                 ZStack(alignment: .topLeading) {
                     ForEach(Array(px.enumerated()), id: \.offset) { i, r in
-                        cell(i, r, size: size)
+                        cell(i, r, size: size, project: project)
                             .opacity(project.cellAlpha(i))
                             .zIndex(Double(order.firstIndex(of: i) ?? i))
                             // motion cells follow the clock: an animated change elsewhere (a tab opening) must not
@@ -403,8 +404,7 @@ struct StageView: View {
     }
 
     @ViewBuilder
-    private func cell(_ i: Int, _ r: PxRect, size: CGSize) -> some View {
-        let project = store.shown
+    private func cell(_ i: Int, _ r: PxRect, size: CGSize, project: Project) -> some View {
         let state = project.cells.indices.contains(i) ? project.cells[i] : CellState()
         let item = state.mediaId.flatMap { store.item($0) }
         let outers = project.frameRects(W: size.width, H: size.height)
@@ -450,7 +450,7 @@ struct StageView: View {
                 }
             }
             .frame(width: r.w, height: r.h)
-            .clipShape(PictureShape(frame: frame, radius: pr))
+            .pictureClip(frame, radius: pr)
             .offset(x: r.x - outer.x, y: r.y - outer.y)
             if frame.hasDecor && frame != .film {
                 FrameDecorLayer(frame: frame, size: printSize, picture: local, color: project.frameColor, unit: unit, seed: i, over: true)
@@ -492,7 +492,7 @@ struct StageView: View {
                 }
                 MediaPlacementView(item: item, rect: PxRect(x: 0, y: 0, w: g.picture.w, h: g.picture.h), view: o.view, player: nil)
                     .frame(width: g.picture.w, height: g.picture.h)
-                    .clipShape(PictureShape(frame: o.frame, radius: pr))
+                    .pictureClip(o.frame, radius: pr)
                     .offset(x: g.picture.x - g.outer.x, y: g.picture.y - g.outer.y)
                 if o.frame.hasDecor && o.frame != .film {
                     FrameDecorLayer(frame: o.frame, size: printSize, picture: local, color: o.frameColor, unit: unit, seed: 1000 + k, over: true)

@@ -243,7 +243,7 @@ struct ChoosePartEditor: View {
         guard draft == nil, let item, let clip = store.clip(ref) else { return }
         store.playback.pause()
         draft = clip
-        let playerItem = AVPlayerItem(url: item.url)
+        let playerItem = AVPlayerItem(url: PreviewCopies.shared.playbackURL(for: item))
         player.replaceCurrentItem(with: playerItem)
         player.isMuted = (store.project.lanes.first { $0.mediaId == ref.mediaId }?.volume ?? 1) == 0
         player.actionAtItemEnd = .pause

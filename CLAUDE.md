@@ -50,6 +50,8 @@ SIMCTL_CHILD_CM_PRO=1 SIMCTL_CHILD_CM_AUTOLOAD=a.jpg,b.jpg xcrun simctl launch b
 | `CM_CONSENT_EEA=1`, `CM_LIVE_ADS=1` | Tests the EU consent form; uses live ad units (don't tap them) |
 | `CM_ANALYTICS=1` | Turns on Firebase install tracking in Debug (log: `CM_INSTALL tracking started`) |
 | `CM_FAKE_UPDATE=1` | Shows the "Update available" strip |
+| `CM_NO_PREVIEW_COPY=1` | Preview plays the original videos instead of their small copies (log: `CM_PREVIEW_COPY ready`) |
+| `CM_SYNC_LOG=1` | Logs when hidden videos pause and when players are jumped back into step (`CM_SYNC hide/jump`) |
 
 If the simulator shows "Apple Account Verification" (StoreKit sandbox), tap Not Now.
 
@@ -80,6 +82,9 @@ Code is under `ios/CollageMagik/CollageMagik/`.
 - **Media**: `Media/MediaLoader.swift` validates imports up front (playable, decodable, yields a picture; H.264/HEVC,
   HDR, rotated clips). `Media/PlaybackEngine.swift` keeps one `AVPlayer` per video plus one for music in step with the
   timeline clock for live preview.
+- **Preview copies**: `Media/PreviewCopies.swift` makes a 720p SDR copy of every video bigger than 720p or HDR, in the
+  background, and the live preview (and Choose part) switch to it when it's ready. Exports, thumbnails and drafts
+  always read the original file. Copies sit in `tmp/PreviewCopies/` and are cleared at launch.
 - **Export**: `Export/CollageRenderer.swift` draws a frame with Core Graphics from an `ExportSnapshot` (copied out of
   the store so export runs off the main thread); `LaneFrameFeeder` reads each video lane's frames in order. HDR clips
   convert to SDR BT.709, unless HDR export is on (10-bit HEVC HLG via the `HDR` helpers). `Export/Exporter.swift`

@@ -8,6 +8,22 @@ struct PictureShape: Shape {
     func path(in rect: CGRect) -> Path { Path(pictureClipPath(frame, rect: rect, radius: radius)) }
 }
 
+extension View {
+    /// Cuts a picture to its frame's shape. Rounded and square pictures use the plain corner clip, which iOS draws
+    /// without an extra pass; only the real shapes (circle, heart, arch) need a mask. That matters for playing videos,
+    /// whose clip is redrawn every frame. Same outline as `pictureClipPath`, so preview and export still match.
+    @ViewBuilder
+    func pictureClip(_ frame: PhotoFrame, radius: Double) -> some View {
+        if frame.isShape {
+            clipShape(PictureShape(frame: frame, radius: radius))
+        } else if radius <= 0 {
+            clipped()
+        } else {
+            clipShape(RoundedRectangle(cornerRadius: radius, style: .circular))
+        }
+    }
+}
+
 /// A frame's extras (film holes under the picture; tape, mat line, date stamp or neon over it) in the live preview,
 /// drawn by the very code the export uses (`FrameDecor`). It is a little larger than the print, so glows and tape that
 /// reach past the edge aren't cut off. `picture` is in the print's own space (0, 0 = its top-left corner).

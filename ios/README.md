@@ -258,7 +258,7 @@ right. AVI, MKV, WebM, MPEG-1/2 can't be decoded by iOS: the app says so and ask
 | Path | What |
 |---|---|
 | `Model/` | Layouts, geometry, timeline maths (ported 1:1 from the web `src/`), the `CollageStore` |
-| `Media/` | Import and validation, live playback engine (one `AVPlayer` per video kept in step with the timeline) |
+| `Media/` | Import and validation, live playback engine (one `AVPlayer` per video kept in step with the timeline), small preview copies of big or HDR videos (`PreviewCopies`: 720p SDR, made in the background; exports use the originals) |
 | `Export/` | Frame renderer (Core Graphics), per-clip frame reader, audio mix, MP4 writer |
 | `UI/` | Stage, panels, timeline, crop editor, export sheet, glass components |
 | `Ads/` | Google AdMob, the ads on/off switch, ad unit IDs, install tracking for Google Ads (Firebase) and Meta (Facebook SDK) |
