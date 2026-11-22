@@ -32,6 +32,180 @@ private final class ExportMeasurement: @unchecked Sendable {
 }
 #endif
 
+enum ExportEngine: String {
+    case cpu, gpu
+
+    static var requested: Self {
+        #if DEBUG
+        if let raw = ProcessInfo.processInfo.environment["CM_EXPORT_ENGINE"], let engine = Self(rawValue: raw) {
+            return engine
+        }
+        #endif
+        return .gpu
+    }
+}
+
+private final class CPUVideoComposer {
+    private let snapshot: ExportSnapshot
+    private let photos: [String: CGImage]
+    private let captions: CaptionLayers
+    private let width: Int
+    private let height: Int
+    private let hdrContext: CGContext?
+
+    init(snapshot: ExportSnapshot, photos: [String: CGImage], captions: CaptionLayers, width: Int, height: Int, hdr: Bool) throws {
+        self.snapshot = snapshot
+        self.photos = photos
+        self.captions = captions
+        self.width = width
+        self.height = height
+        hdrContext = hdr ? CollageRenderer.makeContext(width: width, height: height, hdr: true) : nil
+        if hdr, hdrContext?.data == nil { throw ExportFailure(String(localized: "Couldn't set up HDR drawing.")) }
+    }
+
+    func render(at time: Double, to buffer: CVPixelBuffer, feeders: [String: LaneFrameFeeder]) throws {
+        func draw(_ context: CGContext) {
+            CollageRenderer.draw(ctx: context, W: Double(width), H: Double(height),
+                                 snapshot: snapshot, t: time, captionLayers: captions) { id in
+                photos[id] ?? feeders[id]?.frame(at: time)
+            }
+        }
+        if let context = hdrContext, let canvas = context.data {
+            draw(context)
+            let rowBytes = context.bytesPerRow
+            let data = Data(bytesNoCopy: canvas, count: rowBytes * height, deallocator: .none)
+            let frame = CIImage(bitmapData: data, bytesPerRow: rowBytes, size: CGSize(width: width, height: height),
+                                format: .RGBAh, colorSpace: HDR.linearSpace)
+            HDR.ci.render(frame, to: buffer, bounds: frame.extent, colorSpace: HDR.hlgSpace)
+        } else {
+            guard CVPixelBufferLockBaseAddress(buffer, []) == kCVReturnSuccess else {
+                throw ExportFailure(String(localized: "Couldn't allocate video memory."))
+            }
+            defer { CVPixelBufferUnlockBaseAddress(buffer, []) }
+            guard let context = CollageRenderer.makeContext(width: width, height: height, data: CVPixelBufferGetBaseAddress(buffer),
+                                                           bytesPerRow: CVPixelBufferGetBytesPerRow(buffer)) else {
+                throw ExportFailure(String(localized: "Couldn't allocate video memory."))
+            }
+            draw(context)
+        }
+    }
+}
+
+/// Ownership transfers to the video queue when the writer starts.
+private final class VideoExportFrames: @unchecked Sendable {
+    private enum Composer {
+        case cpu(CPUVideoComposer)
+        case gpu(GPUFrameComposer)
+    }
+
+    private let makeCPU: () throws -> CPUVideoComposer
+    private let makeFeeders: (Bool) -> [String: LaneFrameFeeder]
+    private let hdr: Bool
+    private var composer: Composer
+    private var feeders: [String: LaneFrameFeeder]
+    #if DEBUG
+    private let forceGPUFailure = ProcessInfo.processInfo.environment["CM_EXPORT_FORCE_GPU_FAILURE"] == "1"
+    private var referenceFeeders: [String: LaneFrameFeeder] = [:]
+    private(set) var comparedTimestamps = 0
+    #endif
+
+    var engine: ExportEngine {
+        switch composer {
+        case .cpu: .cpu
+        case .gpu: .gpu
+        }
+    }
+
+    init(engine: ExportEngine, snapshot: ExportSnapshot, photos: [String: CGImage], captions: CaptionLayers,
+         width: Int, height: Int, hdr: Bool, makeFeeders: @escaping (Bool) -> [String: LaneFrameFeeder]) throws {
+        self.makeFeeders = makeFeeders
+        self.hdr = hdr
+        makeCPU = {
+            try CPUVideoComposer(snapshot: snapshot, photos: photos, captions: captions, width: width, height: height, hdr: hdr)
+        }
+        if engine == .gpu {
+            do {
+                composer = .gpu(try GPUFrameComposer(snapshot: snapshot, photos: photos, captions: captions,
+                                                     width: width, height: height, hdr: hdr))
+                feeders = makeFeeders(true)
+                #if DEBUG
+                if ProcessInfo.processInfo.environment["CM_EXPORT_VERIFY_TIMESTAMPS"] == "1" {
+                    referenceFeeders = makeFeeders(false)
+                }
+                #endif
+                return
+            } catch {
+                Self.logFallback(error)
+            }
+        }
+        composer = .cpu(try makeCPU())
+        feeders = makeFeeders(false)
+    }
+
+    func render(at time: Double, to buffer: CVPixelBuffer, firstFrame: Bool) throws {
+        switch composer {
+        case .gpu(let gpu):
+            do {
+                #if DEBUG
+                if forceGPUFailure { throw GPUFrameComposer.SetupError.simulatedFailure }
+                #endif
+                try gpu.render(at: time, to: buffer) { id in
+                    guard let feeder = self.feeders[id] else { return nil }
+                    let pixelBuffer = feeder.pixelBuffer(at: time)
+                    #if DEBUG
+                    if let reference = self.referenceFeeders[id] {
+                        _ = reference.frame(at: time)
+                        precondition(reference.selectedTimestamp == feeder.selectedTimestamp,
+                                     "CPU and GPU selected different video timestamps at \(time)")
+                        self.comparedTimestamps += 1
+                    }
+                    #endif
+                    if let pixelBuffer { return CIImage(cvPixelBuffer: pixelBuffer) }
+                    return feeder.heldImage.map { CIImage(cgImage: $0) }
+                }
+            } catch {
+                guard firstFrame else { throw error }
+                Self.logFallback(error)
+                let cpu = try makeCPU()
+                composer = .cpu(cpu)
+                feeders = makeFeeders(false)
+                #if DEBUG
+                referenceFeeders.removeAll()
+                #endif
+                try cpu.render(at: time, to: buffer, feeders: feeders)
+            }
+        case .cpu(let cpu):
+            try cpu.render(at: time, to: buffer, feeders: feeders)
+        }
+        if hdr {
+            CVBufferSetAttachment(buffer, kCVImageBufferColorPrimariesKey, kCVImageBufferColorPrimaries_ITU_R_2020, .shouldPropagate)
+            CVBufferSetAttachment(buffer, kCVImageBufferTransferFunctionKey, kCVImageBufferTransferFunction_ITU_R_2100_HLG, .shouldPropagate)
+            CVBufferSetAttachment(buffer, kCVImageBufferYCbCrMatrixKey, kCVImageBufferYCbCrMatrix_ITU_R_2020, .shouldPropagate)
+        }
+    }
+
+    private static func logFallback(_ error: Error) {
+        #if DEBUG
+        NSLog("CM_EXPORT engine=cpu (fallback: %@)", String(describing: error))
+        #endif
+    }
+}
+
+/// The video queue uses these together until it marks the input finished.
+private struct VideoEncoder: @unchecked Sendable {
+    let writer: AVAssetWriter
+    let input: AVAssetWriterInput
+    let adaptor: AVAssetWriterInputPixelBufferAdaptor
+}
+
+private final class ExportFrameFailure: @unchecked Sendable {
+    private let lock = NSLock()
+    private var error: Error?
+
+    var value: Error? { lock.withLock { error } }
+    func set(_ error: Error) { lock.withLock { self.error = error } }
+}
+
 enum ExportQuality: String, CaseIterable, Identifiable {
     case standard, ultra
     var id: String { rawValue }
@@ -50,7 +224,6 @@ struct ExportFailure: LocalizedError {
 final class CollageExporter: @unchecked Sendable {
     private let snapshot: ExportSnapshot
     private let total: Double
-    private var fps = 30
     private var cancelled = false
     private let lock = NSLock()
 
@@ -120,7 +293,7 @@ final class CollageExporter: @unchecked Sendable {
     }
 
     /// One frame reader per placed video. For HDR, frames are scaled to the biggest size a cell shows them at.
-    private func makeFeeders(W: Double = 0, H: Double = 0, hdr: Bool = false) -> [String: LaneFrameFeeder] {
+    private func makeFeeders(W: Double = 0, H: Double = 0, hdr: Bool = false, fps: Int = 30, metalCompatible: Bool = false) -> [String: LaneFrameFeeder] {
         let project = snapshot.project
         // a motion design shows a video at many sizes: read it for the biggest
         let poses = hdr ? project.motionSamples() : []
@@ -135,7 +308,7 @@ final class CollageExporter: @unchecked Sendable {
                     maxPx = max(maxPx, need.w, need.h)
                 }
             }
-            out[lane.mediaId] = LaneFrameFeeder(lane: lane, url: item.url, hdr: hdr, maxPixels: maxPx, fps: fps)
+            out[lane.mediaId] = LaneFrameFeeder(lane: lane, url: item.url, hdr: hdr, maxPixels: maxPx, fps: fps, metalCompatible: metalCompatible)
         }
         return out
     }
@@ -197,18 +370,18 @@ final class CollageExporter: @unchecked Sendable {
 
     // MARK: MP4
 
-    func exportVideo(quality: ExportQuality, hdr: Bool = false, fps: Int = 30, progress: @escaping @Sendable (Double) -> Void) async throws -> URL {
+    func exportVideo(quality: ExportQuality, hdr: Bool = false, fps requestedFPS: Int = 30, progress: @escaping @Sendable (Double) -> Void) async throws -> URL {
         #if DEBUG
         let measurement = ExportMeasurement()
         #endif
-        self.fps = fps == 60 ? 60 : 30
+        let fps = requestedFPS == 60 ? 60 : 30
         let (w, h) = size(quality: quality)
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("Collage-\(Int(Date().timeIntervalSince1970)).mp4")
         try? FileManager.default.removeItem(at: url)
 
         let writer = try AVAssetWriter(url: url, fileType: .mp4)
         writer.shouldOptimizeForNetworkUse = true
-        let vSettings = Self.videoSettings(w, h, hdr: hdr, fps: self.fps)
+        let vSettings = Self.videoSettings(w, h, hdr: hdr, fps: fps)
         guard writer.canApply(outputSettings: vSettings, forMediaType: .video) else {
             throw ExportFailure(hdr
                 ? String(localized: "This iPhone can't encode \(w)×\(h) HDR video. Try Standard quality, or turn HDR off.")
@@ -221,6 +394,7 @@ final class CollageExporter: @unchecked Sendable {
             sourcePixelBufferAttributes: [
                 kCVPixelBufferPixelFormatTypeKey as String: hdr ? kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange : kCVPixelFormatType_32BGRA,
                 kCVPixelBufferIOSurfacePropertiesKey as String: [:] as [String: Any],
+                kCVPixelBufferMetalCompatibilityKey as String: true,
                 kCVPixelBufferWidthKey as String: w,
                 kCVPixelBufferHeightKey as String: h,
             ]
@@ -272,14 +446,11 @@ final class CollageExporter: @unchecked Sendable {
         }
 
         let photos = CollageRenderer.decodePhotos(snapshot: snapshot, W: Double(w), H: Double(h))
-        let feeders = makeFeeders(W: Double(w), H: Double(h), hdr: hdr)
         let captionLayers = CaptionRenderer.layers(project: snapshot.project, W: w, H: h)
-        // HDR: every frame is drawn into one half-float canvas, then Core Image writes it into the 10-bit HLG buffer.
-        let hdrRowBytes = w * 8
-        let hdrCanvas: UnsafeMutableRawPointer? = hdr ? UnsafeMutableRawPointer.allocate(byteCount: hdrRowBytes * h, alignment: 64) : nil
-        defer { hdrCanvas?.deallocate() }
-        let hdrContext = hdrCanvas.flatMap { CollageRenderer.makeContext(width: w, height: h, data: $0, bytesPerRow: hdrRowBytes, hdr: true) }
-        if hdr && hdrContext == nil { throw ExportFailure(String(localized: "Couldn't set up HDR drawing.")) }
+        let frames = try VideoExportFrames(engine: .requested, snapshot: snapshot, photos: photos, captions: captionLayers,
+                                           width: w, height: h, hdr: hdr) { [self] metalCompatible in
+            makeFeeders(W: Double(w), H: Double(h), hdr: hdr, fps: fps, metalCompatible: metalCompatible)
+        }
         let frameCount = max(1, Int((total * Double(fps)).rounded(.up)))
 
         guard writer.startWriting() else { throw ExportFailure(writer.error?.localizedDescription ?? String(localized: "Couldn't start the export.")) }
@@ -289,46 +460,32 @@ final class CollageExporter: @unchecked Sendable {
         let group = DispatchGroup()
         let videoQueue = DispatchQueue(label: "collagemagik.export.video")
         let audioQueue = DispatchQueue(label: "collagemagik.export.audio")
+        let encoder = VideoEncoder(writer: writer, input: vInput, adaptor: adaptor)
         var frameIndex = 0
-        var failure: Error?
+        let failure = ExportFrameFailure()
 
         group.enter()
         vInput.requestMediaDataWhenReady(on: videoQueue) { [self] in
-            while vInput.isReadyForMoreMediaData {
-                if isCancelled || failure != nil || frameIndex >= frameCount {
-                    vInput.markAsFinished()
+            while encoder.input.isReadyForMoreMediaData {
+                if isCancelled || failure.value != nil || frameIndex >= frameCount {
+                    encoder.input.markAsFinished()
                     group.leave()
                     return
                 }
                 autoreleasepool {
-                    guard let pool = adaptor.pixelBufferPool else { failure = ExportFailure(String(localized: "Couldn't allocate video memory.")); return }
+                    guard let pool = encoder.adaptor.pixelBufferPool else { failure.set(ExportFailure(String(localized: "Couldn't allocate video memory."))); return }
                     var pbOut: CVPixelBuffer?
                     CVPixelBufferPoolCreatePixelBuffer(nil, pool, &pbOut)
-                    guard let pb = pbOut else { failure = ExportFailure(String(localized: "Couldn't allocate video memory.")); return }
+                    guard let pb = pbOut else { failure.set(ExportFailure(String(localized: "Couldn't allocate video memory."))); return }
                     let t = Double(frameIndex) / Double(fps)
-                    if let ctx = hdrContext, let canvas = hdrCanvas {
-                        CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot, t: t, captionLayers: captionLayers) { id in
-                            photos[id] ?? feeders[id]?.frame(at: t)
-                        }
-                        let data = Data(bytesNoCopy: canvas, count: hdrRowBytes * h, deallocator: .none)
-                        let frame = CIImage(bitmapData: data, bytesPerRow: hdrRowBytes, size: CGSize(width: w, height: h), format: .RGBAh, colorSpace: HDR.linearSpace)
-                        HDR.ci.render(frame, to: pb, bounds: CGRect(x: 0, y: 0, width: w, height: h), colorSpace: HDR.hlgSpace)
-                        CVBufferSetAttachment(pb, kCVImageBufferColorPrimariesKey, kCVImageBufferColorPrimaries_ITU_R_2020, .shouldPropagate)
-                        CVBufferSetAttachment(pb, kCVImageBufferTransferFunctionKey, kCVImageBufferTransferFunction_ITU_R_2100_HLG, .shouldPropagate)
-                        CVBufferSetAttachment(pb, kCVImageBufferYCbCrMatrixKey, kCVImageBufferYCbCrMatrix_ITU_R_2020, .shouldPropagate)
-                    } else {
-                        CVPixelBufferLockBaseAddress(pb, [])
-                        if let ctx = CollageRenderer.makeContext(
-                            width: w, height: h, data: CVPixelBufferGetBaseAddress(pb), bytesPerRow: CVPixelBufferGetBytesPerRow(pb)
-                        ) {
-                            CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot, t: t, captionLayers: captionLayers) { id in
-                                photos[id] ?? feeders[id]?.frame(at: t)
-                            }
-                        }
-                        CVPixelBufferUnlockBaseAddress(pb, [])
+                    do {
+                        try frames.render(at: t, to: pb, firstFrame: frameIndex == 0)
+                    } catch {
+                        failure.set(error)
+                        return
                     }
-                    if !adaptor.append(pb, withPresentationTime: CMTime(value: CMTimeValue(frameIndex), timescale: CMTimeScale(fps))) {
-                        failure = writer.error ?? ExportFailure(String(localized: "The video encoder stopped."))
+                    if !encoder.adaptor.append(pb, withPresentationTime: CMTime(value: CMTimeValue(frameIndex), timescale: CMTimeScale(fps))) {
+                        failure.set(encoder.writer.error ?? ExportFailure(String(localized: "The video encoder stopped.")))
                         return
                     }
                     frameIndex += 1
@@ -344,7 +501,7 @@ final class CollageExporter: @unchecked Sendable {
             group.enter()
             aInput.requestMediaDataWhenReady(on: audioQueue) { [self] in
                 while aInput.isReadyForMoreMediaData {
-                    if isCancelled || failure != nil { aInput.markAsFinished(); group.leave(); return }
+                    if isCancelled || failure.value != nil { aInput.markAsFinished(); group.leave(); return }
                     if let sb = aOutput.copyNextSampleBuffer() {
                         if !aInput.append(sb) { aInput.markAsFinished(); group.leave(); return }
                     } else {
@@ -365,7 +522,7 @@ final class CollageExporter: @unchecked Sendable {
             try? FileManager.default.removeItem(at: url)
             throw CancellationError()
         }
-        if let failure {
+        if let failure = failure.value {
             writer.cancelWriting()
             try? FileManager.default.removeItem(at: url)
             throw failure
@@ -376,7 +533,10 @@ final class CollageExporter: @unchecked Sendable {
             throw ExportFailure(writer.error?.localizedDescription ?? String(localized: "The export didn't finish."))
         }
         #if DEBUG
-        measurement.finish(engine: "cpu", width: w, height: h, fps: self.fps, frames: frameIndex)
+        measurement.finish(engine: frames.engine.rawValue, width: w, height: h, fps: fps, frames: frameIndex)
+        if frames.comparedTimestamps > 0 {
+            NSLog("CM_EXPORT verified %d matching CPU/GPU timestamps", frames.comparedTimestamps)
+        }
         #endif
         progress(1)
         return url

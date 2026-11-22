@@ -49,12 +49,17 @@ enum PhotoLookRenderer {
         guard !look.isOriginal else { return image }
         let k = "\(key)|\(image.width)x\(image.height)|\(look.key)" as NSString
         if let hit = cache.object(forKey: k) { return hit }
-        let input = CIImage(cgImage: image)
-        var out = filtered(input, look.filter)
-        out = adjusted(out, look)
-        guard let made = ci.createCGImage(out.cropped(to: input.extent), from: input.extent) else { return image }
+        guard let made = render(image, look) else { return image }
         cache.setObject(made, forKey: k)
         return made
+    }
+
+    /// Exports can keep the result for their own lifetime and avoid retaining it in the preview cache.
+    static func render(_ image: CGImage, _ look: PhotoLook) -> CGImage? {
+        guard !look.isOriginal else { return image }
+        let input = CIImage(cgImage: image)
+        let output = adjusted(filtered(input, look.filter), look)
+        return ci.createCGImage(output.cropped(to: input.extent), from: input.extent)
     }
 
     /// The same for the preview's UIImage.

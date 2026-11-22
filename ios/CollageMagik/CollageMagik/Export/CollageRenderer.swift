@@ -113,6 +113,21 @@ enum CollageRenderer {
             ctx.translateBy(x: -c.x, y: -c.y)
         }
         let path = pictureClipPath(frame, rect: picture.cgRect, radius: radius)
+        drawPrintUnder(ctx, outer: outer, picture: picture, path: path, frame: frame,
+                       frameColor: frameColor, edge: edge, seed: seed, unit: unit)
+        ctx.saveGState()
+        ctx.addPath(path)
+        ctx.clip()
+        content()
+        ctx.restoreGState()
+        FrameDecor.drawOver(ctx, frame: frame, outer: outer.cgRect, picture: picture.cgRect, color: frameColor, unit: unit, seed: seed)
+    }
+
+    /// The unrotated base of a print, shared by the CPU renderer and GPU export's raster pieces.
+    static func drawPrintUnder(
+        _ ctx: CGContext, outer: PxRect, picture: PxRect, path: CGPath,
+        frame: PhotoFrame, frameColor: String, edge: Double, seed: Int, unit: Double
+    ) {
         if frame != .none {
             ctx.saveGState()
             ctx.setShadow(offset: CGSize(width: 0, height: 7 * unit), blur: 22 * unit, color: UIColor.black.withAlphaComponent(0.38).cgColor)
@@ -129,12 +144,6 @@ enum CollageRenderer {
             ctx.restoreGState()
             FrameDecor.drawUnder(ctx, frame: frame, outer: outer.cgRect, picture: picture.cgRect, color: frameColor, unit: unit)
         }
-        ctx.saveGState()
-        ctx.addPath(path)
-        ctx.clip()
-        content()
-        ctx.restoreGState()
-        FrameDecor.drawOver(ctx, frame: frame, outer: outer.cgRect, picture: picture.cgRect, color: frameColor, unit: unit, seed: seed)
     }
 
     /// The context must have a top-left origin (flipped). The picture is drawn with zoom, pan, rotation, flip and straighten.
