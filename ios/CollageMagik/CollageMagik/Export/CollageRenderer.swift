@@ -252,16 +252,32 @@ final class LaneFrameFeeder {
     private var output: AVAssetReaderVideoCompositionOutput?
     private var clipId = ""
     private var lastSourceTime = -1.0
-    private var current: CGImage?
-    private var pending: (image: CGImage, pts: Double)?
+    private enum SourceFrame {
+        case image(CGImage)
+        case buffer(CVPixelBuffer)
+    }
+
+    private struct TimedFrame {
+        let source: SourceFrame
+        let pts: Double
+    }
+
+    private let metalCompatible: Bool
+    private var current: TimedFrame?
+    private var pending: TimedFrame?
+    private(set) var heldImage: CGImage?
+    #if DEBUG
+    private(set) var selectedTimestamp: Double?
+    #endif
     private var holdCache: [Int: CGImage] = [:]
     private let halfFrame: Double
 
-    init(lane: Lane, url: URL, hdr: Bool = false, maxPixels: Int = 0, fps: Int = 30) {
+    init(lane: Lane, url: URL, hdr: Bool = false, maxPixels: Int = 0, fps: Int = 30, metalCompatible: Bool = false) {
         self.lane = lane
         halfFrame = 0.5 / Double(max(1, fps))
         self.hdr = hdr
         self.maxPixels = maxPixels
+        self.metalCompatible = metalCompatible
         asset = AVURLAsset(url: url)
         generator = AVAssetImageGenerator(asset: asset)
         generator.appliesPreferredTrackTransform = true
@@ -270,8 +286,26 @@ final class LaneFrameFeeder {
     }
 
     func frame(at t: Double) -> CGImage? {
+        switch selectFrame(at: t) {
+        case .image(let image): return image
+        case .buffer(let buffer): return makeImage(buffer)
+        case nil: return nil
+        }
+    }
+
+    /// On a held frame this returns nil and leaves the shared still image in `heldImage`.
+    func pixelBuffer(at t: Double) -> CVPixelBuffer? {
+        if case .buffer(let buffer) = selectFrame(at: t) { return buffer }
+        return nil
+    }
+
+    private func selectFrame(at t: Double) -> SourceFrame? {
+        heldImage = nil
+        #if DEBUG
+        selectedTimestamp = nil
+        #endif
         guard let r = resolveLane(lane, t) else { return nil }
-        guard r.active else { return hold(at: r.time) }
+        guard r.active else { return selectHold(at: r.time) }
         let needsRestart = reader == nil || r.clip.id != clipId || r.time < lastSourceTime - 0.001 || r.time > lastSourceTime + 0.75
         if needsRestart { startReader(clip: r.clip, from: r.time) }
         lastSourceTime = r.time
@@ -279,13 +313,26 @@ final class LaneFrameFeeder {
             if pending == nil { pending = readNext() }
             guard let next = pending else { break }
             if next.pts <= r.time + halfFrame {
-                current = next.image
+                current = next
                 pending = nil
             } else {
                 break
             }
         }
-        return current ?? pending?.image ?? hold(at: r.time)
+        guard let selected = current ?? pending else { return selectHold(at: r.time) }
+        #if DEBUG
+        selectedTimestamp = selected.pts
+        #endif
+        return selected.source
+    }
+
+    private func selectHold(at time: Double) -> SourceFrame? {
+        guard let image = hold(at: time) else { return nil }
+        heldImage = image
+        #if DEBUG
+        selectedTimestamp = time
+        #endif
+        return .image(image)
     }
 
     private func startReader(clip: Clip, from time: Double) {
@@ -298,7 +345,7 @@ final class LaneFrameFeeder {
         guard let track = asset.tracks(withMediaType: .video).first else { return }
         let comp = AVMutableVideoComposition(propertiesOf: asset)
         // HDR export: keep the clip's own colour (the composition carries its HLG / PQ properties), 10-bit.
-        let settings: [String: Any] = hdr ? [
+        var settings: [String: Any] = hdr ? [
             kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange,
         ] : [
             kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
@@ -309,6 +356,17 @@ final class LaneFrameFeeder {
                 AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2,
             ],
         ]
+        var plainSettings: [String: Any] = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+        ]
+        if metalCompatible {
+            let bufferOptions: [String: Any] = [
+                kCVPixelBufferIOSurfacePropertiesKey as String: [:] as [String: Any],
+                kCVPixelBufferMetalCompatibilityKey as String: true,
+            ]
+            settings.merge(bufferOptions) { _, new in new }
+            plainSettings.merge(bufferOptions) { _, new in new }
+        }
         guard let r = try? AVAssetReader(asset: asset) else { return }
         let out = AVAssetReaderVideoCompositionOutput(videoTracks: [track], videoSettings: settings)
         out.videoComposition = comp
@@ -316,7 +374,7 @@ final class LaneFrameFeeder {
         guard r.canAdd(out) else {
             // Colour conversion not available for this clip: read it plainly.
             let plain = AVAssetReaderVideoCompositionOutput(
-                videoTracks: [track], videoSettings: [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA]
+                videoTracks: [track], videoSettings: plainSettings
             )
             plain.videoComposition = comp
             if r.canAdd(plain) { r.add(plain); output = plain }
@@ -332,16 +390,19 @@ final class LaneFrameFeeder {
         output = out
     }
 
-    private func readNext() -> (CGImage, Double)? {
+    private func readNext() -> TimedFrame? {
         guard let output, let sb = output.copyNextSampleBuffer(), let pb = CMSampleBufferGetImageBuffer(sb) else { return nil }
-        if hdr {
-            guard let img = hdrImage(pb) else { return nil }
-            return (img, CMSampleBufferGetPresentationTimeStamp(sb).seconds)
-        }
-        var cg: CGImage?
-        VTCreateCGImageFromCVPixelBuffer(pb, options: nil, imageOut: &cg)
-        guard let img = cg else { return nil }
-        return (img, CMSampleBufferGetPresentationTimeStamp(sb).seconds)
+        let pts = CMSampleBufferGetPresentationTimeStamp(sb).seconds
+        if metalCompatible { return TimedFrame(source: .buffer(pb), pts: pts) }
+        guard let image = makeImage(pb) else { return nil }
+        return TimedFrame(source: .image(image), pts: pts)
+    }
+
+    private func makeImage(_ pb: CVPixelBuffer) -> CGImage? {
+        if hdr { return hdrImage(pb) }
+        var image: CGImage?
+        VTCreateCGImageFromCVPixelBuffer(pb, options: nil, imageOut: &image)
+        return image
     }
 
     /// Core Image reads the buffer's colour tags (HLG / PQ / SDR) and linearises it; values above 1.0 are highlights.
