@@ -4032,6 +4032,16 @@
         }
       }
     },
+    "%@ motion template, %lld photos" : {
+      "localizations" : {
+        "en-US" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ motion template, %2$lld photos"
+          }
+        }
+      }
+    },
     "%@ plan · ends %@." : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -9532,6 +9542,16 @@
         }
       },
       "shouldTranslate" : false
+    },
+    "%lld · %@s" : {
+      "localizations" : {
+        "en-US" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld · %2$@s"
+          }
+        }
+      }
     },
     "%lld × %lld each" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -22777,6 +22797,9 @@
         }
       }
     },
+    "Add a scene" : {
+
+    },
     "Add a video to control its sound and add background music." : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -27962,6 +27985,9 @@
         }
       }
     },
+    "Adds a copy of this scene after it" : {
+
+    },
     "Adjust" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -29486,6 +29512,9 @@
           }
         }
       }
+    },
+    "After" : {
+
     },
     "AFTER" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -32231,6 +32260,9 @@
           }
         }
       }
+    },
+    "Animate" : {
+
     },
     "Anniversary" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -36196,6 +36228,9 @@
           }
         }
       }
+    },
+    "Before" : {
+
     },
     "BEFORE" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -69162,6 +69197,9 @@
         }
       }
     },
+    "Cut" : {
+
+    },
     "Cut the video, choose its part, and set its sound and background music" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -74347,6 +74385,9 @@
         }
       }
     },
+    "Delete scene" : {
+
+    },
     "Delete this collage?" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -75871,6 +75912,9 @@
           }
         }
       }
+    },
+    "developed today" : {
+
     },
     "Diary" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -80751,6 +80795,12 @@
           }
         }
       }
+    },
+    "Drift" : {
+
+    },
+    "Drop" : {
+
     },
     "Drop to place on top" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -88987,6 +89037,9 @@
         }
       }
     },
+    "Faster" : {
+
+    },
     "Feature tour" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -91426,6 +91479,9 @@
           }
         }
       }
+    },
+    "Film reel" : {
+
     },
     "Film roll" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -117058,6 +117114,9 @@
         }
       }
     },
+    "How the scene's pictures are laid out (pick its pictures in Pictures)" : {
+
+    },
     "How to delete your data" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -120107,6 +120166,9 @@
           }
         }
       }
+    },
+    "it all adds up" : {
+
     },
     "It is removed from My Library. A copy you saved to Photos is not affected." : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -132624,6 +132686,9 @@
       },
       "shouldTranslate" : false
     },
+    "Make it still" : {
+
+    },
     "Make photo and video collages with no ads, and help a tiny team keep the app going." : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -139944,6 +140009,9 @@
         }
       }
     },
+    "More" : {
+
+    },
     "More clip options" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -140858,6 +140926,18 @@
           }
         }
       }
+    },
+    "Motion" : {
+
+    },
+    "Motion templates" : {
+
+    },
+    "Move scene earlier" : {
+
+    },
+    "Move scene later" : {
+
     },
     "Move the playhead a little further from the clip edge." : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -147263,6 +147343,9 @@
           }
         }
       }
+    },
+    "New pictures arrive" : {
+
     },
     "New Year" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -168309,6 +168392,9 @@
         }
       }
     },
+    "Photos move while the scene plays (videos play as they are)" : {
+
+    },
     "Photos on top have the same tools as pictures in cells: change, rotate, flip, crop and zoom." : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -170444,6 +170530,19 @@
         }
       }
     },
+    "Picture %lld, in place %lld" : {
+      "localizations" : {
+        "en-US" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Picture %1$lld, in place %2$lld"
+          }
+        }
+      }
+    },
+    "Picture %lld, not in this scene" : {
+
+    },
     "Picture collage, %@" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -171053,6 +171152,9 @@
           }
         }
       }
+    },
+    "Pictures" : {
+
     },
     "Pictures cross the edges of your slides, so people keep swiping. Up to 20 photos, slides added for you." : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -173799,6 +173901,9 @@
         }
       }
     },
+    "Pop" : {
+
+    },
     "Post 4:5" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -176238,6 +176343,9 @@
           }
         }
       }
+    },
+    "Print drop" : {
+
     },
     "Print wall" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -189060,6 +189168,9 @@
         }
       }
     },
+    "Rise" : {
+
+    },
     "roll 01" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -195161,6 +195272,29 @@
         }
       }
     },
+    "Scene %lld of %lld" : {
+      "localizations" : {
+        "en-US" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Scene %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "Scene %lld, %@ seconds" : {
+      "localizations" : {
+        "en-US" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Scene %1$lld, %2$@ seconds"
+          }
+        }
+      }
+    },
+    "Scene length" : {
+
+    },
     "Scrapbook" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -196990,6 +197124,9 @@
           }
         }
       }
+    },
+    "see you next time" : {
+
     },
     "SEQUENCE" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -201566,6 +201703,9 @@
         }
       }
     },
+    "Shuffle" : {
+
+    },
     "Side by side" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -203701,6 +203841,9 @@
         }
       }
     },
+    "Slide" : {
+
+    },
     "Slide %lld" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -204006,6 +204149,9 @@
         }
       }
     },
+    "Slide up" : {
+
+    },
     "Slides" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -204310,6 +204456,9 @@
           }
         }
       }
+    },
+    "Slower" : {
+
     },
     "Small first & last" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -208275,6 +208424,9 @@
           }
         }
       }
+    },
+    "Split open" : {
+
     },
     "Split works on video clips. Trim the music with its ends instead." : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -214375,6 +214527,9 @@
           }
         }
       }
+    },
+    "Still" : {
+
     },
     "Still (PNG)" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -224441,6 +224596,9 @@
         }
       }
     },
+    "Tap pictures to show or hide them in this scene; numbers are their places" : {
+
+    },
     "Tap to fill a cell · hold and drag onto the design to put it on top" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -232370,6 +232528,9 @@
           }
         }
       }
+    },
+    "The first scene starts the video, so it has no transition in" : {
+
     },
     "the good days" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -242747,6 +242908,12 @@
         }
       }
     },
+    "Timing" : {
+
+    },
+    "Together" : {
+
+    },
     "Torn" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -244576,6 +244743,9 @@
           }
         }
       }
+    },
+    "Transition" : {
+
     },
     "Travel" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -261965,6 +262135,9 @@
         }
       }
     },
+    "weekend\nrecap" : {
+
+    },
     "WEEKEND EDITION · NO. 12" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -262269,6 +262442,9 @@
           }
         }
       }
+    },
+    "Weekend recap" : {
+
     },
     "Welcome to Collage Magic" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
@@ -270505,6 +270681,9 @@
         }
       }
     },
+    "Your pictures move through scenes, saved as a video" : {
+
+    },
     "Your privacy" : {
       "comment" : "Machine translation draft; review in context before release.\nMachine translation draft; review in context before release.\nMachine translation draft; review in context before release.",
       "localizations" : {
@@ -272639,6 +272818,12 @@
           }
         }
       }
+    },
+    "Zoom in" : {
+
+    },
+    "Zoom out" : {
+
     }
   },
   "version" : "1.0"
