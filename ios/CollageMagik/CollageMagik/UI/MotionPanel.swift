@@ -256,7 +256,8 @@ struct MotionPanel: View {
                                             ?? String(localized: "Picture \(slot + 1), not in this scene"))
                     }
                 }
-                .padding(.vertical, 2)
+                .padding(.top, 7)
+                .padding(.trailing, 6)
             }
             .scrollClipDisabled()
         }

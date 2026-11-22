@@ -16,6 +16,8 @@ extension CollageStore {
         guard !isCarousel else { return }
         project.motion = Motion.starter(count: project.cellCount, layoutId: project.layoutId)
         project.cellSizes = nil
+        // a fresh motion: no caption belongs to a scene yet
+        for i in project.captions.indices { project.captions[i].scene = nil }
         for i in project.lanes.indices { project.lanes[i].loop = true }
         selectedCell = nil
         swapFrom = nil
@@ -27,13 +29,30 @@ extension CollageStore {
     /// Back to a still collage, laid out like the scene on screen when it has every picture, otherwise in the first
     /// layout for that many.
     func makeStill() {
-        guard let m = project.motion else { return }
-        let scene = m.scenes.indices.contains(currentScene) ? m.scenes[currentScene] : nil
+        guard let m = project.motion, !m.scenes.isEmpty else { return }
+        let all = Array(0..<project.cellCount)
+        // the scene on screen when it shows every picture, otherwise the last scene
+        let k = m.scenes.indices.contains(currentScene) && Set(m.scenes[currentScene].slots) == Set(all) ? currentScene : m.scenes.count - 1
+        let scene = m.scenes[k]
         project.motion = nil
-        if let scene, scene.slots == Array(0..<project.cellCount) {
+        if Set(scene.slots) == Set(all) {
+            // the still layout puts the pictures in slot order, so take the scene's layout only when it matches that
             project.layoutId = scene.layoutId
+            if scene.slots != all {
+                var cells = project.cells
+                for (place, slot) in scene.slots.enumerated() { cells[place] = project.cells[slot] }
+                project.cells = cells
+            }
         } else if layout(byId: project.layoutId).count != project.cellCount {
             project.layoutId = defaultLayout(for: project.cellCount).id
+        }
+        // captions of that scene stay (shown all the time now); other scenes' captions go (Undo brings them back)
+        project.captions = project.captions.compactMap { c in
+            guard let sc = c.scene else { return c }
+            guard sc == k else { return nil }
+            var c = c
+            c.scene = nil
+            return c
         }
         playback.seek(to: 0)
         playback.projectChanged()
@@ -59,6 +78,7 @@ extension CollageStore {
     func addScene() {
         let k = currentScene
         guard motionScenes.count < maxScenes, motionScenes.indices.contains(k) else { return }
+        renumberCaptions { $0 > k ? $0 + 1 : $0 }
         editMotion(focus: k + 1) { m in
             var copy = m.scenes[k]
             copy.transition = .fade
@@ -67,9 +87,18 @@ extension CollageStore {
         }
     }
 
+    /// Keeps captions with their scene when scenes are added, moved or deleted.
+    private func renumberCaptions(_ map: (Int) -> Int) {
+        for i in project.captions.indices {
+            if let sc = project.captions[i].scene { project.captions[i].scene = map(sc) }
+        }
+    }
+
     func deleteScene() {
         let k = currentScene
         guard motionScenes.count > 1, motionScenes.indices.contains(k) else { return }
+        // the deleted scene's captions go to the scene before it (or the new first scene)
+        renumberCaptions { $0 == k ? max(0, k - 1) : ($0 > k ? $0 - 1 : $0) }
         editMotion(focus: max(0, k - 1)) { m in m.scenes.remove(at: k) }
     }
 
@@ -77,6 +106,7 @@ extension CollageStore {
     func moveScene(by d: Int) {
         let k = currentScene, to = k + d
         guard motionScenes.indices.contains(k), motionScenes.indices.contains(to) else { return }
+        renumberCaptions { $0 == k ? to : ($0 == to ? k : $0) }
         editMotion(focus: to) { m in m.scenes.swapAt(k, to) }
     }
 
@@ -114,6 +144,11 @@ extension CollageStore {
     /// Keeps the scenes in step when the number of slots changes (pictures added or removed).
     func fitMotion(previousCount: Int) {
         guard project.isMotion, let m = project.motion else { return }
+        // scenes left with no pictures go: their captions move to the scene before
+        let kept = m.scenes.indices.filter { m.scenes[$0].slots.contains { $0 < project.cellCount } }
+        if kept.count != m.scenes.count, !kept.isEmpty {
+            renumberCaptions { sc in max(0, (kept.lastIndex { $0 <= sc }) ?? 0) }
+        }
         project.motion = m.fitted(to: project.cellCount, previous: previousCount)
         if project.motion != nil { for i in project.lanes.indices { project.lanes[i].loop = true } }
     }
