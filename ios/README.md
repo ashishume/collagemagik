@@ -259,7 +259,7 @@ right. AVI, MKV, WebM, MPEG-1/2 can't be decoded by iOS: the app says so and ask
 |---|---|
 | `Model/` | Layouts, geometry, timeline maths (ported 1:1 from the web `src/`), the `CollageStore` |
 | `Media/` | Import and validation, live playback engine (one `AVPlayer` per video kept in step with the timeline), small preview copies of big or HDR videos (`PreviewCopies`: 720p SDR, made in the background; exports use the originals) |
-| `Export/` | Frame renderer (Core Graphics), per-clip frame reader, audio mix, MP4 writer |
+| `Export/` | Metal-backed Core Image video composer, Core Graphics still and fallback renderer, per-clip reader, audio mix, MP4 writer |
 | `UI/` | Stage, panels, timeline, crop editor, export sheet, glass components |
 | `Ads/` | Google AdMob, the ads on/off switch, ad unit IDs, install tracking for Google Ads (Firebase) and Meta (Facebook SDK) |
 | `Store/` | Collage Magic Pro: StoreKit 2 purchases and the Pro page |
@@ -279,11 +279,34 @@ All are ignored in release builds.
 | `CM_TAB=layout`, `CM_SELECT=i`, `CM_CROP=i`, `CM_PART=1` | Opens a tab, selects a cell, opens crop or Choose part |
 | `CM_CAPTIONS=1` | Adds sample captions |
 | `CM_EXPORT=video\|png\|ultra`, `CM_OUT=/path` | Exports without the UI |
+| `CM_EXPORT_ENGINE=cpu\|gpu` | Chooses a video export engine for comparison |
+| `CM_EXPORT_VERIFY_TIMESTAMPS=1` | Checks the GPU reader's selected timestamps against the CPU reader |
+| `CM_EXPORT_FORCE_GPU_FAILURE=1` | Exercises CPU fallback before the first encoded frame |
+| `CM_FIT=i`, `CM_ROTATE=i`, `CM_FLIP=i`, `CM_ANGLE=i:deg` | Applies fit with blurred bars, a 90° turn, a flip, or straightening to the indexed cell |
 | `CM_PRO=1` / `CM_PRO=0` | Forces Pro on (no ads, no consent or tracking prompt) or off |
 | `CM_PAYWALL=1`, `CM_PRO_MOCK=1` | Opens the Pro page; shows it with placeholder plans |
 | `CM_CONSENT_EEA=1`, `CM_LIVE_ADS=1` | Tests the EU consent form; uses the live ad units (don't tap them) |
 
 If the simulator shows "Apple Account Verification" (StoreKit asking for the sandbox account), tap Not Now.
+
+### Verify video export engines
+
+Video export composes decoded frames with Metal-backed Core Image. It reuses Core Graphics artwork for print
+frames, shadows, fit bars, captions and other static elements. If GPU setup or the first render fails, video
+export retries that frame with the Core Graphics renderer. PNG and carousel JPEG export use Core Graphics.
+
+Install a Debug build on a booted simulator, then run the comparison with FFmpeg and FFprobe installed.
+
+```bash
+SIM_UDID=<device-udid> ios/scripts/compare_export_engines.sh compare
+SIM_UDID=<device-udid> ios/scripts/compare_export_engines.sh compare '^(rounded|4k60-heavy|hdr)$'
+```
+
+The script writes each engine's resolution, frame rate, time, sampled process footprint and SSIM to
+`ios/docs/gpu-export-results.md`. Set `CM_COMPARE_REPORT` to write to another file or `CM_COMPARE_DIR` to retain
+artifacts elsewhere. The `baseline` mode records CPU outputs for `cpu-parity`, which compares against them after
+a renderer refactor. Use `against-baseline` to compare GPU output with those same saved CPU files.
+`CM_EXPORT` lines in the simulator log identify the engine that actually produced the file.
 
 ## Localization
 

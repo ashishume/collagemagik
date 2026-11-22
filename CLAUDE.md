@@ -45,6 +45,7 @@ SIMCTL_CHILD_CM_PRO=1 SIMCTL_CHILD_CM_AUTOLOAD=a.jpg,b.jpg xcrun simctl launch b
 | `CM_TAB=layout`, `CM_SELECT=i`, `CM_CROP=i`, `CM_PART=1` | Opens a tab, selects a cell, opens crop or Choose part |
 | `CM_CAPTIONS=1` | Adds sample captions |
 | `CM_EXPORT=video\|png\|ultra`, `CM_OUT=/path` | Exports without the UI |
+| `CM_EXPORT_ENGINE=cpu\|gpu` | Selects the video export engine and logs timing and peak memory as `CM_EXPORT` |
 | `CM_PRO=1` / `CM_PRO=0` | Forces Pro on (no ads, no consent or tracking prompt) or off |
 | `CM_PAYWALL=1`, `CM_PRO_MOCK=1` | Opens the Pro page; shows it with placeholder plans |
 | `CM_CONSENT_EEA=1`, `CM_LIVE_ADS=1` | Tests the EU consent form; uses live ad units (don't tap them) |
@@ -54,6 +55,9 @@ SIMCTL_CHILD_CM_PRO=1 SIMCTL_CHILD_CM_AUTOLOAD=a.jpg,b.jpg xcrun simctl launch b
 | `CM_SYNC_LOG=1` | Logs when hidden videos pause and when players are jumped back into step (`CM_SYNC hide/jump`) |
 
 If the simulator shows "Apple Account Verification" (StoreKit sandbox), tap Not Now.
+
+Run `SIM_UDID=<booted-device> ios/scripts/compare_export_engines.sh compare` with a Debug build installed and
+FFmpeg available. The script measures both engines, checks per-frame SSIM and inspects the HDR output tags.
 
 ## Architecture
 
@@ -85,8 +89,9 @@ Code is under `ios/CollageMagik/CollageMagik/`.
 - **Preview copies**: `Media/PreviewCopies.swift` makes a 720p SDR copy of every video bigger than 720p or HDR, in the
   background, and the live preview (and Choose part) switch to it when it's ready. Exports, thumbnails and drafts
   always read the original file. Copies sit in `tmp/PreviewCopies/` and are cleared at launch.
-- **Export**: `Export/CollageRenderer.swift` draws a frame with Core Graphics from an `ExportSnapshot` (copied out of
-  the store so export runs off the main thread); `LaneFrameFeeder` reads each video lane's frames in order. HDR clips
+- **Export**: `Export/GPUFrameComposer.swift` uses Metal-backed Core Image to compose video frames. It shares print
+  drawing with the Core Graphics renderer in `Export/CollageRenderer.swift`, which handles stills and video fallback.
+  Both consume an `ExportSnapshot` and share `LaneFrameFeeder` for timeline frame selection. HDR clips
   convert to SDR BT.709, unless HDR export is on (10-bit HEVC HLG via the `HDR` helpers). `Export/Exporter.swift`
   (`CollageExporter`) writes MP4 (H.264 + AAC, HD or 4K, 30/60 fps), PNG, or one JPEG per carousel slide
   (`exportSlides`), and saves to Photos with add-only access.

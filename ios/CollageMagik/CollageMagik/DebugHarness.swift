@@ -205,9 +205,13 @@ enum DebugHarness {
                     try? FileManager.default.removeItem(atPath: out + ".mp4")
                     try FileManager.default.copyItem(at: url, to: URL(fileURLWithPath: out + ".mp4"))
                 }
-                NSLog("CM_DEBUG export DONE in %.1fs -> %@", Date().timeIntervalSince(start), out)
+                let line = String(format: "CM_DEBUG export DONE in %.1fs -> %@", Date().timeIntervalSince(start), out)
+                NSLog("%@", line)
+                if let path = env["CM_EXPORT_STATUS"] { try? line.write(toFile: path, atomically: true, encoding: .utf8) }
             } catch {
-                NSLog("CM_DEBUG export FAILED: %@", error.localizedDescription)
+                let line = "CM_DEBUG export FAILED: \(error)"
+                NSLog("%@", line)
+                if let path = env["CM_EXPORT_STATUS"] { try? line.write(toFile: path, atomically: true, encoding: .utf8) }
             }
         }
         if env["CM_DUP"] == "1" { store.duplicateSelectedClip() }

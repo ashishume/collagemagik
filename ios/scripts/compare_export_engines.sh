@@ -11,7 +11,7 @@ selection=${2:-}
 bundle=com.axpo.collagemagik
 mkdir -p "$work"
 work=$(cd "$work" && pwd)
-case "$mode" in baseline|compare|cpu-parity) ;; *) echo "Usage: $0 [baseline|compare|cpu-parity] [case regex]" >&2; exit 2 ;; esac
+case "$mode" in baseline|compare|against-baseline|cpu-parity) ;; *) echo "Usage: $0 [baseline|compare|against-baseline|cpu-parity] [case regex]" >&2; exit 2 ;; esac
 
 if [[ ! -e "$report" ]]; then
     printf '| Case | Engine | Resolution/fps | Seconds | Peak MB | SSIM overall | SSIM min frame |\n|---|---|---|---:|---:|---:|---:|\n' > "$report"
@@ -49,26 +49,32 @@ render() {
     shift 3
     local output="$work/$name/$stem"
     mkdir -p "$work/$name"
-    rm -f "$output.mp4" "$output.log" "$output.metrics"
+    rm -f "$output.mp4" "$output.log" "$output.metrics" "$output.status"
     xcrun simctl terminate "$SIM_UDID" "$bundle" 2>/dev/null || true
-    local vars=(SIMCTL_CHILD_CM_PRO=1 SIMCTL_CHILD_CM_NO_PREVIEW_COPY=1 "SIMCTL_CHILD_CM_OUT=$output" "SIMCTL_CHILD_CM_EXPORT_ENGINE=$engine")
+    local vars=(SIMCTL_CHILD_CM_PRO=1 SIMCTL_CHILD_CM_NO_PREVIEW_COPY=1 "SIMCTL_CHILD_CM_OUT=$output" "SIMCTL_CHILD_CM_EXPORT_ENGINE=$engine"
+        "SIMCTL_CHILD_CM_EXPORT_METRICS=$output.metrics" "SIMCTL_CHILD_CM_EXPORT_STATUS=$output.status")
     local arg launch pid
     for arg in "$@"; do vars+=("SIMCTL_CHILD_$arg"); done
-    launch=$(env "${vars[@]}" xcrun simctl launch --stderr "$output.log" "$SIM_UDID" "$bundle" -AppleLanguages '(en-US)' -cm.tour.seen.v1 YES)
+    launch=$(env "${vars[@]}" xcrun simctl launch --stderr="$output.log" "$SIM_UDID" "$bundle" -AppleLanguages '(en-US)' -cm.tour.seen.v1 YES) || return 1
     pid=${launch##* }
-    local started=$SECONDS line=''
+    local started=$SECONDS line='' logs=''
     while (( SECONDS - started < ${CM_COMPARE_TIMEOUT:-600} )); do
         if [[ -s "$output.mp4" ]] && ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of csv=p=0 "$output.mp4" >/dev/null 2>&1; then
-            if [[ -f "$output.log" ]]; then line=$(sed -n 's/.*\(CM_EXPORT engine=.*fps=.*\)/\1/p' "$output.log" | tail -1); fi
+            if [[ -s "$output.status" && -s "$output.metrics" ]]; then
+                line=$(cat "$output.metrics")
+            fi
             if [[ -z "$line" ]]; then
-                line=$(xcrun simctl spawn "$SIM_UDID" log show --last 10m --style compact \
-                    --predicate "processIdentifier == $pid AND eventMessage BEGINSWITH 'CM_EXPORT engine='" |
-                    sed -n 's/.*\(CM_EXPORT engine=.*fps=.*\)/\1/p' | tail -1)
+                logs=$(xcrun simctl spawn "$SIM_UDID" log show --last 10m --style compact \
+                    --predicate "processIdentifier == $pid AND (eventMessage BEGINSWITH 'CM_EXPORT engine=' OR eventMessage BEGINSWITH 'CM_DEBUG export DONE')")
+                if [[ "$logs" == *'CM_DEBUG export DONE'* ]]; then
+                    line=$(sed -n 's/.*\(CM_EXPORT engine=.*fps=.*\)/\1/p' <<< "$logs" | tail -1)
+                fi
             fi
             [[ -z "$line" ]] || break
         fi
-        if [[ -f "$output.log" ]] && rg -q 'CM_DEBUG export FAILED' "$output.log"; then
-            rg 'CM_DEBUG export FAILED' "$output.log" >&2
+        if [[ -f "$output.status" ]] && rg -q 'CM_DEBUG export FAILED' "$output.status"; then
+            cat "$output.status" >&2
+            printf '\n' >&2
             return 1
         fi
         sleep 1
@@ -85,32 +91,73 @@ row() {
     ' "$work/$name/$stem.metrics" >> "$report"
 }
 
-run() {
+quality_failed=0
+run_case() {
     local name=$1
     shift
     if [[ -n "$selection" && ! "$name" =~ $selection ]]; then return; fi
     echo "$mode $name"
     local folder="$work/$name" reference=baseline actual=gpu
     case "$mode" in
-        baseline) render "$name" cpu baseline "$@"; row "$name" baseline; return ;;
-        compare) render "$name" cpu cpu "$@"; reference=cpu; render "$name" gpu gpu "$@" ;;
-        cpu-parity) actual=cpu; render "$name" cpu cpu "$@" ;;
+        baseline) render "$name" cpu baseline "$@" && row "$name" baseline; return ;;
+        compare)
+            local cpu_ready=0
+            reference=cpu
+            if render "$name" cpu cpu "$@"; then
+                row "$name" "$reference" || return 1
+                cpu_ready=1
+            fi
+            render "$name" gpu gpu "$@" || return 1
+            if [[ "$cpu_ready" != 1 ]]; then
+                row "$name" gpu
+                return 1
+            fi
+            ;;
+        against-baseline) render "$name" gpu gpu "$@" || return 1 ;;
+        cpu-parity) actual=cpu; render "$name" cpu cpu "$@" || return 1 ;;
     esac
     local frames_ref frames_actual
-    frames_ref=$(ffprobe -v error -select_streams v:0 -show_entries stream=nb_frames -of csv=p=0 "$folder/$reference.mp4")
-    frames_actual=$(ffprobe -v error -select_streams v:0 -show_entries stream=nb_frames -of csv=p=0 "$folder/$actual.mp4")
+    frames_ref=$(ffprobe -v error -select_streams v:0 -show_entries stream=nb_frames -of csv=p=0 "$folder/$reference.mp4") || return 1
+    frames_actual=$(ffprobe -v error -select_streams v:0 -show_entries stream=nb_frames -of csv=p=0 "$folder/$actual.mp4") || return 1
     [[ "$frames_ref" = "$frames_actual" && "$frames_actual" =~ ^[0-9]+$ ]] || {
         echo "$name frame count differs ($frames_ref vs $frames_actual)" >&2; return 1;
     }
-    (cd "$folder" && ffmpeg -hide_banner -i "$reference.mp4" -i "$actual.mp4" \
-        -lavfi "ssim=stats_file=$mode.ssim" -an -f null - 2>"$mode.ffmpeg.log")
+    (cd "$folder" && ffmpeg -hide_banner -nostats -i "$reference.mp4" -i "$actual.mp4" \
+        -lavfi "ssim=stats_file=$mode.ssim" -an -f null - 2>"$mode.ffmpeg.log") || return 1
     local overall minimum
     overall=$(sed -n 's/.* All:\([0-9.]*\).*/\1/p' "$folder/$mode.ffmpeg.log" | tail -1)
     minimum=$(awk -F'All:' 'NF>1 { split($2, a, " "); if (!n++ || a[1]+0<min) min=a[1]+0 }
-        END { if (n) printf "%.6f", min; else exit 1 }' "$folder/$mode.ssim")
-    [[ "$(wc -l < "$folder/$mode.ssim" | tr -d ' ')" = "$frames_actual" ]]
-    if [[ "$mode" == compare ]]; then row "$name" "$reference"; fi
-    row "$name" "$actual" "$overall" "$minimum"
+        END { if (n) printf "%.6f", min; else exit 1 }' "$folder/$mode.ssim") || return 1
+    if [[ -z "$overall" || "$(wc -l < "$folder/$mode.ssim" | tr -d ' ')" != "$frames_actual" ]]; then
+        echo "$name SSIM did not cover all $frames_actual frames" >&2
+        return 1
+    fi
+    row "$name" "$actual" "$overall" "$minimum" || return 1
+    if [[ "$actual" == gpu ]]; then
+        if ! awk -v all="$overall" -v min="$minimum" 'BEGIN { exit !(all >= .985 && min >= .96) }' ||
+           ! rg -q '^CM_EXPORT engine=gpu ' "$folder/$actual.metrics"; then
+            echo "$name missed the SSIM or GPU-engine requirement" >&2
+            quality_failed=1
+        fi
+        if [[ "$name" == 4k60-heavy ]]; then
+            if ! awk 'NR==1 { split($6,s,"="); split($7,m,"="); cpuTime=s[2]; cpuMB=m[2]; next }
+                { split($6,s,"="); split($7,m,"="); exit !(s[2] <= .4 * cpuTime && m[2] <= .6 * cpuMB) }' \
+                "$folder/$reference.metrics" "$folder/$actual.metrics"; then
+                echo "$name missed the time or memory target" >&2
+                quality_failed=1
+            fi
+        fi
+    elif [[ "$mode" == cpu-parity && ( "$overall" != 1.000000 || "$minimum" != 1.000000 ) ]]; then
+        echo "$name CPU output differs from the baseline" >&2
+        quality_failed=1
+    fi
+}
+
+run() {
+    if ! run_case "$@"; then
+        echo "$1 failed. See $work/$1 for artifacts." >&2
+        quality_failed=1
+    fi
 }
 
 run rounded CM_EXPORT=video "CM_BATCH=$a,$b,$c" CM_LAYOUT_ID=3-big-top CM_GAP=14 CM_RADIUS=18
@@ -128,7 +175,7 @@ while IFS= read -r template; do
 done < <(sed -n 's/.*id: "\([^"]*\)",.*category: \.motion,.*/\1/p' ios/CollageMagik/CollageMagik/Model/Templates.swift)
 run 4k60-heavy CM_EXPORT=ultra CM_FPS=60 CM_START_TEMPLATE=living-night "CM_BATCH=$large,$hdr,$small"
 run hdr CM_HDR=1 CM_EXPORT=ultra "CM_BATCH=$hdr,$photos"
-if [[ -s "$work/hdr/gpu.mp4" && "$mode" == compare && ( -z "$selection" || hdr =~ $selection ) ]]; then
+if [[ -s "$work/hdr/gpu.mp4" && ( "$mode" == compare || "$mode" == against-baseline ) && ( -z "$selection" || hdr =~ $selection ) ]]; then
     tags=$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,pix_fmt,color_transfer,color_primaries \
         -of default=noprint_wrappers=1 "$work/hdr/gpu.mp4")
     printf '%s\n' "$tags"
@@ -136,3 +183,4 @@ if [[ -s "$work/hdr/gpu.mp4" && "$mode" == compare && ( -z "$selection" || hdr =
         [[ "$tags" == *"$tag"* ]] || exit 1
     done
 fi
+exit "$quality_failed"

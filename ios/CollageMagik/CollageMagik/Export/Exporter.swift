@@ -26,8 +26,13 @@ private final class ExportMeasurement: @unchecked Sendable {
 
     func finish(engine: String, width: Int, height: Int, fps: Int, frames: Int) {
         sample()
-        NSLog("CM_EXPORT engine=%@ %d×%d fps=%d frames=%d seconds=%.3f peakMB=%.1f",
-              engine, width, height, fps, frames, CACurrentMediaTime() - started, Double(peakBytes) / 1_048_576)
+        let line = String(format: "CM_EXPORT engine=%@ %d×%d fps=%d frames=%d seconds=%.3f peakMB=%.1f",
+                          locale: Locale(identifier: "en_US_POSIX"),
+                          engine, width, height, fps, frames, CACurrentMediaTime() - started, Double(peakBytes) / 1_048_576)
+        NSLog("%@", line)
+        if let path = ProcessInfo.processInfo.environment["CM_EXPORT_METRICS"] {
+            try? line.write(toFile: path, atomically: true, encoding: .utf8)
+        }
     }
 }
 #endif
@@ -98,7 +103,7 @@ private final class VideoExportFrames: @unchecked Sendable {
         case gpu(GPUFrameComposer)
     }
 
-    private let makeCPU: () throws -> CPUVideoComposer
+    private var makeCPU: (() throws -> CPUVideoComposer)?
     private let makeFeeders: (Bool) -> [String: LaneFrameFeeder]
     private let hdr: Bool
     private var composer: Composer
@@ -120,7 +125,7 @@ private final class VideoExportFrames: @unchecked Sendable {
          width: Int, height: Int, hdr: Bool, makeFeeders: @escaping (Bool) -> [String: LaneFrameFeeder]) throws {
         self.makeFeeders = makeFeeders
         self.hdr = hdr
-        makeCPU = {
+        let makeCPU = {
             try CPUVideoComposer(snapshot: snapshot, photos: photos, captions: captions, width: width, height: height, hdr: hdr)
         }
         if engine == .gpu {
@@ -128,6 +133,7 @@ private final class VideoExportFrames: @unchecked Sendable {
                 composer = .gpu(try GPUFrameComposer(snapshot: snapshot, photos: photos, captions: captions,
                                                      width: width, height: height, hdr: hdr))
                 feeders = makeFeeders(true)
+                self.makeCPU = makeCPU
                 #if DEBUG
                 if ProcessInfo.processInfo.environment["CM_EXPORT_VERIFY_TIMESTAMPS"] == "1" {
                     referenceFeeders = makeFeeders(false)
@@ -163,12 +169,14 @@ private final class VideoExportFrames: @unchecked Sendable {
                     if let pixelBuffer { return CIImage(cvPixelBuffer: pixelBuffer) }
                     return feeder.heldImage.map { CIImage(cgImage: $0) }
                 }
+                if firstFrame { makeCPU = nil }
             } catch {
-                guard firstFrame else { throw error }
+                guard firstFrame, let makeCPU else { throw error }
                 Self.logFallback(error)
                 let cpu = try makeCPU()
                 composer = .cpu(cpu)
                 feeders = makeFeeders(false)
+                self.makeCPU = nil
                 #if DEBUG
                 referenceFeeders.removeAll()
                 #endif
@@ -198,12 +206,15 @@ private struct VideoEncoder: @unchecked Sendable {
     let adaptor: AVAssetWriterInputPixelBufferAdaptor
 }
 
-private final class ExportFrameFailure: @unchecked Sendable {
+private final class ExportQueueState: @unchecked Sendable {
     private let lock = NSLock()
     private var error: Error?
+    private var finished = false
 
-    var value: Error? { lock.withLock { error } }
-    func set(_ error: Error) { lock.withLock { self.error = error } }
+    var failure: Error? { lock.withLock { error } }
+    var isFinished: Bool { lock.withLock { finished } }
+    func fail(_ error: Error) { lock.withLock { self.error = error } }
+    func finish() { lock.withLock { finished = true } }
 }
 
 enum ExportQuality: String, CaseIterable, Identifiable {
@@ -462,30 +473,30 @@ final class CollageExporter: @unchecked Sendable {
         let audioQueue = DispatchQueue(label: "collagemagik.export.audio")
         let encoder = VideoEncoder(writer: writer, input: vInput, adaptor: adaptor)
         var frameIndex = 0
-        let failure = ExportFrameFailure()
+        let queues = ExportQueueState()
 
         group.enter()
         vInput.requestMediaDataWhenReady(on: videoQueue) { [self] in
             while encoder.input.isReadyForMoreMediaData {
-                if isCancelled || failure.value != nil || frameIndex >= frameCount {
+                if isCancelled || queues.failure != nil || frameIndex >= frameCount {
                     encoder.input.markAsFinished()
                     group.leave()
                     return
                 }
                 autoreleasepool {
-                    guard let pool = encoder.adaptor.pixelBufferPool else { failure.set(ExportFailure(String(localized: "Couldn't allocate video memory."))); return }
+                    guard let pool = encoder.adaptor.pixelBufferPool else { queues.fail(ExportFailure(String(localized: "Couldn't allocate video memory."))); return }
                     var pbOut: CVPixelBuffer?
                     CVPixelBufferPoolCreatePixelBuffer(nil, pool, &pbOut)
-                    guard let pb = pbOut else { failure.set(ExportFailure(String(localized: "Couldn't allocate video memory."))); return }
+                    guard let pb = pbOut else { queues.fail(ExportFailure(String(localized: "Couldn't allocate video memory."))); return }
                     let t = Double(frameIndex) / Double(fps)
                     do {
                         try frames.render(at: t, to: pb, firstFrame: frameIndex == 0)
                     } catch {
-                        failure.set(error)
+                        queues.fail(error)
                         return
                     }
                     if !encoder.adaptor.append(pb, withPresentationTime: CMTime(value: CMTimeValue(frameIndex), timescale: CMTimeScale(fps))) {
-                        failure.set(encoder.writer.error ?? ExportFailure(String(localized: "The video encoder stopped.")))
+                        queues.fail(encoder.writer.error ?? ExportFailure(String(localized: "The video encoder stopped.")))
                         return
                     }
                     frameIndex += 1
@@ -501,7 +512,7 @@ final class CollageExporter: @unchecked Sendable {
             group.enter()
             aInput.requestMediaDataWhenReady(on: audioQueue) { [self] in
                 while aInput.isReadyForMoreMediaData {
-                    if isCancelled || failure.value != nil { aInput.markAsFinished(); group.leave(); return }
+                    if isCancelled || queues.failure != nil { aInput.markAsFinished(); group.leave(); return }
                     if let sb = aOutput.copyNextSampleBuffer() {
                         if !aInput.append(sb) { aInput.markAsFinished(); group.leave(); return }
                     } else {
@@ -513,19 +524,28 @@ final class CollageExporter: @unchecked Sendable {
             }
         }
 
-        await withCheckedContinuation { (c: CheckedContinuation<Void, Never>) in
-            group.notify(queue: .global()) { c.resume() }
+        // Writer failures can stop readiness callbacks altogether. Check its state while waiting so a failed
+        // encoder or cancelled job cannot leave the export waiting for a callback that will never arrive.
+        group.notify(queue: .global()) { queues.finish() }
+        while !queues.isFinished {
+            if isCancelled || Task.isCancelled || queues.failure != nil ||
+                writer.status == .failed || writer.status == .cancelled { break }
+            try? await Task.sleep(for: .milliseconds(25))
         }
 
-        if isCancelled {
-            writer.cancelWriting()
+        if isCancelled || Task.isCancelled {
+            if writer.status == .writing { writer.cancelWriting() }
             try? FileManager.default.removeItem(at: url)
             throw CancellationError()
         }
-        if let failure = failure.value {
-            writer.cancelWriting()
+        if let error = queues.failure ?? writer.error {
+            if writer.status == .writing { writer.cancelWriting() }
             try? FileManager.default.removeItem(at: url)
-            throw failure
+            throw error
+        }
+        guard writer.status == .writing else {
+            try? FileManager.default.removeItem(at: url)
+            throw ExportFailure(String(localized: "The export didn't finish."))
         }
         await writer.finishWriting()
         guard writer.status == .completed else {

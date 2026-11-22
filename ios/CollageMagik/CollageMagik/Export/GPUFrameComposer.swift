@@ -97,11 +97,11 @@ final class GPUFrameComposer: @unchecked Sendable {
             let edges = pose.frameEdges(i, outer, W: W)
             let picture = outer.inset(left: edges.side, top: edges.top, right: edges.side, bottom: edges.bottom)
             let frame = pose.frame(of: i)
-            let pieces = try printPieces(
+            guard let pieces = try printPieces(
                 index: i, outer: outer, picture: picture, radius: pose.pictureRadius(i, W: W),
                 frame: frame, color: pose.frameColor, edge: edges.side, unit: unit,
                 cell: cell, fitItem: media != nil && cell.fit ? item : nil
-            )
+            ) else { continue }
             var print = pieces.under
             if let item, let media {
                 let placed = Self.place(media, item: item, picture: picture, view: cell.view, height: H)
@@ -109,7 +109,7 @@ final class GPUFrameComposer: @unchecked Sendable {
                 let clipped: CIImage
                 if let mask = pieces.mask {
                     let clear = CIImage.empty().cropped(to: mask.extent)
-                    clipped = placed.applyingFilter("CIBlendWithAlphaMask", parameters: [
+                    clipped = placed.applyingFilter("CIBlendWithMask", parameters: [
                         kCIInputBackgroundImageKey: clear,
                         kCIInputMaskImageKey: mask,
                     ]).cropped(to: mask.extent)
@@ -144,10 +144,12 @@ final class GPUFrameComposer: @unchecked Sendable {
     private func printPieces(
         index: Int, outer: PxRect, picture: PxRect, radius: Double, frame: PhotoFrame,
         color: String, edge: Double, unit: Double, cell: CellState, fitItem: MediaItem?
-    ) throws -> PrintPieces {
+    ) throws -> PrintPieces? {
         let H = bounds.height
         let pad = Self.printPadding(outer, frame: frame, unit: unit)
-        let box = outer.cgRect.insetBy(dx: -pad, dy: -pad).integral
+        let padded = outer.cgRect.insetBy(dx: -pad, dy: -pad).integral
+        let box = outer.tilt == 0 ? padded.intersection(bounds) : padded
+        guard !box.isEmpty else { return nil }
         let key = PrintPieceCache.Key(
             index: index, frame: frame, color: color, fitBars: fitItem == nil ? nil : cell.fitBars,
             blurMedia: cell.fitBars == fitBlur ? fitItem?.id : nil,
@@ -180,11 +182,8 @@ final class GPUFrameComposer: @unchecked Sendable {
             break
         }
         if radius > 0 || frame.isShape || picture.cgRect != picture.cgRect.integral {
-            result.mask = try Self.raster(picture.cgRect.integral, height: H, hdr: false) { ctx in
-                ctx.setFillColor(UIColor.white.cgColor)
-                ctx.addPath(path)
-                ctx.fillPath()
-            }
+            let maskBox = picture.cgRect.integral.intersection(box)
+            if !maskBox.isEmpty { result.mask = try Self.rasterMask(path, box: maskBox, height: H) }
         }
         pieces.insert(result.shifted(to: CGPoint(x: -origin.x, y: -origin.y)), for: key, hdr: hdr)
         return result
@@ -210,6 +209,22 @@ final class GPUFrameComposer: @unchecked Sendable {
         guard let image = ctx.makeImage() else { throw SetupError.rasterAllocationFailed }
         let origin = bottomLeft(box, height: height).origin
         return CIImage(cgImage: image).transformed(by: CGAffineTransform(translationX: origin.x, y: origin.y))
+    }
+
+    /// Coverage is stored as one byte per pixel, independent of the output's transfer function.
+    private static func rasterMask(_ path: CGPath, box: CGRect, height: Double) throws -> CIImage {
+        guard let ctx = CGContext(data: nil, width: Int(box.width), height: Int(box.height),
+                                  bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceGray(),
+                                  bitmapInfo: CGImageAlphaInfo.none.rawValue) else { throw SetupError.rasterAllocationFailed }
+        ctx.translateBy(x: -box.minX, y: box.maxY)
+        ctx.scaleBy(x: 1, y: -1)
+        ctx.setFillColor(gray: 1, alpha: 1)
+        ctx.addPath(path)
+        ctx.fillPath()
+        guard let image = ctx.makeImage() else { throw SetupError.rasterAllocationFailed }
+        let origin = bottomLeft(box, height: height).origin
+        return CIImage(cgImage: image, options: [.colorSpace: NSNull()])
+            .transformed(by: CGAffineTransform(translationX: origin.x, y: origin.y))
     }
 
     private static func place(_ image: CIImage, item: MediaItem, picture: PxRect, view: MediaView, height: Double) -> CIImage {
@@ -244,7 +259,7 @@ private struct PrintPieces {
             guard let image else { return 0 }
             return Int(image.extent.width * image.extent.height) * pixel
         }
-        return bytes(under, pixel: hdr ? 8 : 4) + bytes(mask, pixel: 4) + bytes(over, pixel: hdr ? 8 : 4)
+        return bytes(under, pixel: hdr ? 8 : 4) + bytes(mask, pixel: 1) + bytes(over, pixel: hdr ? 8 : 4)
     }
 }
 
