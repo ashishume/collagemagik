@@ -58,14 +58,14 @@ struct TemplateCard: View {
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
-                Text(template.mode == .carousel ? "Carousel" : "\(template.slots) photos or videos · \(template.format.short)")
+                Text(template.mode == .carousel ? String(localized: "Carousel") : String(localized: "\(template.slots) photos or videos · \(template.format.short)"))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(template.name) template, \(template.mode == .carousel ? "carousel" : "\(template.slots) photos")")
+        .accessibilityLabel((template.mode == .carousel ? String(localized: "\(template.name) carousel template") : String(localized: "\(template.name) template, \(template.slots) photos")))
     }
 }
 
@@ -78,7 +78,7 @@ struct TemplateCategoryChips: View {
         let available = TemplateCategory.allCases.filter { !templates(for: mode, category: $0).isEmpty }
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                chip("All", on: category == nil) { category = nil }
+                chip(String(localized: "All"), on: category == nil) { category = nil }
                 ForEach(available) { c in
                     chip(c.title, on: category == c) { category = c }
                 }
@@ -130,7 +130,7 @@ struct TemplateBrowserSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    Text("Your photos and videos go into the template in order. Everything stays editable, and Undo brings your design back.")
+                    Text(String(localized: "Your photos and videos go into the template in order. Everything stays editable, and Undo brings your design back."))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 16)
@@ -141,18 +141,18 @@ struct TemplateBrowserSheet: View {
                         // the template's words are placeholders: select the first, so changing it is one tap away
                         if let first = store.project.captions.first {
                             store.selectCaption(first.id)
-                            store.notify("\(t.name) applied. Tap Edit to write your own words; Undo brings your design back.")
+                            store.notify(String(localized: "\(t.name) applied. Tap Edit to write your own words; Undo brings your design back."))
                         } else {
-                            store.notify("\(t.name) applied. Undo brings your design back.")
+                            store.notify(String(localized: "\(t.name) applied. Undo brings your design back."))
                         }
                     }
                 }
                 .padding(.vertical, 10)
             }
-            .navigationTitle(mode == .carousel ? "Carousel templates" : "Collage templates")
+            .navigationTitle(mode == .carousel ? String(localized: "Carousel templates") : String(localized: "Collage templates"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Close", systemImage: "xmark") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button(String(localized: "Close"), systemImage: "xmark") { dismiss() } }
             }
         }
         .presentationDetents([.large])

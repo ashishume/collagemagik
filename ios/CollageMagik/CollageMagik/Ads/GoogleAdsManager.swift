@@ -175,13 +175,13 @@ final class GoogleAdsManager: NSObject {
         guard let top = Self.topViewController() else { return false }
         return await withCheckedContinuation { (c: CheckedContinuation<Bool, Never>) in
             let alert = UIAlertController(
-                title: "Thank you for using Collage Magic 💜",
-                message: "Collage Magic is made by a tiny team and is free for everyone, with no account. A short ad after you export is what keeps the app alive and lets us keep improving it.\n\nYour photos and videos never leave your iPhone. Thank you for your support!",
+                title: String(localized: "Thank you for using Collage Magic 💜"),
+                message: String(localized: "Collage Magic is made by a tiny team and is free for everyone, with no account. A short ad after you export is what keeps the app alive and lets us keep improving it.\n\nYour photos and videos never leave your iPhone. Thank you for your support!"),
                 preferredStyle: .alert
             )
-            let ok = UIAlertAction(title: "Happy to help", style: .default) { _ in c.resume(returning: false) }
+            let ok = UIAlertAction(title: String(localized: "Happy to help"), style: .default) { _ in c.resume(returning: false) }
             alert.addAction(ok)
-            alert.addAction(UIAlertAction(title: "Remove ads with Pro", style: .default) { _ in c.resume(returning: true) })
+            alert.addAction(UIAlertAction(title: String(localized: "Remove ads with Pro"), style: .default) { _ in c.resume(returning: true) })
             alert.preferredAction = ok
             top.present(alert, animated: true)
         }
@@ -230,7 +230,7 @@ struct AdBannerSlot: View {
             BannerRepresentable(failed: $failed)
                 .frame(width: AdSizeBanner.size.width, height: AdSizeBanner.size.height)
                 .frame(maxWidth: .infinity)
-                .accessibilityLabel("Advertisement")
+                .accessibilityLabel(String(localized: "Advertisement"))
                 .transition(.opacity)
         }
         Color.clear.frame(height: 0)

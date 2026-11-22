@@ -117,17 +117,17 @@ final class CollageExporter: @unchecked Sendable {
         let (w, h) = size(quality: quality)
         let photos = CollageRenderer.decodePhotos(snapshot: snapshot, W: Double(w), H: Double(h))
         let feeders = makeFeeders()
-        guard let ctx = CollageRenderer.makeContext(width: w, height: h) else { throw ExportFailure("Couldn't create the picture.") }
+        guard let ctx = CollageRenderer.makeContext(width: w, height: h) else { throw ExportFailure(String(localized: "Couldn't create the picture.")) }
         CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot) { id in
             photos[id] ?? feeders[id]?.frame(at: t)
         }
-        guard let image = ctx.makeImage() else { throw ExportFailure("Couldn't create the picture.") }
+        guard let image = ctx.makeImage() else { throw ExportFailure(String(localized: "Couldn't create the picture.")) }
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("Collage-\(Int(Date().timeIntervalSince1970)).png")
         guard let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil) else {
-            throw ExportFailure("Couldn't save the picture.")
+            throw ExportFailure(String(localized: "Couldn't save the picture."))
         }
         CGImageDestinationAddImage(dest, image, nil)
-        guard CGImageDestinationFinalize(dest) else { throw ExportFailure("Couldn't save the picture.") }
+        guard CGImageDestinationFinalize(dest) else { throw ExportFailure(String(localized: "Couldn't save the picture.")) }
         return url
     }
 
@@ -140,22 +140,22 @@ final class CollageExporter: @unchecked Sendable {
         let slides = p.slides
         let w = slideW * slides
         let photos = CollageRenderer.decodePhotos(snapshot: snapshot, W: Double(w), H: Double(h))
-        guard let ctx = CollageRenderer.makeContext(width: w, height: h) else { throw ExportFailure("Couldn't create the pictures.") }
+        guard let ctx = CollageRenderer.makeContext(width: w, height: h) else { throw ExportFailure(String(localized: "Couldn't create the pictures.")) }
         CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot) { photos[$0] }
-        guard let full = ctx.makeImage() else { throw ExportFailure("Couldn't create the pictures.") }
+        guard let full = ctx.makeImage() else { throw ExportFailure(String(localized: "Couldn't create the pictures.")) }
         let stamp = Int(Date().timeIntervalSince1970)
         var urls: [URL] = []
         do {
             for i in 0..<slides {
                 guard let slice = full.cropping(to: CGRect(x: i * slideW, y: 0, width: slideW, height: h)) else {
-                    throw ExportFailure("Couldn't cut slide \(i + 1).")
+                    throw ExportFailure(String(localized: "Couldn't cut slide \(i + 1)."))
                 }
                 let url = FileManager.default.temporaryDirectory.appendingPathComponent("Carousel-\(stamp)-\(i + 1).jpg")
                 guard let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.jpeg.identifier as CFString, 1, nil) else {
-                    throw ExportFailure("Couldn't save slide \(i + 1).")
+                    throw ExportFailure(String(localized: "Couldn't save slide \(i + 1)."))
                 }
                 CGImageDestinationAddImage(dest, slice, [kCGImageDestinationLossyCompressionQuality: 0.95] as CFDictionary)
-                guard CGImageDestinationFinalize(dest) else { throw ExportFailure("Couldn't save slide \(i + 1).") }
+                guard CGImageDestinationFinalize(dest) else { throw ExportFailure(String(localized: "Couldn't save slide \(i + 1).")) }
                 urls.append(url)
             }
         } catch {
@@ -178,8 +178,8 @@ final class CollageExporter: @unchecked Sendable {
         let vSettings = Self.videoSettings(w, h, hdr: hdr, fps: self.fps)
         guard writer.canApply(outputSettings: vSettings, forMediaType: .video) else {
             throw ExportFailure(hdr
-                ? "This iPhone can't encode \(w)×\(h) HDR video. Try Standard quality, or turn HDR off."
-                : "This iPhone can't encode \(w)×\(h) video. Try Standard quality.")
+                ? String(localized: "This iPhone can't encode \(w)×\(h) HDR video. Try Standard quality, or turn HDR off.")
+                : String(localized: "This iPhone can't encode \(w)×\(h) video. Try Standard quality."))
         }
         let vInput = AVAssetWriterInput(mediaType: .video, outputSettings: vSettings)
         vInput.expectsMediaDataInRealTime = false
@@ -192,7 +192,7 @@ final class CollageExporter: @unchecked Sendable {
                 kCVPixelBufferHeightKey as String: h,
             ]
         )
-        guard writer.canAdd(vInput) else { throw ExportFailure("Couldn't set up the video encoder.") }
+        guard writer.canAdd(vInput) else { throw ExportFailure(String(localized: "Couldn't set up the video encoder.")) }
         writer.add(vInput)
 
         // Sound: the videos' own audio plus the music, mixed.
@@ -246,12 +246,12 @@ final class CollageExporter: @unchecked Sendable {
         let hdrCanvas: UnsafeMutableRawPointer? = hdr ? UnsafeMutableRawPointer.allocate(byteCount: hdrRowBytes * h, alignment: 64) : nil
         defer { hdrCanvas?.deallocate() }
         let hdrContext = hdrCanvas.flatMap { CollageRenderer.makeContext(width: w, height: h, data: $0, bytesPerRow: hdrRowBytes, hdr: true) }
-        if hdr && hdrContext == nil { throw ExportFailure("Couldn't set up HDR drawing.") }
+        if hdr && hdrContext == nil { throw ExportFailure(String(localized: "Couldn't set up HDR drawing.")) }
         let frameCount = max(1, Int((total * Double(fps)).rounded(.up)))
 
-        guard writer.startWriting() else { throw ExportFailure(writer.error?.localizedDescription ?? "Couldn't start the export.") }
+        guard writer.startWriting() else { throw ExportFailure(writer.error?.localizedDescription ?? String(localized: "Couldn't start the export.")) }
         writer.startSession(atSourceTime: .zero)
-        if let aReader, !aReader.startReading() { throw ExportFailure(aReader.error?.localizedDescription ?? "Couldn't read the sound.") }
+        if let aReader, !aReader.startReading() { throw ExportFailure(aReader.error?.localizedDescription ?? String(localized: "Couldn't read the sound.")) }
 
         let group = DispatchGroup()
         let videoQueue = DispatchQueue(label: "collagemagik.export.video")
@@ -268,10 +268,10 @@ final class CollageExporter: @unchecked Sendable {
                     return
                 }
                 autoreleasepool {
-                    guard let pool = adaptor.pixelBufferPool else { failure = ExportFailure("Couldn't allocate video memory."); return }
+                    guard let pool = adaptor.pixelBufferPool else { failure = ExportFailure(String(localized: "Couldn't allocate video memory.")); return }
                     var pbOut: CVPixelBuffer?
                     CVPixelBufferPoolCreatePixelBuffer(nil, pool, &pbOut)
-                    guard let pb = pbOut else { failure = ExportFailure("Couldn't allocate video memory."); return }
+                    guard let pb = pbOut else { failure = ExportFailure(String(localized: "Couldn't allocate video memory.")); return }
                     let t = Double(frameIndex) / Double(fps)
                     if let ctx = hdrContext, let canvas = hdrCanvas {
                         CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot, captionLayer: captionLayer) { id in
@@ -295,7 +295,7 @@ final class CollageExporter: @unchecked Sendable {
                         CVPixelBufferUnlockBaseAddress(pb, [])
                     }
                     if !adaptor.append(pb, withPresentationTime: CMTime(value: CMTimeValue(frameIndex), timescale: CMTimeScale(fps))) {
-                        failure = writer.error ?? ExportFailure("The video encoder stopped.")
+                        failure = writer.error ?? ExportFailure(String(localized: "The video encoder stopped."))
                         return
                     }
                     frameIndex += 1
@@ -337,7 +337,7 @@ final class CollageExporter: @unchecked Sendable {
         await writer.finishWriting()
         guard writer.status == .completed else {
             try? FileManager.default.removeItem(at: url)
-            throw ExportFailure(writer.error?.localizedDescription ?? "The export didn't finish.")
+            throw ExportFailure(writer.error?.localizedDescription ?? String(localized: "The export didn't finish."))
         }
         progress(1)
         return url
@@ -424,7 +424,7 @@ final class CollageExporter: @unchecked Sendable {
 
 /// Adding to Photos was refused. Only the person can change that, in Settings, so the UI offers a button for it.
 struct PhotosAccessDenied: LocalizedError {
-    var errorDescription: String? { "Collage Magic needs permission to add pictures to your Photos. You can allow it in Settings." }
+    var errorDescription: String? { String(localized: "Collage Magic needs permission to add pictures to your Photos. You can allow it in Settings.") }
 }
 
 /// Saves to Photos with add-only access: the app can add a collage but never read or change what is already there.

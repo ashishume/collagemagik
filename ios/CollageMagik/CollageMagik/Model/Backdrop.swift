@@ -10,10 +10,10 @@ enum BackdropKind: String, CaseIterable, Identifiable, Codable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .color: "Colour"
-        case .gradient: "Gradient"
-        case .blur: "Blur"
-        case .pattern: "Pattern"
+        case .color: String(localized: "Color")
+        case .gradient: String(localized: "Gradient")
+        case .blur: String(localized: "Blur")
+        case .pattern: String(localized: "Pattern")
         }
     }
 }
@@ -36,18 +36,18 @@ struct GradientPreset {
 }
 
 let gradientPresets: [GradientPreset] = [
-    GradientPreset(name: "Magik", colors: ["#8b6cff", "#c94bd8", "#ff7f8c"], angle: 135),
-    GradientPreset(name: "Sunset", colors: ["#ff9a5a", "#ff5f8f", "#7b4dff"], angle: 160),
-    GradientPreset(name: "Peach", colors: ["#ffe1c6", "#ffc0cb"], angle: 120),
-    GradientPreset(name: "Ocean", colors: ["#2fd3ff", "#3a6bff", "#1b1f6b"], angle: 150),
-    GradientPreset(name: "Mint", colors: ["#d8fff0", "#7fe0c2"], angle: 110),
-    GradientPreset(name: "Night", colors: ["#2b1055", "#7597de"], angle: 90),
-    GradientPreset(name: "Lemon", colors: ["#fff6b7", "#f6c445"], angle: 135),
-    GradientPreset(name: "Berry", colors: ["#5b0e2d", "#c2185b", "#ff8a80"], angle: 60),
-    GradientPreset(name: "Glow", colors: ["#fff1fb", "#e2b8ff", "#6c4dff"], angle: nil),
-    GradientPreset(name: "Mono", colors: ["#f2f2f2", "#9e9e9e"], angle: 90),
-    GradientPreset(name: "Forest", colors: ["#0f3d2e", "#5fb37a"], angle: 135),
-    GradientPreset(name: "Spotlight", colors: ["#3a3a46", "#0b0b10"], angle: nil),
+    GradientPreset(name: String(localized: "Magik"), colors: ["#8b6cff", "#c94bd8", "#ff7f8c"], angle: 135),
+    GradientPreset(name: String(localized: "Sunset"), colors: ["#ff9a5a", "#ff5f8f", "#7b4dff"], angle: 160),
+    GradientPreset(name: String(localized: "Peach"), colors: ["#ffe1c6", "#ffc0cb"], angle: 120),
+    GradientPreset(name: String(localized: "Ocean"), colors: ["#2fd3ff", "#3a6bff", "#1b1f6b"], angle: 150),
+    GradientPreset(name: String(localized: "Mint"), colors: ["#d8fff0", "#7fe0c2"], angle: 110),
+    GradientPreset(name: String(localized: "Night"), colors: ["#2b1055", "#7597de"], angle: 90),
+    GradientPreset(name: String(localized: "Lemon"), colors: ["#fff6b7", "#f6c445"], angle: 135),
+    GradientPreset(name: String(localized: "Berry"), colors: ["#5b0e2d", "#c2185b", "#ff8a80"], angle: 60),
+    GradientPreset(name: String(localized: "Glow"), colors: ["#fff1fb", "#e2b8ff", "#6c4dff"], angle: nil),
+    GradientPreset(name: String(localized: "Mono"), colors: ["#f2f2f2", "#9e9e9e"], angle: 90),
+    GradientPreset(name: String(localized: "Forest"), colors: ["#0f3d2e", "#5fb37a"], angle: 135),
+    GradientPreset(name: String(localized: "Spotlight"), colors: ["#3a3a46", "#0b0b10"], angle: nil),
 ]
 
 enum BackdropPattern: Int, CaseIterable, Identifiable {
@@ -55,12 +55,12 @@ enum BackdropPattern: Int, CaseIterable, Identifiable {
     var id: Int { rawValue }
     var title: String {
         switch self {
-        case .dots: "Dots"
-        case .grid: "Grid"
-        case .stripes: "Stripes"
-        case .checks: "Checks"
-        case .confetti: "Confetti"
-        case .hearts: "Hearts"
+        case .dots: String(localized: "Dots")
+        case .grid: String(localized: "Grid")
+        case .stripes: String(localized: "Stripes")
+        case .checks: String(localized: "Checks")
+        case .confetti: String(localized: "Confetti")
+        case .hearts: String(localized: "Hearts")
         }
     }
 }

@@ -1,0 +1,642 @@
+{
+  "sourceLanguage" : "en-US",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Bundle display name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en-US" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Collage Magic"
+          }
+        }
+      }
+    },
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en-US" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "CollageMagik"
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryAddUsageDescription" : {
+      "comment" : "System permission prompt. Machine translations require native-language review.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يحتاج Collage Magic إلى إذن لإضافة الصور المجمعة النهائية إلى مكتبة الصور الخاصة بك. لا يمكنه رؤية أو تغيير الصور الموجودة بالفعل."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "আপনার ফটো লাইব্রেরিতে আপনার সমাপ্ত কোলাজগুলি যোগ করার জন্য কোলাজ ম্যাজিকের অনুমতি প্রয়োজন৷ এটি ইতিমধ্যে সেখানে থাকা ফটোগুলি দেখতে বা পরিবর্তন করতে পারে না।"
+          }
+        },
+        "ca" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic necessita permís per afegir els teus collages acabats a la teva biblioteca de fotos. No pot veure ni canviar les fotos que ja hi ha."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic potřebuje oprávnění k přidání vašich hotových koláží do vaší knihovny fotografií. Nemůže vidět ani změnit fotografie, které tam již jsou."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic skal have tilladelse til at tilføje dine færdige collager til dit fotobibliotek. Den kan ikke se eller ændre billederne, der allerede er der."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic benötigt die Erlaubnis, Ihre fertigen Collagen zu Ihrer Fotobibliothek hinzuzufügen. Die bereits vorhandenen Fotos können nicht angezeigt oder geändert werden."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Το Collage Magic χρειάζεται άδεια για να προσθέσει τα τελικά κολάζ σας στη βιβλιοθήκη φωτογραφιών σας. Δεν μπορεί να δει ή να αλλάξει τις φωτογραφίες που υπάρχουν ήδη."
+          }
+        },
+        "en-AU" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collage Magic needs permission to add your finished collages to your photo library. It cannot see or change the photos already there."
+          }
+        },
+        "en-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collage Magic needs permission to add your finished collages to your photo library. It cannot see or change the photos already there."
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collage Magic needs permission to add your finished collages to your photo library. It cannot see or change the photos already there."
+          }
+        },
+        "en-US" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collage Magic needs permission to add your finished collages to your photo library. It cannot see or change the photos already there."
+          }
+        },
+        "es-ES" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic necesita permiso para agregar tus collages terminados a tu biblioteca de fotos. No puede ver ni cambiar las fotos que ya están allí."
+          }
+        },
+        "es-MX" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic necesita permiso para agregar tus collages terminados a tu biblioteca de fotos. No puede ver ni cambiar las fotos que ya están allí."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic tarvitsee luvan lisätäksesi valmiita kollaaseja valokuvakirjastoosi. Se ei voi nähdä tai muuttaa olemassa olevia kuvia."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic a besoin d'une autorisation pour ajouter vos collages terminés à votre photothèque. Il ne peut pas voir ou modifier les photos déjà présentes."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic a besoin d'une autorisation pour ajouter vos collages terminés à votre photothèque. Il ne peut pas voir ou modifier les photos déjà présentes."
+          }
+        },
+        "gu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "કોલાજ મેજિકને તમારી ફોટો લાઇબ્રેરીમાં તમારા તૈયાર કોલાજ ઉમેરવા માટે પરવાનગીની જરૂર છે. તે પહેલાથી જ ત્યાં ફોટા જોઈ અથવા બદલી શકતું નથી."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic זקוק להרשאה כדי להוסיף את הקולאז'ים המוגמרים שלך לספריית התמונות שלך. זה לא יכול לראות או לשנות את התמונות שכבר שם."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "कोलाज मैजिक को आपके तैयार कोलाज को आपकी फोटो लाइब्रेरी में जोड़ने के लिए अनुमति की आवश्यकता है। यह वहां पहले से मौजूद फ़ोटो को देख या बदल नहीं सकता।"
+          }
+        },
+        "hr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic treba dopuštenje za dodavanje vaših gotovih kolaža u vašu biblioteku fotografija. Ne može vidjeti niti promijeniti fotografije koje su već tamo."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A Collage Magicnek engedélyre van szüksége ahhoz, hogy a kész kollázsokat hozzáadja a fotókönyvtárához. Nem láthatja vagy módosíthatja a már meglévő képeket."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic memerlukan izin untuk menambahkan kolase Anda yang sudah selesai ke perpustakaan foto Anda. Ia tidak dapat melihat atau mengubah foto yang sudah ada di sana."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic necessita dell'autorizzazione per aggiungere i collage finiti alla libreria di foto. Non può vedere o modificare le foto già presenti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic では、完成したコラージュを写真ライブラリに追加する許可が必要です。すでにそこにある写真を表示したり変更したりすることはできません。"
+          }
+        },
+        "kn" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ನಿಮ್ಮ ಫೋಟೋ ಲೈಬ್ರರಿಗೆ ನಿಮ್ಮ ಸಿದ್ಧಪಡಿಸಿದ ಕೊಲಾಜ್‌ಗಳನ್ನು ಸೇರಿಸಲು ಕೊಲಾಜ್ ಮ್ಯಾಜಿಕ್‌ಗೆ ಅನುಮತಿಯ ಅಗತ್ಯವಿದೆ. ಇದು ಈಗಾಗಲೇ ಫೋಟೋಗಳನ್ನು ನೋಡಲು ಅಥವಾ ಬದಲಾಯಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "완성된 콜라주를 사진 보관함에 저장하려면 'Collage Magic'에 권한이 필요합니다. 앱은 기존에 보관함에 있던 사진을 확인하거나 변경할 수 없습니다."
+          }
+        },
+        "ml" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "നിങ്ങളുടെ ഫോട്ടോ ലൈബ്രറിയിൽ പൂർത്തിയായ കൊളാഷുകൾ ചേർക്കാൻ കൊളാഷ് മാജിക്കിന് അനുമതി ആവശ്യമാണ്. ഇതിന് ഇതിനകം അവിടെയുള്ള ഫോട്ടോകൾ കാണാനോ മാറ്റാനോ കഴിയില്ല."
+          }
+        },
+        "mr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "तुमचे तयार झालेले कोलाज तुमच्या फोटो लायब्ररीमध्ये जोडण्यासाठी कोलाज मॅजिकला परवानगी आवश्यक आहे. ते आधीपासून असलेले फोटो पाहू किंवा बदलू शकत नाही."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic memerlukan kebenaran untuk menambahkan kolaj siap anda pada pustaka foto anda. Ia tidak dapat melihat atau menukar foto yang sudah ada."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic trenger tillatelse for å legge til de ferdige collagene dine i fotobiblioteket ditt. Den kan ikke se eller endre bildene som allerede er der."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic heeft toestemming nodig om je voltooide collages aan je fotobibliotheek toe te voegen. De foto's die er al zijn, kunnen niet worden bekeken of gewijzigd."
+          }
+        },
+        "or" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ଆପଣଙ୍କ ପ୍ରସ୍ତୁତ କୋଲାଜ୍‌ଗୁଡ଼ିକୁ ଫଟୋ ଲାଇବ୍ରେରୀରେ ଯୋଡ଼ିବା ପାଇଁ 'କୋଲାଜ୍ ମ୍ୟାଜିକ୍' (Collage Magic) କୁ ଅନୁମତି ଆବଶ୍ୟକ। ଏହା ଆପଣଙ୍କ ଫଟୋ ଲାଇବ୍ରେରୀରେ ଥିବା ଅନ୍ୟ ଫଟୋଗୁଡ଼ିକୁ ଦେଖିପାରିବ ନାହିଁ କିମ୍ବା ସେଥିରେ କୌଣସି ପରିବର୍ତ୍ତନ କରିପାରିବ ନାହିଁ।"
+          }
+        },
+        "pa" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ਕੋਲਾਜ ਮੈਜਿਕ ਨੂੰ ਤੁਹਾਡੀ ਫੋਟੋ ਲਾਇਬ੍ਰੇਰੀ ਵਿੱਚ ਤੁਹਾਡੇ ਮੁਕੰਮਲ ਹੋਏ ਕੋਲਾਜ ਜੋੜਨ ਲਈ ਇਜਾਜ਼ਤ ਦੀ ਲੋੜ ਹੈ। ਇਹ ਪਹਿਲਾਂ ਤੋਂ ਮੌਜੂਦ ਫੋਟੋਆਂ ਨੂੰ ਦੇਖ ਜਾਂ ਬਦਲ ਨਹੀਂ ਸਕਦਾ।"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic potrzebuje pozwolenia, aby dodać gotowe kolaże do Twojej biblioteki zdjęć. Nie może zobaczyć ani zmienić zdjęć, które już tam są."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic precisa de permissão para adicionar suas colagens finalizadas à sua biblioteca de fotos. Ele não pode ver ou alterar as fotos que já estão lá."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "O Collage Magic precisa de autorização para adicionar as suas colagens finalizadas à sua biblioteca de fotografias. Não pode ver ou alterar as fotos que já lá estão."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic are nevoie de permisiune pentru a adăuga colajele finalizate în biblioteca ta foto. Aplicația nu poate vedea sau modifica fotografiile existente deja acolo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Приложению Collage Magic требуется разрешение на добавление готовых коллажей в вашу медиатеку. Приложение не может просматривать или изменять уже имеющиеся там фотографии."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aplikácia Collage Magic potrebuje povolenie na pridanie hotových koláží do vašej knižnice fotografií. K fotografiám, ktoré sa v nej už nachádzajú, nemá prístup a nemôže ich meniť."
+          }
+        },
+        "sl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aplikacija Collage Magic potrebuje dovoljenje za dodajanje dokončanih kolažev v vašo knjižnico fotografij. Do obstoječih fotografij nima dostopa in jih ne more spreminjati."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic behöver tillåtelse för att lägga till dina färdiga collage i ditt bildbibliotek. Appen kan inte se eller ändra de bilder som redan finns där."
+          }
+        },
+        "ta" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "நீங்கள் உருவாக்கிய கோலேஜ்களை (collages) உங்கள் புகைப்பட நூலகத்தில் சேமிக்க 'கோலேஜ் மேஜிக்' (Collage Magic) செயலிக்கு அனுமதி தேவை. ஏற்கனவே உங்கள் நூலகத்தில் உள்ள புகைப்படங்களை இந்தச் செயலியால் பார்க்கவோ அல்லது மாற்றவோ முடியாது."
+          }
+        },
+        "te" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "మీరు రూపొందించిన కోలాజ్‌లను మీ ఫోటో లైబ్రరీలో సేవ్ చేయడానికి 'కోలాజ్ మ్యాజిక్' (Collage Magic)కి అనుమతి అవసరం. ఇది మీ ఫోటో లైబ్రరీలోని ఇతర ఫోటోలను చూడలేదు లేదా మార్చలేదు."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic ต้องการสิทธิ์ในการบันทึกภาพคอลลาจที่คุณทำเสร็จแล้วลงในคลังรูปภาพของคุณ โดยแอปจะไม่สามารถเข้าถึงหรือแก้ไขรูปภาพที่มีอยู่เดิมในคลังของคุณได้"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic'in, hazırladığınız kolajları fotoğraf arşivinize ekleyebilmesi için izne ihtiyacı vardır. Uygulama, arşivinizdeki mevcut fotoğrafları göremez veya değiştiremez."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Програмі Collage Magic потрібен дозвіл, щоб додавати готові колажі до вашої медіатеки. Вона не має доступу до наявних там фотографій і не може їх змінювати."
+          }
+        },
+        "ur" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic کو آپ کی تیار کردہ کولاجز (collages) کو آپ کی فوٹو لائبریری میں شامل کرنے کے لیے اجازت درکار ہے۔ یہ پہلے سے موجود تصاویر کو نہ تو دیکھ سکتا ہے اور نہ ہی ان میں کوئی تبدیلی کر سکتا ہے۔"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic cần quyền truy cập để lưu các tác phẩm ảnh ghép hoàn thiện của bạn vào thư viện ảnh. Ứng dụng không thể xem hoặc thay đổi các ảnh đã có sẵn trong đó."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic 需要获得权限，才能将您制作完成的拼贴作品保存到您的照片图库中。应用无法查看或修改您图库中原有的照片。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic 需要您的許可才能將您完成的拼貼畫新增至您的照片庫。它無法檢視或變更您照片庫中已有的照片。"
+          }
+        }
+      }
+    },
+    "NSUserTrackingUsageDescription" : {
+      "comment" : "System permission prompt. Machine translations require native-language review.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic مجاني لأنه يعرض الإعلانات. إذا سمحت بالتتبع، فيمكن لشركائنا الإعلانيين عرض الإعلانات الأكثر ملاءمة لك. لا تتم مشاركة الصور ومقاطع الفيديو والموسيقى الخاصة بك أبدًا."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "কোলাজ ম্যাজিক বিনামূল্যে কারণ এটি বিজ্ঞাপন দেখায়। আপনি ট্র্যাকিংয়ের অনুমতি দিলে, আমাদের বিজ্ঞাপন অংশীদাররা আপনার সাথে আরও প্রাসঙ্গিক বিজ্ঞাপন দেখাতে পারে। আপনার ফটো, ভিডিও এবং সঙ্গীত শেয়ার করা হয় না."
+          }
+        },
+        "ca" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic és gratuït perquè mostra anuncis. Si permeteu el seguiment, els nostres socis publicitaris poden mostrar anuncis que us siguin més rellevants. Les teves fotos, vídeos i música no es comparteixen mai."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic je zdarma, protože zobrazuje reklamy. Pokud povolíte sledování, naši reklamní partneři mohou zobrazovat reklamy, které jsou pro vás relevantnější. Vaše fotky, videa a hudba nejsou nikdy sdíleny."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic er gratis, fordi den viser annoncer. Hvis du tillader sporing, kan vores annoncepartnere vise annoncer, der er mere relevante for dig. Dine billeder, videoer og musik deles aldrig."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic ist kostenlos, da es Werbung zeigt. Wenn Sie Tracking zulassen, können unsere Werbepartner Anzeigen schalten, die für Sie relevanter sind. Ihre Fotos, Videos und Musik werden niemals geteilt."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Το Collage Magic είναι δωρεάν επειδή εμφανίζει διαφημίσεις. Εάν επιτρέψετε την παρακολούθηση, οι συνεργάτες διαφημίσεων μπορούν να εμφανίσουν διαφημίσεις που είναι πιο σχετικές με εσάς. Οι φωτογραφίες, τα βίντεο και η μουσική σας δεν κοινοποιούνται ποτέ."
+          }
+        },
+        "en-AU" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collage Magic is free because it shows ads. If you allow tracking, our ad partners can show ads that are more relevant to you. Your photos, videos and music are never shared."
+          }
+        },
+        "en-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collage Magic is free because it shows ads. If you allow tracking, our ad partners can show ads that are more relevant to you. Your photos, videos and music are never shared."
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collage Magic is free because it shows ads. If you allow tracking, our ad partners can show ads that are more relevant to you. Your photos, videos and music are never shared."
+          }
+        },
+        "en-US" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collage Magic is free because it shows ads. If you allow tracking, our ad partners can show ads that are more relevant to you. Your photos, videos and music are never shared."
+          }
+        },
+        "es-ES" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic es gratuito porque muestra anuncios. Si permite el seguimiento, nuestros socios publicitarios pueden mostrarle anuncios que sean más relevantes para usted. Tus fotos, vídeos y música nunca se comparten."
+          }
+        },
+        "es-MX" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic es gratuito porque muestra anuncios. Si permite el seguimiento, nuestros socios publicitarios pueden mostrarle anuncios que sean más relevantes para usted. Tus fotos, vídeos y música nunca se comparten."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic on ilmainen, koska se näyttää mainoksia. Jos sallit seurannan, mainoskumppanimme voivat näyttää sinulle osuvampia mainoksia. Kuviasi, videoitasi ja musiikkiasi ei koskaan jaeta."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic est gratuit car il diffuse des publicités. Si vous autorisez le suivi, nos partenaires publicitaires peuvent diffuser des annonces plus pertinentes pour vous. Vos photos, vidéos et musiques ne sont jamais partagées."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic est gratuit car il diffuse des publicités. Si vous autorisez le suivi, nos partenaires publicitaires peuvent diffuser des annonces plus pertinentes pour vous. Vos photos, vidéos et musiques ne sont jamais partagées."
+          }
+        },
+        "gu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "કોલાજ મેજિક મફત છે કારણ કે તે જાહેરાતો દર્શાવે છે. જો તમે ટ્રેકિંગને મંજૂરી આપો છો, તો અમારા જાહેરાત ભાગીદારો એવી જાહેરાતો બતાવી શકે છે જે તમારા માટે વધુ સુસંગત હોય. તમારા ફોટા, વીડિયો અને સંગીત ક્યારેય શેર કરવામાં આવતા નથી."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic הוא בחינם מכיוון שהוא מציג מודעות. אם תאפשר מעקב, שותפי המודעות שלנו יכולים להציג מודעות שרלוונטיות יותר עבורך. התמונות, הסרטונים והמוזיקה שלך לעולם אינם משותפים."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "कोलाज मैजिक मुफ़्त है क्योंकि यह विज्ञापन दिखाता है। यदि आप ट्रैकिंग की अनुमति देते हैं, तो हमारे विज्ञापन भागीदार आपके लिए अधिक प्रासंगिक विज्ञापन दिखा सकते हैं। आपके फ़ोटो, वीडियो और संगीत कभी साझा नहीं किए जाते."
+          }
+        },
+        "hr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic je besplatan jer prikazuje oglase. Ako dopustite praćenje, naši oglasni partneri mogu prikazati oglase koji su vam relevantniji. Vaše fotografije, videozapisi i glazba nikada se ne dijele."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A Collage Magic ingyenes, mert hirdetéseket jelenít meg. Ha engedélyezi a követést, hirdetési partnereink olyan hirdetéseket jeleníthetnek meg, amelyek relevánsabbak az Ön számára. Fényképeit, videóit és zenéit soha nem osztja meg."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic gratis karena menampilkan iklan. Jika Anda mengizinkan pelacakan, mitra iklan kami dapat menampilkan iklan yang lebih relevan bagi Anda. Foto, video, dan musik Anda tidak pernah dibagikan."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic è gratuito perché mostra annunci pubblicitari. Se consenti il ​​monitoraggio, i nostri partner pubblicitari possono mostrare annunci più pertinenti per te. Le tue foto, i tuoi video e la tua musica non verranno mai condivisi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic は広告が表示されるため無料です。トラッキングを許可すると、広告パートナーはお客様に関連性の高い広告を表示できます。写真、ビデオ、音楽が共有されることはありません。"
+          }
+        },
+        "kn" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ಕೊಲಾಜ್ ಮ್ಯಾಜಿಕ್ ಉಚಿತವಾಗಿದೆ ಏಕೆಂದರೆ ಅದು ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸುತ್ತದೆ. ನೀವು ಟ್ರ್ಯಾಕಿಂಗ್ ಅನ್ನು ಅನುಮತಿಸಿದರೆ, ನಮ್ಮ ಜಾಹೀರಾತು ಪಾಲುದಾರರು ನಿಮಗೆ ಹೆಚ್ಚು ಸೂಕ್ತವಾದ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಬಹುದು. ನಿಮ್ಮ ಫೋಟೋಗಳು, ವೀಡಿಯೊಗಳು ಮತ್ತು ಸಂಗೀತವನ್ನು ಎಂದಿಗೂ ಹಂಚಿಕೊಳ್ಳಲಾಗುವುದಿಲ್ಲ."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "'Collage Magic'은 광고를 통해 무료로 제공됩니다. 추적을 허용하시면 광고 파트너가 사용자에게 더 적합한 광고를 보여줄 수 있습니다. 사용자의 사진, 영상, 음악은 절대 공유되지 않습니다."
+          }
+        },
+        "ml" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "പരസ്യങ്ങൾ കാണിക്കുന്നതിനാൽ കൊളാഷ് മാജിക് സൗജന്യമാണ്. നിങ്ങൾ ട്രാക്കിംഗ് അനുവദിക്കുകയാണെങ്കിൽ, ഞങ്ങളുടെ പരസ്യ പങ്കാളികൾക്ക് നിങ്ങൾക്ക് കൂടുതൽ പ്രസക്തമായ പരസ്യങ്ങൾ കാണിക്കാനാകും. നിങ്ങളുടെ ഫോട്ടോകളും വീഡിയോകളും സംഗീതവും ഒരിക്കലും പങ്കിടില്ല."
+          }
+        },
+        "mr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "कोलाज मॅजिक विनामूल्य आहे कारण ते जाहिराती दाखवते. तुम्ही ट्रॅकिंगला परवानगी दिल्यास, आमचे जाहिरात भागीदार तुमच्यासाठी अधिक संबंधित असलेल्या जाहिराती दाखवू शकतात. तुमचे फोटो, व्हिडिओ आणि संगीत कधीही शेअर केले जात नाहीत."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic adalah percuma kerana ia memaparkan iklan. Jika anda membenarkan penjejakan, rakan kongsi iklan kami boleh memaparkan iklan yang lebih berkaitan dengan anda. Foto, video dan muzik anda tidak pernah dikongsi."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic er gratis fordi den viser annonser. Hvis du tillater sporing, kan annonsepartnerne våre vise annonser som er mer relevante for deg. Dine bilder, videoer og musikk blir aldri delt."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic is gratis omdat het advertenties toont. Als u tracking toestaat, kunnen onze advertentiepartners advertenties weergeven die relevanter voor u zijn. Je foto's, video's en muziek worden nooit gedeeld."
+          }
+        },
+        "or" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "'କୋଲାଜ୍ ମ୍ୟାଜିକ୍' ଏକ ମାଗଣା ଆପ୍, କାରଣ ଏଥିରେ ବିଜ୍ଞାପନ ଦେଖାଯାଏ। ଯଦି ଆପଣ ଟ୍ରାକିଂ (tracking) ପାଇଁ ଅନୁମତି ଦିଅନ୍ତି, ତେବେ ଆମର ବିଜ୍ଞାପନ ସହଯୋଗୀମାନେ ଆପଣଙ୍କ ପାଇଁ ଅଧିକ ଉପଯୁକ୍ତ ବିଜ୍ଞାପନ ଦେଖାଇପାରିବେ। ଆପଣଙ୍କ ଫଟୋ, ଭିଡିଓ ଏବଂ ସଙ୍ଗୀତ କେବେବି ଅନ୍ୟ ସହ ସେୟାର କରାଯାଏ ନାହିଁ।"
+          }
+        },
+        "pa" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ਕੋਲਾਜ ਮੈਜਿਕ ਮੁਫ਼ਤ ਹੈ ਕਿਉਂਕਿ ਇਹ ਵਿਗਿਆਪਨ ਦਿਖਾਉਂਦਾ ਹੈ। ਜੇਕਰ ਤੁਸੀਂ ਟਰੈਕਿੰਗ ਦੀ ਇਜਾਜ਼ਤ ਦਿੰਦੇ ਹੋ, ਤਾਂ ਸਾਡੇ ਵਿਗਿਆਪਨ ਭਾਗੀਦਾਰ ਤੁਹਾਡੇ ਲਈ ਵਧੇਰੇ ਢੁਕਵੇਂ ਵਿਗਿਆਪਨ ਦਿਖਾ ਸਕਦੇ ਹਨ। ਤੁਹਾਡੀਆਂ ਫੋਟੋਆਂ, ਵੀਡੀਓ ਅਤੇ ਸੰਗੀਤ ਨੂੰ ਕਦੇ ਸਾਂਝਾ ਨਹੀਂ ਕੀਤਾ ਜਾਂਦਾ ਹੈ।"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic jest darmowy, ponieważ wyświetla reklamy. Jeśli zezwolisz na śledzenie, nasi partnerzy reklamowi będą mogli wyświetlać reklamy, które są dla Ciebie bardziej odpowiednie. Twoje zdjęcia, filmy i muzyka nigdy nie są udostępniane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic é gratuito porque mostra anúncios. Se você permitir o rastreamento, nossos parceiros de publicidade poderão exibir anúncios mais relevantes para você. Suas fotos, vídeos e músicas nunca são compartilhados."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "O Collage Magic é gratuito porque mostra anúncios. Se permitir o rastreio, os nossos parceiros de publicidade poderão exibir anúncios mais relevantes para si. As suas fotos, vídeos e músicas nunca são partilhados."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic este gratuită deoarece afișează reclame. Dacă permiți urmărirea, partenerii noștri publicitari pot afișa reclame mai relevante pentru tine. Fotografiile, videoclipurile și muzica ta nu sunt niciodată partajate."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Приложение Collage Magic бесплатно, так как в нем показывается реклама. Если вы разрешите отслеживание, наши рекламные партнеры смогут предлагать вам более релевантные объявления. Ваши фотографии, видео и музыка никогда никому не передаются."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aplikácia Collage Magic je bezplatná, pretože zobrazuje reklamy. Ak povolíte sledovanie, naši reklamní partneri vám môžu zobrazovať relevantnejšie reklamy. Vaše fotografie, videá ani hudba sa nikdy s nikým nezdieľajú."
+          }
+        },
+        "sl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aplikacija Collage Magic je brezplačna, saj prikazuje oglase. Če dovolite sledenje, lahko naši oglaševalski partnerji prikazujejo oglase, ki so za vas bolj ustrezni. Vaše fotografije, videoposnetki in glasba se nikoli ne delijo."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic är gratis eftersom appen visar annonser. Om du tillåter spårning kan våra annonspartners visa annonser som är mer relevanta för dig. Dina bilder, videor och din musik delas aldrig med någon."
+          }
+        },
+        "ta" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "'கோலேஜ் மேஜிக்' செயலி விளம்பரங்களைக் காண்பிப்பதன் மூலம் இலவசமாக வழங்கப்படுகிறது. நீங்கள் கண்காணிப்பை (tracking) அனுமதித்தால், எங்கள் விளம்பரப் பங்காளிகள் உங்களுக்கு மிகவும் பொருத்தமான விளம்பரங்களைக் காட்ட முடியும். உங்கள் புகைப்படங்கள், காணொளிகள் மற்றும் இசை ஒருபோதும் மற்றவர்களுடன் பகிரப்படாது."
+          }
+        },
+        "te" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "'కోలాజ్ మ్యాజిక్' ఉచితం, ఎందుకంటే ఇందులో ప్రకటనలు కనిపిస్తాయి. మీరు ట్రాకింగ్‌ను అనుమతిస్తే, మా ప్రకటన భాగస్వాములు మీకు మరింత సంబంధితమైన ప్రకటనలను చూపగలరు. మీ ఫోటోలు, వీడియోలు మరియు సంగీతం ఎప్పటికీ ఎవరితోనూ పంచుకోబడవు."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic เปิดให้ใช้งานฟรีโดยมีการแสดงโฆษณา หากคุณอนุญาตให้มีการติดตาม (Tracking) พันธมิตรด้านโฆษณาของเราจะสามารถแสดงโฆษณาที่ตรงกับความสนใจของคุณได้มากขึ้น ทั้งนี้ รูปภาพ วิดีโอ และเพลงของคุณจะไม่มีการถูกแบ่งปันให้กับผู้อื่นอย่างเด็ดขาด"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic, reklam gösterdiği için ücretsizdir. Takip edilmeye izin verirseniz, reklam ortaklarımız size daha uygun reklamlar gösterebilir. Fotoğraflarınız, videolarınız ve müzikleriniz asla paylaşılmaz."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic — безкоштовна програма, оскільки в ній відображається реклама. Якщо ви дозволите відстеження, наші рекламні партнери зможуть показувати оголошення, які будуть для вас більш актуальними. Ваші фотографії, відео та музика нікому не передаються."
+          }
+        },
+        "ur" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic مفت ہے کیونکہ اس میں اشتہارات دکھائے جاتے ہیں۔ اگر آپ ٹریکنگ (tracking) کی اجازت دیتے ہیں، تو ہمارے اشتہاری پارٹنرز آپ کو ایسے اشتہارات دکھا سکتے ہیں جو آپ کے لیے زیادہ متعلقہ ہوں۔ آپ کی تصاویر، ویڈیوز اور موسیقی کبھی بھی کسی کے ساتھ شیئر نہیں کی جاتی ہیں۔"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic miễn phí nhờ hiển thị quảng cáo. Nếu bạn cho phép theo dõi, các đối tác quảng cáo của chúng tôi có thể hiển thị những quảng cáo phù hợp hơn với bạn. Ảnh, video và âm nhạc của bạn sẽ không bao giờ bị chia sẻ."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic 通过展示广告来维持免费使用。如果您允许追踪，我们的广告合作伙伴便能为您呈现更相关的广告。您的照片、视频和音乐绝不会被分享给他人。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Collage Magic 之所以免費，是因為它會顯示廣告。如果您允許跟踪，我們的廣告合作夥伴可以向您顯示更相關的廣告。您的照片、影片和音樂絕對不會被分享。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

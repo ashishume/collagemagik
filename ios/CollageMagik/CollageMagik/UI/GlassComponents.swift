@@ -14,15 +14,15 @@ enum AppTheme: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .magic: "Magic"
-        case .blackGlass: "Black Glass"
-        case .midnight: "Midnight"
-        case .ocean: "Ocean"
-        case .aurora: "Aurora"
-        case .forest: "Forest"
-        case .sunset: "Sunset"
-        case .rose: "Rose"
-        case .ember: "Ember"
+        case .magic: String(localized: "Magic")
+        case .blackGlass: String(localized: "Black Glass")
+        case .midnight: String(localized: "Midnight")
+        case .ocean: String(localized: "Ocean")
+        case .aurora: String(localized: "Aurora")
+        case .forest: String(localized: "Forest")
+        case .sunset: String(localized: "Sunset")
+        case .rose: String(localized: "Rose")
+        case .ember: String(localized: "Ember")
         }
     }
 
@@ -128,9 +128,9 @@ struct ThemePicker: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Theme").font(.title3.weight(.semibold))
+                Text(String(localized: "Theme")).font(.title3.weight(.semibold))
                 Spacer()
-                Button("Done") { dismiss() }
+                Button(String(localized: "Done")) { dismiss() }
                     .buttonStyle(.glassProminent)
                     .tint(Color.brand)
             }
@@ -160,7 +160,7 @@ struct ThemePicker: View {
                         }
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("\(theme.title) theme")
+                    .accessibilityLabel(String(localized: "\(theme.title) theme"))
                     .accessibilityAddTraits(on ? .isSelected : [])
                 }
             }
@@ -291,7 +291,7 @@ struct SliderRow: View {
     @Binding var value: Double
     let range: ClosedRange<Double>
     var step: Double? = nil
-    var format: (Double) -> String = { "\(Int($0.rounded()))" }
+    var format: (Double) -> String = { String(localized: "\(Int($0.rounded()))") }
     var onEditing: ((Bool) -> Void)? = nil
 
     var body: some View {
@@ -344,7 +344,7 @@ struct SaveFailureNote: View {
                 .foregroundStyle(.orange)
                 .multilineTextAlignment(.center)
             if error is PhotosAccessDenied {
-                Button("Open Settings", systemImage: "gearshape") {
+                Button(String(localized: "Open Settings"), systemImage: "gearshape") {
                     if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
                 }
                 .buttonStyle(.glass)
@@ -373,7 +373,7 @@ struct ImportProgressOverlay: View {
                         .monospacedDigit()
                         .contentTransition(.numericText())
                     Spacer(minLength: 8)
-                    Text("\(Int((progress.fraction * 100).rounded()))%")
+                    Text(String(localized: "\(Int((progress.fraction * 100).rounded()))%"))
                         .font(.subheadline.weight(.semibold))
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
@@ -388,7 +388,7 @@ struct ImportProgressOverlay: View {
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                     Spacer(minLength: 8)
-                    Button("Cancel", role: .cancel, action: cancel)
+                    Button(String(localized: "Cancel"), role: .cancel, action: cancel)
                         .buttonStyle(.glass)
                         .controlSize(.small)
                 }
@@ -399,7 +399,7 @@ struct ImportProgressOverlay: View {
             .padding(.horizontal, 24)
             .animation(.smooth, value: progress.current)
             .accessibilityElement(children: .contain)
-            .accessibilityLabel("\(progress.title), \(Int((progress.fraction * 100).rounded())) percent")
+            .accessibilityLabel(String(localized: "\(progress.title), \(Int((progress.fraction * 100).rounded())) percent"))
         }
     }
 }
@@ -523,16 +523,20 @@ private struct SlidingTabsRow: ViewModifier {
         content
             .coordinateSpace(.named(slidingTabSpace))
             .onPreferenceChange(SlidingTabFrames.self) { frames = $0 }
-            .background(alignment: .topLeading) {
-                if let b = bubble {
-                    Capsule()
-                        .fill(.clear)
-                        .glassEffect(.regular.tint(Color.brand.opacity(0.75)).interactive(), in: .capsule)
-                        .frame(width: b.width, height: b.height)
-                        .scaleEffect(dragX == nil ? 1 : 1.08)
-                        .offset(x: b.minX, y: b.minY)
-                        .allowsHitTesting(false)
+            .background {
+                // Preference frames are physical coordinates in the row's named space.
+                GeometryReader { _ in
+                    if let b = bubble {
+                        Capsule()
+                            .fill(.clear)
+                            .glassEffect(.regular.tint(Color.brand.opacity(0.75)).interactive(), in: .capsule)
+                            .frame(width: b.width, height: b.height)
+                            .scaleEffect(dragX == nil ? 1 : 1.08)
+                            .position(x: b.midX, y: b.midY)
+                            .allowsHitTesting(false)
+                    }
                 }
+                .environment(\.layoutDirection, .leftToRight)
             }
             .simultaneousGesture(
                 DragGesture(minimumDistance: 6, coordinateSpace: .named(slidingTabSpace))
@@ -584,7 +588,7 @@ struct PanelDoneButton: View {
         .buttonStyle(.glassProminent)
         .buttonBorderShape(.circle)
         .controlSize(.small)
-        .accessibilityLabel("Done")
+        .accessibilityLabel(String(localized: "Done"))
     }
 }
 
@@ -619,7 +623,7 @@ struct DockHandle: View {
             HStack(spacing: 6) {
                 Image(systemName: "chevron.up").font(.system(size: 11, weight: .bold))
                 Image(systemName: "square.grid.2x2").font(.system(size: 12, weight: .semibold))
-                Text("Tabs").font(.system(size: 12, weight: .semibold))
+                Text(String(localized: "Tabs")).font(.system(size: 12, weight: .semibold))
             }
             .foregroundStyle(.white.opacity(0.85))
             .padding(.horizontal, 16)
@@ -631,7 +635,7 @@ struct DockHandle: View {
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
         .gesture(DragGesture(minimumDistance: 12).onEnded { v in if v.translation.height < -8 { show() } })
-        .accessibilityLabel("Show tabs")
-        .accessibilityHint("Shows Media, Layout, Style and Text")
+        .accessibilityLabel(String(localized: "Show tabs"))
+        .accessibilityHint(String(localized: "Shows Media, Layout, Style and Text"))
     }
 }

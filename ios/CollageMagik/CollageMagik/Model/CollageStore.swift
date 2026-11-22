@@ -130,9 +130,9 @@ final class CollageStore {
     /// What the "tray is full" alert says, including where to remove pictures from.
     var trayFullMessage: String {
         let skipped = trayFullSkipped > 0
-            ? "\(trayFullSkipped) \(trayFullSkipped == 1 ? "item wasn't" : "items weren't") added. "
+            ? String(localized: "Items not added: \(trayFullSkipped). ")
             : ""
-        return skipped + "Your media tray holds up to \(maxTrayItems) pictures and videos, and it's full. To add more, remove some first: press and hold a picture in the tray at the bottom, then tap Remove."
+        return skipped + String(localized: "Your media tray holds up to \(maxTrayItems) pictures and videos, and it's full. To add more, remove some first: press and hold a picture in the tray at the bottom, then tap Remove.")
     }
     var placedMediaCount: Int { project.cells.prefix(project.cellCount).compactMap(\.mediaId).count }
 
@@ -283,19 +283,19 @@ final class CollageStore {
             if Task.isCancelled { cancelled = true; break }
             let kindHint = source.kindHint
             let label = source.label
-            let noun = kindHint == .video ? "video" : "photo"
-            importProgress?.start(item: index + 1, detail: "\(source.fetchVerb) \(noun)…")
+            let noun = kindHint == .video ? String(localized: "video") : String(localized: "photo")
+            importProgress?.start(item: index + 1, detail: String(localized: "\(source.fetchVerb) \(noun)…"))
             #if DEBUG
             if let ms = ProcessInfo.processInfo.environment["CM_IMPORT_SLOW_MS"].flatMap(Int.init) { try? await Task.sleep(for: .milliseconds(ms)) }
             #endif
 
             // Rules that don't need the file: checked first, so nothing is downloaded only to be refused.
             if kindHint == nil {
-                skip("\(label): only photos and videos can be added.")
+                skip(String(localized: "\(label): only photos and videos can be added."))
                 continue
             }
             if kindHint == .video && isCarousel {
-                skip("Carousels use photos only. Switch to Collage to add videos.")
+                skip(String(localized: "Carousels use photos only. Switch to Collage to add videos."))
                 continue
             }
             if items.count >= maxTrayItems {
@@ -303,7 +303,7 @@ final class CollageStore {
                 break
             }
             if kindHint == .video && videoCount >= maxVideos {
-                skip("Only \(maxVideos) videos per collage. Remove one to add another.")
+                skip(String(localized: "Only \(maxVideos) videos per collage. Remove one to add another."))
                 continue
             }
 
@@ -314,29 +314,29 @@ final class CollageStore {
                     guard let self, self.importProgress?.current == index + 1 else { return }
                     self.importProgress?.update(
                         fraction: f * 0.85,
-                        detail: f < 1 ? "\(source.fetchVerb) \(noun)… \(Int((f * 100).rounded()))%" : "\(source.fetchVerb) \(noun)…"
+                        detail: f < 1 ? String(localized: "\(source.fetchVerb) \(noun)… \(Int((f * 100).rounded()))%") : String(localized: "\(source.fetchVerb) \(noun)…")
                     )
                 }
             } catch {
                 if Task.isCancelled || (error as? CocoaError)?.code == .userCancelled { cancelled = true; break }
-                skip("\(label) couldn't be read: \(error.localizedDescription)")
+                skip(String(localized: "\(label) couldn't be read: \(error.localizedDescription)"))
                 continue
             }
             if Task.isCancelled { cancelled = true; break }
 
             // 2. Check it plays here and make its thumbnails.
             let kind = MediaLoader.kind(of: url)
-            importProgress?.update(fraction: 0.88, detail: kind == .video ? "Preparing video…" : "Preparing photo…")
+            importProgress?.update(fraction: 0.88, detail: kind == .video ? String(localized: "Preparing video…") : String(localized: "Preparing photo…"))
             if kind == nil {
-                skip("\(url.lastPathComponent): only photos and videos can be added.")
+                skip(String(localized: "\(url.lastPathComponent): only photos and videos can be added."))
                 continue
             }
             if kind == .video && isCarousel {
-                skip("Carousels use photos only. Switch to Collage to add videos.")
+                skip(String(localized: "Carousels use photos only. Switch to Collage to add videos."))
                 continue
             }
             if kind == .video && videoCount >= maxVideos {
-                skip("Only \(maxVideos) videos per collage. Remove one to add another.")
+                skip(String(localized: "Only \(maxVideos) videos per collage. Remove one to add another."))
                 continue
             }
             let name = source.name ?? url.deletingPathExtension().lastPathComponent
@@ -367,13 +367,13 @@ final class CollageStore {
             importProgress?.finishItem(added: added)
         }
         if madeRoom > 0, !cancelled {
-            notify("Your tray holds \(maxTrayItems). \(madeRoom) older \(madeRoom == 1 ? "photo was" : "photos were") replaced by the new \(madeRoom == 1 ? "one" : "ones").")
+            notify(String(localized: "Your tray holds \(maxTrayItems). Older photos replaced: \(madeRoom)."))
         }
         if cancelled {
-            notify(added == 0 ? "Adding stopped. Nothing was added." : "Adding stopped. \(added) of \(sources.count) added.")
+            notify(added == 0 ? String(localized: "Adding stopped. Nothing was added.") : String(localized: "Adding stopped. \(added) of \(sources.count) added."))
         } else if !problems.isEmpty, skippedForTray == 0 {
-            let first = problems.count == 1 ? problems[0] : "\(problems.count) items couldn't be added. \(problems[0])"
-            notify("\(added) of \(sources.count) added. " + first)
+            let first = problems.count == 1 ? problems[0] : String(localized: "\(problems.count) items couldn't be added. \(problems[0])")
+            notify(String(localized: "\(added) of \(sources.count) added. ") + first)
         }
         if cancelled || !problems.isEmpty, skippedForTray == 0 {
             // the summary above already said what happened
@@ -382,7 +382,7 @@ final class CollageStore {
             showTrayFull = true
             UINotificationFeedbackGenerator().notificationOccurred(.warning)
         } else if leftInTray > 0 {
-            notify("The \(isCarousel ? "carousel" : "collage") is full (\(cellLimit)). \(leftInTray == 1 ? "1 picture is" : "\(leftInTray) pictures are") in your tray: tap a cell, then a tray picture, to swap it in.")
+            notify(String(localized: "The design is full (\(cellLimit)). Pictures in your tray: \(leftInTray). Tap a cell, then a tray picture, to swap it in."))
         }
         // The collage follows the selection: pick N photos / videos and you get an N-cell collage, with the
         // formats for N cells ready to choose from. (A single add to a collage already in progress leaves it alone.)
@@ -422,7 +422,7 @@ final class CollageStore {
     func importMusic(_ url: URL) async {
         let local: URL
         do { local = try MediaLoader.copyIntoApp(url) } catch {
-            notify("\(url.lastPathComponent): couldn't be read.")
+            notify(String(localized: "\(url.lastPathComponent): couldn't be read."))
             return
         }
         let name = url.deletingPathExtension().lastPathComponent
@@ -453,11 +453,11 @@ final class CollageStore {
         if idx == -1 {
             // a collage template keeps its own slots: once they are full, more pictures wait in the tray
             if activeTemplate?.mode == .collage && !isCarousel {
-                if !quiet { notify("This template has \(count) slots. Tap a picture, then a tray picture, to swap it in.") }
+                if !quiet { notify(String(localized: "This template has \(count) slots. Tap a picture, then a tray picture, to swap it in.")) }
                 return false
             }
             if count >= cellLimit {
-                if !quiet { notify("The \(isCarousel ? "carousel" : "collage") is full (\(cellLimit)). Tap a cell first, then tap a tray picture to swap it in.") }
+                if !quiet { notify(String(localized: "The design is full (\(cellLimit)). Tap a cell first, then tap a tray picture to swap it in.")) }
                 return false
             }
             count += 1
@@ -803,11 +803,11 @@ final class CollageStore {
     func addOverlay(_ mediaId: String, cx: Double? = nil, cy: Double? = nil) -> Bool {
         guard let item = item(mediaId) else { return false }
         guard item.kind == .photo else {
-            notify("Only photos can go on top. Videos play in the layout's cells.")
+            notify(String(localized: "Only photos can go on top. Videos play in the layout's cells."))
             return false
         }
         guard project.overlays.count < maxOverlays else {
-            notify("Up to \(maxOverlays) photos fit on top of one design. Remove one to add another.")
+            notify(String(localized: "Up to \(maxOverlays) photos fit on top of one design. Remove one to add another."))
             return false
         }
         let n = project.overlays.count
@@ -865,7 +865,7 @@ final class CollageStore {
     func replaceOverlayMedia(_ id: String, with mediaId: String) {
         guard let item = item(mediaId) else { return }
         guard item.kind == .photo else {
-            notify("Only photos can go on top. Videos play in the layout's cells.")
+            notify(String(localized: "Only photos can go on top. Videos play in the layout's cells."))
             return
         }
         updateOverlay(id) { $0.mediaId = mediaId; $0.apply(MediaView()) }
@@ -879,7 +879,7 @@ final class CollageStore {
     func duplicateOverlay(_ id: String) {
         guard let src = overlay(id) else { return }
         guard project.overlays.count < maxOverlays else {
-            notify("Up to \(maxOverlays) photos fit on top of one design. Remove one to add another.")
+            notify(String(localized: "Up to \(maxOverlays) photos fit on top of one design. Remove one to add another."))
             return
         }
         var o = src
@@ -922,7 +922,7 @@ final class CollageStore {
     /// caption that was selected (or the last one), so a set of captions matches without restyling each.
     func addCaption() {
         guard project.captions.count < maxCaptions else {
-            notify("Up to \(maxCaptions) captions fit on one design. Remove one to add another.")
+            notify(String(localized: "Up to \(maxCaptions) captions fit on one design. Remove one to add another."))
             return
         }
         var c = Caption()
@@ -962,7 +962,7 @@ final class CollageStore {
     func duplicateCaption(_ id: String) {
         guard let src = caption(id) else { return }
         guard project.captions.count < maxCaptions else {
-            notify("Up to \(maxCaptions) captions fit on one design. Remove one to add another.")
+            notify(String(localized: "Up to \(maxCaptions) captions fit on one design. Remove one to add another."))
             return
         }
         var c = src
@@ -996,7 +996,7 @@ final class CollageStore {
     func splitAtPlayhead() {
         let playhead = playback.playhead
         if selectedClip == musicClipId {
-            notify("Split works on video clips. Trim the music with its ends instead.")
+            notify(String(localized: "Split works on video clips. Trim the music with its ends instead."))
             return
         }
         var target: (lane: Int, clip: Clip)?
@@ -1008,11 +1008,11 @@ final class CollageStore {
             }
         }
         guard let t = target else {
-            notify("Move the playhead over a clip to cut it there.")
+            notify(String(localized: "Move the playhead over a clip to cut it there."))
             return
         }
         guard let parts = splitClip(t.clip, playhead) else {
-            notify("Move the playhead a little further from the clip edge.")
+            notify(String(localized: "Move the playhead a little further from the clip edge."))
             return
         }
         project.lanes[t.lane].clips = project.lanes[t.lane].clips.flatMap { $0.id == t.clip.id ? [parts.0, parts.1] : [$0] }
@@ -1022,7 +1022,7 @@ final class CollageStore {
 
     func deleteSelectedClip() {
         guard let sel = selectedClip else {
-            notify("Tap a clip on the timeline first.")
+            notify(String(localized: "Tap a clip on the timeline first."))
             return
         }
         if sel == musicClipId {
@@ -1031,7 +1031,7 @@ final class CollageStore {
         }
         guard let li = project.lanes.firstIndex(where: { $0.clips.contains { $0.id == sel } }) else { return }
         if project.lanes[li].clips.count <= 1 {
-            notify("A video needs at least one clip. Use Remove on its cell to take it out.")
+            notify(String(localized: "A video needs at least one clip. Use Remove on its cell to take it out."))
             return
         }
         project.lanes[li].clips.removeAll { $0.id == sel }
@@ -1057,7 +1057,7 @@ final class CollageStore {
     /// Opens the editor that picks which part of the video a clip plays.
     func openChoosePart() {
         guard let ref = targetClip() else {
-            notify(selectedClip == musicClipId ? "Choose part works on video clips. Drag the music's ends to trim it." : "Tap a clip on the timeline first.")
+            notify(selectedClip == musicClipId ? String(localized: "Choose part works on video clips. Drag the music's ends to trim it.") : String(localized: "Tap a clip on the timeline first."))
             return
         }
         playback.pause()
@@ -1071,7 +1071,7 @@ final class CollageStore {
     /// Sets how fast a clip plays. It keeps its start; a faster clip is shorter on the timeline, a slower one longer.
     func setClipSpeed(_ speed: Double) {
         guard let ref = targetClip() else {
-            notify(selectedClip == musicClipId ? "Speed works on video clips." : "Tap a clip on the timeline first.")
+            notify(selectedClip == musicClipId ? String(localized: "Speed works on video clips.") : String(localized: "Tap a clip on the timeline first."))
             return
         }
         updateClip(mediaId: ref.mediaId, clipId: ref.clipId) { setSpeed($0, speed) }
@@ -1081,11 +1081,11 @@ final class CollageStore {
 
     func duplicateSelectedClip() {
         guard let ref = targetClip(), let c = clip(ref) else {
-            notify("Tap a clip on the timeline first.")
+            notify(String(localized: "Tap a clip on the timeline first."))
             return
         }
         guard let copy = duplicateClip(c) else {
-            notify("There's no room left in the \(Int(maxDuration))-second collage for a copy.")
+            notify(String(localized: "There's no room left in the \(Int(maxDuration))-second collage for a copy."))
             return
         }
         setLane(ref.mediaId) { $0.clips.append(copy) }
@@ -1097,7 +1097,7 @@ final class CollageStore {
     /// Plays the whole video again (or its first 60 seconds), from where the clip starts.
     func resetSelectedClip() {
         guard let ref = targetClip(), let item = item(ref.mediaId) else {
-            notify("Tap a clip on the timeline first.")
+            notify(String(localized: "Tap a clip on the timeline first."))
             return
         }
         updateClip(mediaId: ref.mediaId, clipId: ref.clipId) { choosePart($0, inPoint: 0, outPoint: item.duration, mediaDuration: item.duration) }
@@ -1232,17 +1232,17 @@ extension CollageStore {
         saveDraftNow()
         let file: DraftFile
         do { file = try DraftDisk.read(id) } catch {
-            notify("This draft couldn't be opened.")
+            notify(String(localized: "This draft couldn't be opened."))
             return
         }
         let mediaDir = DraftDisk.media(id)
         playback.pause()
         for i in items { playback.dispose(i.id) }
-        importProgress = ImportProgress(total: file.items.count, heading: "Opening your draft")
+        importProgress = ImportProgress(total: file.items.count, heading: String(localized: "Opening your draft"))
         importing = true
         var loaded: [MediaItem] = []
         for (i, d) in file.items.enumerated() {
-            importProgress?.start(item: i + 1, detail: d.isVideo ? "Reading video…" : "Reading photo…")
+            importProgress?.start(item: i + 1, detail: d.isVideo ? String(localized: "Reading video…") : String(localized: "Reading photo…"))
             if let item = try? await MediaLoader.load(url: mediaDir.appendingPathComponent(d.file), name: d.name, id: d.id) {
                 loaded.append(item)
             }
@@ -1275,7 +1275,7 @@ extension CollageStore {
         resetHistory()
         if loaded.count < file.items.count {
             let missing = file.items.count - loaded.count
-            notify("\(missing) \(missing == 1 ? "item" : "items") in this draft couldn't be read and \(missing == 1 ? "was" : "were") left out.")
+            notify(String(localized: "Unreadable items left out of this draft: \(missing)."))
         }
     }
 

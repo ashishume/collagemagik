@@ -70,7 +70,8 @@ struct CropEditor: View {
                 GeometryReader { geo in
                     canvas(geo.size)
                 }
-                Text("The bright area is what's used. Drag to move, pinch or use the slider to zoom.")
+                .environment(\.layoutDirection, .leftToRight)
+                Text(String(localized: "The bright area is what's used. Drag to move, pinch or use the slider to zoom."))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -79,14 +80,14 @@ struct CropEditor: View {
             .padding(.horizontal, 14)
             .padding(.bottom, 8)
             .background { AuroraBackground().ignoresSafeArea() }
-            .navigationTitle("Crop and rotate")
+            .navigationTitle(String(localized: "Crop and rotate"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", systemImage: "xmark") { dismiss() }
+                    Button(String(localized: "Cancel"), systemImage: "xmark") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Apply", systemImage: "checkmark") {
+                    Button(String(localized: "Apply"), systemImage: "checkmark") {
                         apply()
                         dismiss()
                     }
@@ -189,18 +190,18 @@ struct CropEditor: View {
         VStack(spacing: 10) {
             GlassEffectContainer(spacing: 8) {
                 HStack(spacing: 8) {
-                    ChipButton(title: "Left", symbol: "rotate.left") { turn(-1) }
-                    ChipButton(title: "Right", symbol: "rotate.right") { turn(1) }
-                    ChipButton(title: "Flip", symbol: "arrow.left.and.right.righttriangle.left.righttriangle.right", isOn: draft.flip) {
+                    ChipButton(title: String(localized: "Left"), symbol: "rotate.left") { turn(-1) }
+                    ChipButton(title: String(localized: "Right"), symbol: "rotate.right") { turn(1) }
+                    ChipButton(title: String(localized: "Flip"), symbol: "arrow.left.and.right.righttriangle.left.righttriangle.right", isOn: draft.flip) {
                         withAnimation(.smooth) { draft.flip.toggle(); draft.panX = -draft.panX }
                     }
-                    ChipButton(title: "Reset", symbol: "arrow.counterclockwise") {
+                    ChipButton(title: String(localized: "Reset"), symbol: "arrow.counterclockwise") {
                         withAnimation(.smooth) { draft = MediaView() }
                     }
                 }
             }
-            SliderRow(title: "Zoom", value: $draft.zoom, range: 1...4, step: 0.01) { "\(Int(($0 * 100).rounded()))%" }
-            SliderRow(title: "Straighten", value: $draft.angle, range: -45...45, step: 0.5) {
+            SliderRow(title: String(localized: "Zoom"), value: $draft.zoom, range: 1...4, step: 0.01) { String(localized: "\(Int(($0 * 100).rounded()))%") }
+            SliderRow(title: String(localized: "Straighten"), value: $draft.angle, range: -45...45, step: 0.5) {
                 ($0 > 0 ? "+" : "") + String(format: "%.1f", $0).replacingOccurrences(of: ".0", with: "") + "°"
             }
         }

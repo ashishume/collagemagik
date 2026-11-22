@@ -75,15 +75,15 @@ enum CarouselStyle: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .panorama: "Panorama"
-        case .flow: "Flow"
-        case .squareFlow: "Square flow"
-        case .duo: "Two rows"
-        case .stagger: "Stagger"
-        case .mosaic: "Mosaic"
-        case .scatter: "Scatter"
-        case .wave: "Wave"
-        case .wall: "Wall"
+        case .panorama: String(localized: "Panorama")
+        case .flow: String(localized: "Flow")
+        case .squareFlow: String(localized: "Square flow")
+        case .duo: String(localized: "Two rows")
+        case .stagger: String(localized: "Stagger")
+        case .mosaic: String(localized: "Mosaic")
+        case .scatter: String(localized: "Scatter")
+        case .wave: String(localized: "Wave")
+        case .wall: String(localized: "Wall")
         }
     }
     /// Styles whose arrangement is dealt at random (and can be re-dealt).

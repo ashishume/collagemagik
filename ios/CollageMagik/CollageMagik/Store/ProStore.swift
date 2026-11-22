@@ -93,9 +93,9 @@ final class ProStore {
                 if let sub = p.subscription, sub.introductoryOffer != nil, await sub.isEligibleForIntroOffer { eligible.insert(plan) }
             }
             introEligible = eligible
-            if map.isEmpty { loadError = "The plans couldn't be loaded. Check your connection and try again." }
+            if map.isEmpty { loadError = String(localized: "The plans couldn't be loaded. Check your connection and try again.") }
         } catch {
-            loadError = "The plans couldn't be loaded: \(error.localizedDescription)"
+            loadError = String(localized: "The plans couldn't be loaded: \(error.localizedDescription)")
         }
     }
 
@@ -140,7 +140,7 @@ final class ProStore {
     enum Outcome { case purchased, cancelled, pending, failed(String) }
 
     func purchase(_ plan: Plan) async -> Outcome {
-        guard let product = products[plan] else { return .failed("This plan isn't available right now.") }
+        guard let product = products[plan] else { return .failed(String(localized: "This plan isn't available right now.")) }
         purchasing = plan
         defer { purchasing = nil }
         do {
@@ -148,7 +148,7 @@ final class ProStore {
             case .success(let verification):
                 withAnimation(.smooth) { confirming = true }
                 defer { withAnimation(.smooth) { confirming = false } }
-                guard case .verified(let t) = verification else { return .failed("The App Store couldn't confirm this purchase.") }
+                guard case .verified(let t) = verification else { return .failed(String(localized: "The App Store couldn't confirm this purchase.")) }
                 // Verified on the device: Pro is on now. The full check (renewal details) can take a few seconds over
                 // the network, so it runs afterwards instead of keeping the person waiting.
                 setPro(plan, renews: t.expirationDate, willRenew: true)

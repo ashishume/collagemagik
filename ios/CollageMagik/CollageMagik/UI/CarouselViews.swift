@@ -82,7 +82,7 @@ struct SlideBar: View {
                             }
                             .buttonStyle(.plain)
                             .id(k)
-                            .accessibilityLabel("Slide \(k)")
+                            .accessibilityLabel(String(localized: "Slide \(k)"))
                             .accessibilityAddTraits(on ? .isSelected : [])
                         }
                     }
@@ -101,6 +101,7 @@ struct SlideBar: View {
             .onAppear { reader.scrollTo(current, anchor: .center) }
             .onChange(of: slides) { reader.scrollTo(current, anchor: .center) }
         }
+        .environment(\.layoutDirection, .leftToRight)
         .sensoryFeedback(.selection, trigger: current)
     }
 }
@@ -112,11 +113,11 @@ struct VideoPanel: View {
     var body: some View {
         @Bindable var store = store
         if placedLanes(store.project).isEmpty {
-            HintRow(symbol: "film", text: "Add a video to cut it here, control its sound and add background music.")
+            HintRow(symbol: "film", text: String(localized: "Add a video to cut it here, control its sound and add background music."))
         } else {
             VStack(spacing: 8) {
                 HStack(spacing: 8) {
-                    Picker("Video tools", selection: $store.videoSection) {
+                    Picker(String(localized: "Video tools"), selection: $store.videoSection) {
                         ForEach(VideoSection.allCases) { Text($0.label).tag($0) }
                     }
                     .pickerStyle(.segmented)
@@ -126,7 +127,7 @@ struct VideoPanel: View {
                     .buttonStyle(.glassProminent)
                     .buttonBorderShape(.circle)
                     .controlSize(.small)
-                    .accessibilityLabel("Done with video")
+                    .accessibilityLabel(String(localized: "Done with video"))
                 }
                 switch store.videoSection {
                 case .timeline: TimelinePanel()

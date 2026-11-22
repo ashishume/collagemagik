@@ -31,26 +31,26 @@ enum CaptionFont: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .classic: "Classic"
-        case .rounded: "Rounded"
-        case .serif: "Serif"
-        case .italic: "Elegant"
-        case .script: "Script"
-        case .vows: "Vows"
-        case .signature: "Signature"
-        case .dreamy: "Dreamy"
-        case .diary: "Diary"
-        case .hand: "Hand"
-        case .marker: "Marker"
-        case .poster: "Poster"
-        case .typewriter: "Typed"
-        case .chalk: "Chalk"
-        case .romance: "Romance"
-        case .retro: "Retro"
-        case .note: "Note"
-        case .magazine: "Magazine"
-        case .engraved: "Engraved"
-        case .slab: "Slab"
+        case .classic: String(localized: "Classic")
+        case .rounded: String(localized: "Rounded")
+        case .serif: String(localized: "Serif")
+        case .italic: String(localized: "Elegant")
+        case .script: String(localized: "Script")
+        case .vows: String(localized: "Vows")
+        case .signature: String(localized: "Signature")
+        case .dreamy: String(localized: "Dreamy")
+        case .diary: String(localized: "Diary")
+        case .hand: String(localized: "Hand")
+        case .marker: String(localized: "Marker")
+        case .poster: String(localized: "Poster")
+        case .typewriter: String(localized: "Typed")
+        case .chalk: String(localized: "Chalk")
+        case .romance: String(localized: "Romance")
+        case .retro: String(localized: "Retro")
+        case .note: String(localized: "Note")
+        case .magazine: String(localized: "Magazine")
+        case .engraved: String(localized: "Engraved")
+        case .slab: String(localized: "Slab")
         }
     }
 
@@ -161,13 +161,13 @@ enum CaptionLook: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .plain: "Shadow"
-        case .label: "Label"
-        case .plate: "Plate"
-        case .outline: "Outline"
-        case .neon: "Neon"
-        case .sticker: "Sticker"
-        case .gradient: "Gradient"
+        case .plain: String(localized: "Shadow")
+        case .label: String(localized: "Label")
+        case .plate: String(localized: "Plate")
+        case .outline: String(localized: "Outline")
+        case .neon: String(localized: "Neon")
+        case .sticker: String(localized: "Sticker")
+        case .gradient: String(localized: "Gradient")
         }
     }
     var symbol: String {
@@ -185,6 +185,14 @@ enum CaptionLook: String, CaseIterable, Identifiable {
 
 enum CaptionAlign: String, CaseIterable {
     case left, center, right
+
+    var title: String {
+        switch self {
+        case .left: String(localized: "Left")
+        case .center: String(localized: "Center")
+        case .right: String(localized: "Right")
+        }
+    }
 
     var symbol: String {
         switch self {
@@ -222,11 +230,11 @@ enum CaptionOrnament: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .none: "None"
-        case .heart: "Heart"
-        case .divider: "Divider"
-        case .sparkles: "Sparkles"
-        case .swash: "Swash"
+        case .none: String(localized: "None")
+        case .heart: String(localized: "Heart")
+        case .divider: String(localized: "Divider")
+        case .sparkles: String(localized: "Sparkles")
+        case .swash: String(localized: "Swash")
         }
     }
     var symbol: String {
@@ -247,18 +255,18 @@ enum CaptionMix: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .none: "One size"
-        case .lead: "Small first line"
-        case .tail: "Small last line"
-        case .both: "Small first & last"
+        case .none: String(localized: "One size")
+        case .lead: String(localized: "Small first line")
+        case .tail: String(localized: "Small last line")
+        case .both: String(localized: "Small first & last")
         }
     }
     var short: String {
         switch self {
-        case .none: "Off"
-        case .lead: "First"
-        case .tail: "Last"
-        case .both: "Both"
+        case .none: String(localized: "Off")
+        case .lead: String(localized: "First")
+        case .tail: String(localized: "Last")
+        case .both: String(localized: "Both")
         }
     }
 
@@ -316,12 +324,12 @@ enum CaptionFormat: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .bold: "Bold"
-        case .italic: "Italic"
-        case .underline: "Underline"
-        case .strikethrough: "Strikethrough"
-        case .allCaps: "All caps"
-        case .vertical: "Vertical"
+        case .bold: String(localized: "Bold")
+        case .italic: String(localized: "Italic")
+        case .underline: String(localized: "Underline")
+        case .strikethrough: String(localized: "Strikethrough")
+        case .allCaps: String(localized: "All caps")
+        case .vertical: String(localized: "Vertical")
         }
     }
     var symbol: String {

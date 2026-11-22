@@ -32,7 +32,7 @@ struct ChoosePartEditor: View {
                     summary(draft)
                     filmstrip(draft)
                         .frame(height: 64)
-                    Text("Drag the frame to choose another moment. Drag its ends to change the length.")
+                    Text(String(localized: "Drag the frame to choose another moment. Drag its ends to change the length."))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -42,14 +42,14 @@ struct ChoosePartEditor: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 8)
             .background { AuroraBackground().ignoresSafeArea() }
-            .navigationTitle("Choose part")
+            .navigationTitle(String(localized: "Choose part"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", systemImage: "xmark") { dismiss() }
+                    Button(String(localized: "Cancel"), systemImage: "xmark") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Apply", systemImage: "checkmark") {
+                    Button(String(localized: "Apply"), systemImage: "checkmark") {
                         if let draft { store.updateClip(mediaId: ref.mediaId, clipId: ref.clipId) { _ in draft } }
                         if let draft { store.playback.seek(to: draft.start) }
                         dismiss()
@@ -81,17 +81,17 @@ struct ChoosePartEditor: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Preview of the chosen part")
-        .accessibilityHint(playing ? "Tap to pause" : "Tap to play")
+        .accessibilityLabel(String(localized: "Preview of the chosen part"))
+        .accessibilityHint(playing ? String(localized: "Tap to pause") : String(localized: "Tap to play"))
         .accessibilityAddTraits(.isButton)
     }
 
     private func summary(_ c: Clip) -> some View {
         HStack {
-            Label("\(precise(c.inPoint)) – \(precise(c.outPoint))", systemImage: "film")
+            Label(String(localized: "\(precise(c.inPoint)) – \(precise(c.outPoint))"), systemImage: "film")
                 .font(.subheadline.weight(.semibold).monospacedDigit())
             Spacer()
-            Text(String(format: "%.1fs of %.1fs", c.sourceLength, mediaDuration))
+            Text(String(format: String(localized: "%.1fs of %.1fs"), c.sourceLength, mediaDuration))
                 .font(.subheadline.monospacedDigit())
                 .foregroundStyle(.secondary)
         }
@@ -145,8 +145,9 @@ struct ChoosePartEditor: View {
             .gesture(stripGesture(x0: x0, x1: x1, pxPerSec: pxPerSec, inset: inset))
         }
         .accessibilityElement()
-        .accessibilityLabel("Chosen part")
-        .accessibilityValue("\(precise(c.inPoint)) to \(precise(c.outPoint))")
+        .environment(\.layoutDirection, .leftToRight)
+        .accessibilityLabel(String(localized: "Chosen part"))
+        .accessibilityValue(String(localized: "\(precise(c.inPoint)) to \(precise(c.outPoint))"))
         .accessibilityAdjustableAction { dir in
             let step = dir == .increment ? 0.5 : -0.5
             guard let d = draft else { return }
@@ -222,12 +223,12 @@ struct ChoosePartEditor: View {
     private func controls(_ c: Clip) -> some View {
         GlassEffectContainer(spacing: 8) {
             HStack(spacing: 8) {
-                ChipButton(title: playing ? "Pause" : "Play", symbol: playing ? "pause.fill" : "play.fill") { togglePlay() }
-                ChipButton(title: "Whole video", symbol: "arrow.left.and.right") {
+                ChipButton(title: playing ? String(localized: "Pause") : String(localized: "Play"), symbol: playing ? "pause.fill" : "play.fill") { togglePlay() }
+                ChipButton(title: String(localized: "Whole video"), symbol: "arrow.left.and.right") {
                     draft = choosePart(c, inPoint: 0, outPoint: mediaDuration, mediaDuration: mediaDuration)
                     restartLoop()
                 }
-                ChipButton(title: "Start here", symbol: "arrow.right.to.line") {
+                ChipButton(title: String(localized: "Start here"), symbol: "arrow.right.to.line") {
                     // the chosen part begins at the frame showing now
                     draft = choosePart(c, inPoint: current, outPoint: current + c.sourceLength, mediaDuration: mediaDuration)
                     restartLoop()

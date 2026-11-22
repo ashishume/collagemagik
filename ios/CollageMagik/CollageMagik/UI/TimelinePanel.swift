@@ -16,15 +16,15 @@ struct TransportBar: View {
             }
             .buttonStyle(.glass)
             .buttonBorderShape(.circle)
-            .accessibilityLabel(pb.isPlaying ? "Pause" : "Play")
+            .accessibilityLabel(pb.isPlaying ? String(localized: "Pause") : String(localized: "Play"))
 
             Slider(
                 value: Binding(get: { pb.playhead }, set: { pb.seek(to: $0) }),
                 in: 0...max(store.totalDuration, 0.1)
             )
-            .accessibilityLabel("Playhead")
+            .accessibilityLabel(String(localized: "Playhead"))
 
-            Text("\(formatTime(pb.playhead)) / \(formatTime(store.totalDuration))")
+            Text(String(localized: "\(formatTime(pb.playhead)) / \(formatTime(store.totalDuration))"))
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
@@ -33,14 +33,14 @@ struct TransportBar: View {
             // The video tools aren't in the dock (a collage often has no video): this is the way in, shown only
             // while there is a video to cut.
             Button { store.openVideo(.timeline) } label: {
-                Label("Timeline", systemImage: "film.stack")
+                Label(String(localized: "Timeline"), systemImage: "film.stack")
                     .font(.caption.weight(.semibold))
                     .lineLimit(1)
                     .fixedSize()
             }
             .buttonStyle(.glassProminent)
             .controlSize(.small)
-            .accessibilityHint("Cut the video, choose its part, and set its sound and background music")
+            .accessibilityHint(String(localized: "Cut the video, choose its part, and set its sound and background music"))
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 2)
@@ -54,7 +54,7 @@ struct TimelinePanel: View {
     var body: some View {
         let lanes = placedLanes(store.project)
         if lanes.isEmpty {
-            HintRow(symbol: "film", text: "Add a video to cut it here. Photos stay on screen for the whole video.")
+            HintRow(symbol: "film", text: String(localized: "Add a video to cut it here. Photos stay on screen for the whole video."))
         } else {
             VStack(spacing: 6) {
                 controls
@@ -74,9 +74,9 @@ struct TimelinePanel: View {
             }
             .buttonStyle(.glass)
             .buttonBorderShape(.circle)
-            .accessibilityLabel(pb.isPlaying ? "Pause" : "Play")
+            .accessibilityLabel(pb.isPlaying ? String(localized: "Pause") : String(localized: "Play"))
 
-            Text("\(formatTime(pb.playhead)) / \(formatTime(store.totalDuration))")
+            Text(String(localized: "\(formatTime(pb.playhead)) / \(formatTime(store.totalDuration))"))
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
@@ -84,18 +84,18 @@ struct TimelinePanel: View {
             Spacer(minLength: 0)
             GlassEffectContainer(spacing: 6) {
                 HStack(spacing: 6) {
-                    ChipButton(title: "Split", symbol: "scissors") { store.splitAtPlayhead() }
+                    ChipButton(title: String(localized: "Split"), symbol: "scissors") { store.splitAtPlayhead() }
                         .fixedSize()
-                    ChipButton(title: "Part", symbol: "film.stack") { store.openChoosePart() }
+                    ChipButton(title: String(localized: "Part"), symbol: "film.stack") { store.openChoosePart() }
                         .fixedSize()
-                        .accessibilityLabel("Choose part of the clip")
+                        .accessibilityLabel(String(localized: "Choose part of the clip"))
                     Menu {
                         ForEach(clipSpeeds.reversed(), id: \.self) { sp in
                             Button { withAnimation(.smooth) { store.setClipSpeed(sp) } } label: {
                                 if store.targetClipSpeed == sp {
                                     Label(speedLabel(sp), systemImage: "checkmark")
                                 } else {
-                                    Text(sp == 1 ? "1× Normal" : speedLabel(sp))
+                                    Text(sp == 1 ? String(localized: "1× Normal") : speedLabel(sp))
                                 }
                             }
                         }
@@ -107,13 +107,13 @@ struct TimelinePanel: View {
                     .buttonStyle(.glass)
                     .controlSize(.small)
                     .fixedSize()
-                    .accessibilityLabel("Clip speed")
+                    .accessibilityLabel(String(localized: "Clip speed"))
                     Menu {
-                        Button { store.openChoosePart() } label: { Label("Choose part…", systemImage: "film.stack") }
-                        Button { store.duplicateSelectedClip() } label: { Label("Duplicate", systemImage: "plus.square.on.square") }
-                        Button { store.resetSelectedClip() } label: { Label("Use whole video", systemImage: "arrow.left.and.right") }
+                        Button { store.openChoosePart() } label: { Label(String(localized: "Choose part…"), systemImage: "film.stack") }
+                        Button { store.duplicateSelectedClip() } label: { Label(String(localized: "Duplicate"), systemImage: "plus.square.on.square") }
+                        Button { store.resetSelectedClip() } label: { Label(String(localized: "Use whole video"), systemImage: "arrow.left.and.right") }
                         Divider()
-                        Button(role: .destructive) { store.deleteSelectedClip() } label: { Label("Delete clip", systemImage: "trash") }
+                        Button(role: .destructive) { store.deleteSelectedClip() } label: { Label(String(localized: "Delete clip"), systemImage: "trash") }
                     } label: {
                         Image(systemName: "ellipsis")
                             .font(.footnote.weight(.semibold))
@@ -122,7 +122,7 @@ struct TimelinePanel: View {
                     .buttonStyle(.glass)
                     .buttonBorderShape(.circle)
                     .controlSize(.small)
-                    .accessibilityLabel("More clip options")
+                    .accessibilityLabel(String(localized: "More clip options"))
                 }
             }
         }
@@ -191,6 +191,7 @@ private struct TimelineArea: View {
             .frame(height: rowY(rows) - rowGap)
             .coordinateSpace(name: "track")
         }
+        .environment(\.layoutDirection, .leftToRight)
     }
 
     // MARK: Labels
@@ -206,10 +207,10 @@ private struct TimelineArea: View {
                         .frame(width: 18, height: 18)
                         .background(Color.lane(i), in: Circle())
                         .foregroundStyle(.black.opacity(0.8))
-                    miniButton(lane.volume == 0 ? "speaker.slash.fill" : "speaker.wave.2.fill", on: lane.volume == 0, label: lane.volume == 0 ? "Unmute video \(name)" : "Mute video \(name)") {
+                    miniButton(lane.volume == 0 ? "speaker.slash.fill" : "speaker.wave.2.fill", on: lane.volume == 0, label: lane.volume == 0 ? String(localized: "Unmute video \(name)") : String(localized: "Mute video \(name)")) {
                         store.setLane(lane.mediaId) { $0.volume = $0.volume == 0 ? 1 : 0 }
                     }
-                    miniButton("repeat", on: lane.loop, label: "Loop video \(name) when it ends") {
+                    miniButton("repeat", on: lane.loop, label: String(localized: "Loop video \(name) when it ends")) {
                         store.setLane(lane.mediaId) { $0.loop.toggle() }
                     }
                 }
@@ -222,10 +223,10 @@ private struct TimelineArea: View {
                     .background(Color.musicGreen, in: Circle())
                     .foregroundStyle(.black.opacity(0.8))
                 if let m = store.project.music {
-                    miniButton(m.volume == 0 ? "speaker.slash.fill" : "speaker.wave.2.fill", on: m.volume == 0, label: m.volume == 0 ? "Unmute music" : "Mute music") {
+                    miniButton(m.volume == 0 ? "speaker.slash.fill" : "speaker.wave.2.fill", on: m.volume == 0, label: m.volume == 0 ? String(localized: "Unmute music") : String(localized: "Mute music")) {
                         store.project.music?.volume = m.volume == 0 ? 0.7 : 0
                     }
-                    miniButton("repeat", on: m.loop, label: "Repeat the music until the collage ends") {
+                    miniButton("repeat", on: m.loop, label: String(localized: "Repeat the music until the collage ends")) {
                         store.project.music?.loop.toggle()
                     }
                 }
@@ -374,7 +375,7 @@ private struct TimelineArea: View {
         let last = view - 18 / max(pxPerSec, 0.01)
         return ZStack(alignment: .topLeading) {
             ForEach(Array(stride(from: step, through: max(step, last), by: step)).filter { $0 <= last }, id: \.self) { t in
-                Text("\(Int(t))s")
+                Text(String(localized: "\(Int(t))s"))
                     .font(.system(size: 8.5, weight: .medium).monospacedDigit())
                     .foregroundStyle(.secondary)
                     .offset(x: t * pxPerSec + 2)
@@ -392,7 +393,7 @@ private struct TimelineArea: View {
                 .fill(.white.opacity(0.06))
                 .frame(width: width, height: laneHeight)
             ForEach(lane.clips) { clip in
-                clipView(clip: clip, color: color, pxPerSec: pxPerSec, thumbnail: item?.thumbnail, label: clip.speed == 1 ? formatTime(clip.length) : "\(formatTime(clip.length)) · \(speedLabel(clip.speed))")
+                clipView(clip: clip, color: color, pxPerSec: pxPerSec, thumbnail: item?.thumbnail, label: clip.speed == 1 ? formatTime(clip.length) : String(localized: "\(formatTime(clip.length)) · \(speedLabel(clip.speed))"))
             }
         }
         .frame(width: width, height: laneHeight, alignment: .topLeading)
@@ -421,7 +422,7 @@ private struct TimelineArea: View {
                     .allowsHitTesting(false)
             } else {
                 Button { store.openMusicImporter() } label: {
-                    Label("Add music", systemImage: "plus").font(.caption.weight(.semibold))
+                    Label(String(localized: "Add music"), systemImage: "plus").font(.caption.weight(.semibold))
                         .padding(.horizontal, 12).frame(height: laneHeight - 6)
                         .contentShape(Capsule())
                         .glassEffect(.regular.interactive(), in: .capsule)
@@ -469,7 +470,7 @@ private struct TimelineArea: View {
         }
         .frame(width: w, height: laneHeight - 2)
         .offset(x: clip.start * pxPerSec, y: 1)
-        .accessibilityLabel(clip.id == musicClipId ? "Music \(label)" : "Clip \(label)")
+        .accessibilityLabel(clip.id == musicClipId ? String(localized: "Music \(label)") : String(localized: "Clip \(label)"))
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }

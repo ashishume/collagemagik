@@ -4,6 +4,7 @@ import SwiftUI
 /// bar: tap a tool and it glides there, or press and drag across the bar and it follows the finger (a little lifted),
 /// settling on the tool it is let go over.
 struct ToolDock: View {
+    @Environment(\.layoutDirection) private var layoutDirection
     @Environment(CollageStore.self) private var store
     @State private var width: Double = 0
     /// Where the bubble is while being dragged, in tool slots (0 = first tool); nil when not dragging.
@@ -47,16 +48,20 @@ struct ToolDock: View {
                     .accessibilityAddTraits(store.tab == tab ? .isSelected : [])
                 }
             }
-            .background(alignment: .leading) {
-                if let position {
-                    Capsule()
-                        .fill(.clear)
-                        .glassEffect(.regular.tint(Color.brand.opacity(0.75)).interactive(), in: .capsule)
-                        .frame(width: slot)
-                        .scaleEffect(dragPosition == nil ? 1 : 1.12)
-                        .offset(x: position * slot)
-                        .allowsHitTesting(false)
+            .background {
+                GeometryReader { geometry in
+                    if let position {
+                        let physicalSlot = layoutDirection == .rightToLeft ? Double(tabs.count - 1) - position : position
+                        Capsule()
+                            .fill(.clear)
+                            .glassEffect(.regular.tint(Color.brand.opacity(0.75)).interactive(), in: .capsule)
+                            .frame(width: slot, height: geometry.size.height)
+                            .scaleEffect(dragPosition == nil ? 1 : 1.12)
+                            .position(x: (physicalSlot + 0.5) * slot, y: geometry.size.height / 2)
+                            .allowsHitTesting(false)
+                    }
                 }
+                .environment(\.layoutDirection, .leftToRight)
             }
             .padding(Self.inset)
             .glassEffect(.regular, in: .capsule)
@@ -64,7 +69,8 @@ struct ToolDock: View {
             .simultaneousGesture(
                 DragGesture(minimumDistance: 6)
                     .onChanged { g in
-                        let p = min(max(0, (g.location.x - Self.inset) / slot - 0.5), Double(tabs.count - 1))
+                        let x = layoutDirection == .rightToLeft ? width - g.location.x : g.location.x
+                        let p = min(max(0, (x - Self.inset) / slot - 0.5), Double(tabs.count - 1))
                         if dragPosition == nil {
                             withAnimation(Self.slide) { dragPosition = p }
                         } else {

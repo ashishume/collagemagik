@@ -156,7 +156,7 @@ struct SplashView: View {
             .overlay { shimmerOverlay }
             .shadow(color: Color.brand.opacity(0.5), radius: 12)
 
-            Text("Collages, carousels & video")
+            Text(String(localized: "Collages, carousels & video"))
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(.white.opacity(0.75))
                 .opacity(phase >= 3 ? 1 : 0)

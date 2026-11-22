@@ -32,10 +32,10 @@ enum StickerGroup: String, PanelSection {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .faces: "Faces"
-        case .love: "Love"
-        case .fun: "Fun"
-        case .shapes: "Shapes"
+        case .faces: String(localized: "Faces")
+        case .love: String(localized: "Love")
+        case .fun: String(localized: "Fun")
+        case .shapes: String(localized: "Shapes")
         }
     }
     var symbol: String {
@@ -157,7 +157,7 @@ extension CollageStore {
     /// Adds a sticker in the middle of the slide on screen, a little apart from the last one, and selects it.
     func addSticker(_ content: String, kind: StickerKind) {
         guard project.stickers.count < maxStickers else {
-            notify("Up to \(maxStickers) stickers fit on one design. Remove one to add another.")
+            notify(String(localized: "Up to \(maxStickers) stickers fit on one design. Remove one to add another."))
             return
         }
         let n = project.stickers.count

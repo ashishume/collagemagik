@@ -8,16 +8,16 @@ enum PhotoFilter: String, CaseIterable, Identifiable, Codable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .none: "Original"
-        case .vivid: "Vivid"
-        case .warm: "Warm"
-        case .cool: "Cool"
-        case .fade: "Fade"
-        case .film: "Film"
-        case .chrome: "Chrome"
-        case .vintage: "Vintage"
-        case .mono: "Mono"
-        case .noir: "Noir"
+        case .none: String(localized: "Original")
+        case .vivid: String(localized: "Vivid")
+        case .warm: String(localized: "Warm")
+        case .cool: String(localized: "Cool")
+        case .fade: String(localized: "Fade")
+        case .film: String(localized: "Film")
+        case .chrome: String(localized: "Chrome")
+        case .vintage: String(localized: "Vintage")
+        case .mono: String(localized: "Mono")
+        case .noir: String(localized: "Noir")
         }
     }
 }

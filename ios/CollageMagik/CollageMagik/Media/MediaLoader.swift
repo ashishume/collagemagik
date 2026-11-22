@@ -50,7 +50,7 @@ enum MediaLoader {
         switch kind(of: url) {
         case .photo: return try loadPhoto(url: url, name: name, id: id)
         case .video: return try await loadVideo(url: url, name: name, id: id)
-        case nil: throw ImportError("\(name): only photos and videos can be added.")
+        case nil: throw ImportError(String(localized: "\(name): only photos and videos can be added."))
         }
     }
 
@@ -61,7 +61,7 @@ enum MediaLoader {
               let props = CGImageSourceCopyPropertiesAtIndex(src, 0, nil) as? [CFString: Any],
               let pw = (props[kCGImagePropertyPixelWidth] as? NSNumber)?.doubleValue,
               let ph = (props[kCGImagePropertyPixelHeight] as? NSNumber)?.doubleValue
-        else { throw ImportError("\(name): this picture couldn't be read.") }
+        else { throw ImportError(String(localized: "\(name): this picture couldn't be read.")) }
         let orientation = (props[kCGImagePropertyOrientation] as? NSNumber)?.intValue ?? 1
         let swapped = (5...8).contains(orientation)
         func thumb(_ maxPixels: Int) -> UIImage? {
@@ -75,7 +75,7 @@ enum MediaLoader {
             return UIImage(cgImage: cg)
         }
         // only the small tray thumbnail now; the editor's preview is decoded when a cell first shows the photo
-        guard let small = thumb(420) else { throw ImportError("\(name): this picture couldn't be read.") }
+        guard let small = thumb(420) else { throw ImportError(String(localized: "\(name): this picture couldn't be read.")) }
         return MediaItem(
             id: id, kind: .photo, url: url, name: name,
             width: swapped ? ph : pw, height: swapped ? pw : ph,
@@ -95,31 +95,31 @@ enum MediaLoader {
     static func loadVideo(url: URL, name: String, id: String = newId()) async throws -> MediaItem {
         let asset = AVURLAsset(url: url)
         let ext = url.pathExtension.uppercased()
-        let supported = "Use an MP4 or MOV video (H.264 or HEVC)."
+        let supported = String(localized: "Use an MP4 or MOV video (H.264 or HEVC).")
 
         let playable: Bool, readable: Bool, duration: CMTime
         do {
             (playable, readable, duration) = try await asset.load(.isPlayable, .isReadable, .duration)
         } catch {
-            let what = ext.isEmpty ? "" : " format .\(ext)"
-            throw ImportError("\(name): this video\(what) can't be played on iPhone. \(supported)")
+            let what = ext.isEmpty ? "" : String(localized: " format .\(ext)")
+            throw ImportError(String(localized: "\(name): this video\(what) can't be played on iPhone. \(supported)"))
         }
         guard let track = try? await asset.loadTracks(withMediaType: .video).first else {
-            throw ImportError("\(name): no video was found in this file. \(supported)")
+            throw ImportError(String(localized: "\(name): no video was found in this file. \(supported)"))
         }
         let codec = await codecName(track)
         let decodable = (try? await track.load(.isDecodable)) ?? true
         guard playable, readable, decodable else {
             let what = [ext.isEmpty ? nil : ".\(ext)", codec.map { "(\($0))" }].compactMap { $0 }.joined(separator: " ")
-            throw ImportError("\(name): this video format \(what) can't be played on iPhone. \(supported)")
+            throw ImportError(String(localized: "\(name): this video format \(what) can't be played on iPhone. \(supported)"))
         }
         let seconds = duration.seconds
-        guard seconds.isFinite, seconds > 0.1 else { throw ImportError("\(name): this video is empty.") }
+        guard seconds.isFinite, seconds > 0.1 else { throw ImportError(String(localized: "\(name): this video is empty.")) }
 
         let (natural, transform) = try await track.load(.naturalSize, .preferredTransform)
         let box = CGRect(origin: .zero, size: natural).applying(transform)
         let w = abs(box.width), h = abs(box.height)
-        guard w > 1, h > 1 else { throw ImportError("\(name): this video has no picture size.") }
+        guard w > 1, h > 1 else { throw ImportError(String(localized: "\(name): this video has no picture size.")) }
         let hasAudio = ((try? await asset.loadTracks(withMediaType: .audio))?.isEmpty == false)
 
         let gen = AVAssetImageGenerator(asset: asset)
@@ -135,7 +135,7 @@ enum MediaLoader {
             }
         }
         guard let thumbnail = thumb else {
-            throw ImportError("\(name): the pictures in this video can't be decoded on this iPhone. \(supported)")
+            throw ImportError(String(localized: "\(name): the pictures in this video can't be decoded on this iPhone. \(supported)"))
         }
         return MediaItem(
             id: id, kind: .video, url: url, name: name,
@@ -149,9 +149,9 @@ enum MediaLoader {
         let asset = AVURLAsset(url: url)
         guard let (playable, duration) = try? await asset.load(.isPlayable, .duration), playable,
               (try? await asset.loadTracks(withMediaType: .audio))?.isEmpty == false
-        else { throw ImportError("\(name): this audio file can't be played. Use MP3, M4A, AAC or WAV.") }
+        else { throw ImportError(String(localized: "\(name): this audio file can't be played. Use MP3, M4A, AAC or WAV.")) }
         let s = duration.seconds
-        guard s.isFinite, s > 0.2 else { throw ImportError("\(name): this audio file is empty.") }
+        guard s.isFinite, s > 0.2 else { throw ImportError(String(localized: "\(name): this audio file is empty.")) }
         return s
     }
 }

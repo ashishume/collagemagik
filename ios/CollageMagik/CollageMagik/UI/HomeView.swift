@@ -20,16 +20,16 @@ struct HomeView: View {
     var body: some View {
         @Bindable var store = store
         TabView(selection: $section) {
-            SwiftUI.Tab("Collage", systemImage: "square.grid.2x2", value: .collage) {
+            SwiftUI.Tab(String(localized: "Collage"), systemImage: "square.grid.2x2", value: .collage) {
                 KindHome(mode: .collage) { templateMode = .collage; section = .templates }
             }
-            SwiftUI.Tab("Carousel", systemImage: "rectangle.split.3x1", value: .carousel) {
+            SwiftUI.Tab(String(localized: "Carousel"), systemImage: "rectangle.split.3x1", value: .carousel) {
                 KindHome(mode: .carousel) { templateMode = .carousel; section = .templates }
             }
-            SwiftUI.Tab("Templates", systemImage: "sparkles.rectangle.stack", value: .templates) {
+            SwiftUI.Tab(String(localized: "Templates"), systemImage: "sparkles.rectangle.stack", value: .templates) {
                 TemplatesHome(mode: $templateMode)
             }
-            SwiftUI.Tab("Library", systemImage: "photo.stack", value: .library) {
+            SwiftUI.Tab(String(localized: "Library"), systemImage: "photo.stack", value: .library) {
                 LibraryHome()
             }
         }
@@ -101,13 +101,13 @@ private struct KindHome: View {
             AuroraBackground().ignoresSafeArea()
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    HomeHeader(title: mode == .collage ? "Collage" : "Carousel",
-                               subtitle: mode == .collage ? "Videos that play inside your photos" : "Pictures that flow across Instagram slides")
+                    HomeHeader(title: mode == .collage ? String(localized: "Collage") : String(localized: "Carousel"),
+                               subtitle: mode == .collage ? String(localized: "Videos that play inside your photos") : String(localized: "Pictures that flow across Instagram slides"))
 
                     newCard
 
                     VStack(alignment: .leading, spacing: 10) {
-                        sectionTitle("Start from a template", action: ("See all", seeAllTemplates))
+                        sectionTitle(String(localized: "Start from a template"), action: (String(localized: "See all"), seeAllTemplates))
                         ScrollView(.horizontal, showsIndicators: false) {
                             LazyHStack(alignment: .top, spacing: 14) {
                                 ForEach(templates(for: mode).prefix(8)) { t in
@@ -120,9 +120,9 @@ private struct KindHome: View {
                     }
 
                     VStack(alignment: .leading, spacing: 10) {
-                        sectionTitle(drafts.isEmpty ? "Your \(mode == .collage ? "collages" : "carousels")" : "Recent")
+                        sectionTitle(drafts.isEmpty ? (mode == .collage ? String(localized: "Your collages") : String(localized: "Your carousels")) : String(localized: "Recent"))
                         if drafts.isEmpty {
-                            Text("Designs you make are saved here as you go, so you can come back to them any time.")
+                            Text(String(localized: "Designs you make are saved here as you go, so you can come back to them any time."))
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                                 .padding(.horizontal, 16)
@@ -150,15 +150,15 @@ private struct KindHome: View {
                     .frame(width: 52, height: 52)
                     .background(Color.brand, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(mode == .collage ? "New collage" : "New carousel")
+                    Text(mode == .collage ? String(localized: "New collage") : String(localized: "New carousel"))
                         .font(.headline)
                         .foregroundStyle(.white)
-                    Text(mode == .collage ? "Mix photos with up to \(maxVideos) playing videos, add music" : "2 to \(maxCarouselPhotos) photos, slides added for you")
+                    Text(mode == .collage ? String(localized: "Mix photos with up to \(maxVideos) playing videos, add music") : String(localized: "2 to \(maxCarouselPhotos) photos, slides added for you"))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
-                Image(systemName: "chevron.right").foregroundStyle(.secondary)
+                Image(systemName: "chevron.forward").foregroundStyle(.secondary)
             }
             .padding(14)
             .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
@@ -166,7 +166,7 @@ private struct KindHome: View {
         }
         .buttonStyle(.plain)
         .padding(.horizontal, 16)
-        .accessibilityLabel(mode == .collage ? "New collage" : "New carousel")
+        .accessibilityLabel(mode == .collage ? String(localized: "New collage") : String(localized: "New carousel"))
     }
 
     private func sectionTitle(_ title: String, action: (String, () -> Void)? = nil) -> some View {
@@ -192,11 +192,11 @@ private struct TemplatesHome: View {
             AuroraBackground().ignoresSafeArea()
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    HomeHeader(title: "Templates", subtitle: "Pick a look, then add your photos and videos")
-                    Picker("Kind", selection: $mode) {
-                        Text("All").tag(EditMode?.none)
-                        Text("Collage").tag(EditMode?.some(.collage))
-                        Text("Carousel").tag(EditMode?.some(.carousel))
+                    HomeHeader(title: String(localized: "Templates"), subtitle: String(localized: "Pick a look, then add your photos and videos"))
+                    Picker(String(localized: "Kind"), selection: $mode) {
+                        Text(String(localized: "All")).tag(EditMode?.none)
+                        Text(String(localized: "Collage")).tag(EditMode?.some(.collage))
+                        Text(String(localized: "Carousel")).tag(EditMode?.some(.carousel))
                     }
                     .pickerStyle(.segmented)
                     .padding(.horizontal, 16)
@@ -264,16 +264,16 @@ private struct SettingsMenu: View {
 
     var body: some View {
         Menu {
-            Button { themeOpen = true } label: { Label("Theme", systemImage: "paintpalette") }
+            Button { themeOpen = true } label: { Label(String(localized: "Theme"), systemImage: "paintpalette") }
             Button { NotificationCenter.default.post(name: .showFeatureTour, object: nil) } label: {
-                Label("Feature tour", systemImage: "sparkles.tv")
+                Label(String(localized: "Feature tour"), systemImage: "sparkles.tv")
             }
-            Button { store.helpOpen = true } label: { Label("How it works", systemImage: "questionmark.circle") }
-            Button { store.aboutOpen = true } label: { Label("About & Privacy", systemImage: "hand.raised") }
-            Link(destination: AppLinks.writeReview) { Label("Rate Collage Magic", systemImage: "star") }
+            Button { store.helpOpen = true } label: { Label(String(localized: "How it works"), systemImage: "questionmark.circle") }
+            Button { store.aboutOpen = true } label: { Label(String(localized: "About & Privacy"), systemImage: "hand.raised") }
+            Link(destination: AppLinks.writeReview) { Label(String(localized: "Rate Collage Magic"), systemImage: "star") }
             Divider()
             Button { ProStore.shared.openPaywall() } label: {
-                Label(ProStore.shared.isPro ? "Collage Magic Pro" : "Remove ads (Pro)", systemImage: "sparkles")
+                Label(ProStore.shared.isPro ? "Collage Magic Pro" : String(localized: "Remove ads (Pro)"), systemImage: "sparkles")
             }
         } label: {
             Image(systemName: "gearshape.fill")
@@ -282,7 +282,7 @@ private struct SettingsMenu: View {
                 .frame(width: 40, height: 40)
                 .glassEffect(.regular.interactive(), in: .circle)
         }
-        .accessibilityLabel("Settings")
+        .accessibilityLabel(String(localized: "Settings"))
         .sheet(isPresented: $themeOpen) { ThemePicker() }
     }
 }
@@ -295,7 +295,7 @@ private struct LibraryHome: View {
         ZStack {
             AuroraBackground().ignoresSafeArea()
             VStack(alignment: .leading, spacing: 14) {
-                HomeHeader(title: "Library", subtitle: "Your drafts and exports, on this iPhone only")
+                HomeHeader(title: String(localized: "Library"), subtitle: String(localized: "Your drafts and exports, on this iPhone only"))
                 GlassEffectContainer(spacing: 6) {
                     HStack(spacing: 0) {
                         ForEach(Array([EditMode.collage, .carousel].enumerated()), id: \.element) { i, k in
@@ -303,7 +303,7 @@ private struct LibraryHome: View {
                             Button {
                                 kind = k
                             } label: {
-                                Label(k == .collage ? "Collages" : "Carousels", systemImage: k == .collage ? "square.grid.2x2" : "rectangle.split.3x1")
+                                Label(k == .collage ? String(localized: "Collages") : String(localized: "Carousels"), systemImage: k == .collage ? "square.grid.2x2" : "rectangle.split.3x1")
                                     .font(.subheadline.weight(.semibold))
                                     .foregroundStyle(on ? Color.white : Color.white.opacity(0.7))
                                     .frame(maxWidth: .infinity)
@@ -356,15 +356,15 @@ private struct DraftTile: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            Button("Open", systemImage: "pencil") { open() }
-            Button("Delete", systemImage: "trash", role: .destructive) { confirmDelete = true }
+            Button(String(localized: "Open"), systemImage: "pencil") { open() }
+            Button(String(localized: "Delete"), systemImage: "trash", role: .destructive) { confirmDelete = true }
         }
-        .confirmationDialog("Delete this draft?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { store.deleteDraft(draft.id) }
+        .confirmationDialog(String(localized: "Delete this draft?"), isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button(String(localized: "Delete"), role: .destructive) { store.deleteDraft(draft.id) }
         } message: {
-            Text("The design is removed from this iPhone. Exports in My Library are not affected.")
+            Text(String(localized: "The design is removed from this iPhone. Exports in My Library are not affected."))
         }
-        .accessibilityLabel("Draft, \(draft.summary)")
+        .accessibilityLabel(String(localized: "Draft, \(draft.summary)"))
     }
 
     private func open() {

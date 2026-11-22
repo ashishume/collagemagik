@@ -116,8 +116,8 @@ struct RootView: View {
                 store.startFileImport(urls)
             }
         }
-        .alert("Your media tray is full", isPresented: $store.showTrayFull) {
-            Button("Show my tray") { withAnimation(.smooth) { store.tab = .media } }
+        .alert(String(localized: "Your media tray is full"), isPresented: $store.showTrayFull) {
+            Button(String(localized: "Show my tray")) { withAnimation(.smooth) { store.tab = .media } }
             Button("OK", role: .cancel) {}
         } message: {
             Text(store.trayFullMessage)
@@ -164,24 +164,24 @@ struct RootView: View {
         #if DEBUG
         .task { await DebugHarness.run(store) }
         #endif
-        .confirmationDialog("Switch to Carousel?", isPresented: $confirmCarousel, titleVisibility: .visible) {
-            Button("Remove videos and switch", role: .destructive) { withAnimation(.smooth) { store.setMode(.carousel) } }
-            Button("Keep my collage", role: .cancel) {}
+        .confirmationDialog(String(localized: "Switch to Carousel?"), isPresented: $confirmCarousel, titleVisibility: .visible) {
+            Button(String(localized: "Remove videos and switch"), role: .destructive) { withAnimation(.smooth) { store.setMode(.carousel) } }
+            Button(String(localized: "Keep my collage"), role: .cancel) {}
         } message: {
-            Text("Carousels use photos only, so the videos in this collage will be removed.")
+            Text(String(localized: "Carousels use photos only, so the videos in this collage will be removed."))
         }
         .confirmationDialog(
-            pendingNew == .carousel ? "Start a new carousel?" : "Start a new collage?",
+            pendingNew == .carousel ? String(localized: "Start a new carousel?") : String(localized: "Start a new collage?"),
             isPresented: Binding(get: { pendingNew != nil }, set: { if !$0 { pendingNew = nil } }),
             titleVisibility: .visible,
             presenting: pendingNew
         ) { mode in
-            Button(mode == .carousel ? "New carousel" : "New collage") {
+            Button(mode == .carousel ? String(localized: "New carousel") : String(localized: "New collage")) {
                 withAnimation(.smooth) { store.newCollage(mode: mode) }
             }
-            Button("Keep editing", role: .cancel) {}
+            Button(String(localized: "Keep editing"), role: .cancel) {}
         } message: { _ in
-            Text("Your current design is kept in My Library, under Drafts.")
+            Text(String(localized: "Your current design is kept in My Library, under Drafts."))
         }
     }
 

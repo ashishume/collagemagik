@@ -47,8 +47,8 @@ struct DraftSummary: Identifiable, Hashable {
     var aspect: Double { (mode == .carousel ? Double(slides) : 1) * format.width / format.height }
     var summary: String {
         var parts: [String] = []
-        if photos > 0 { parts.append("\(photos) \(photos == 1 ? "photo" : "photos")") }
-        if videos > 0 { parts.append("\(videos) \(videos == 1 ? "video" : "videos")") }
+        if photos > 0 { parts.append(String(localized: "\(photos) photos")) }
+        if videos > 0 { parts.append(String(localized: "\(videos) videos")) }
         return parts.isEmpty ? format.label : parts.joined(separator: " · ")
     }
 }
@@ -122,7 +122,7 @@ enum DraftDisk {
     static func read(_ id: String) throws -> DraftFile {
         let data = try Data(contentsOf: folder(id).appendingPathComponent("draft.json"))
         guard var top = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let saved = top["project"] as? [String: Any] else { throw ImportError("This draft is damaged.") }
+              let saved = top["project"] as? [String: Any] else { throw ImportError(String(localized: "This draft is damaged.")) }
         top["project"] = withDefaults(saved)
         let dec = JSONDecoder()
         dec.dateDecodingStrategy = .iso8601

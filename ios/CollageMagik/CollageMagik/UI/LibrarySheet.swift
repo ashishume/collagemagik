@@ -17,7 +17,7 @@ struct LibrarySheet: View {
 
     private var drafts: [DraftSummary] { store.drafts.filter { kind == nil || $0.mode == kind } }
     private var entries: [LibraryEntry] { library.entries.filter { kind == nil || $0.isCarousel == (kind == .carousel) } }
-    private var noun: String { kind == .carousel ? "carousel" : "collage" }
+    private var emptyTitle: String { kind == .carousel ? String(localized: "No carousels yet") : String(localized: "No collages yet") }
 
     private let columns = [GridItem(.adaptive(minimum: 110), spacing: 8, alignment: .top)]
 
@@ -26,29 +26,29 @@ struct LibrarySheet: View {
             Group {
                 if entries.isEmpty && drafts.isEmpty {
                     ContentUnavailableView(
-                        kind == nil ? "Nothing here yet" : "No \(noun)s yet",
+                        kind == nil ? String(localized: "Nothing here yet") : emptyTitle,
                         systemImage: kind == .carousel ? "rectangle.split.3x1" : "photo.stack",
-                        description: Text("\(kind == nil ? "Designs" : noun.capitalized + "s") you're working on are saved here as drafts, and the ones you export are kept here too. All on this iPhone only; nothing is uploaded.")
+                        description: Text(String(localized: "Designs you're working on are saved here as drafts, and the ones you export are kept here too. All on this iPhone only; nothing is uploaded."))
                     )
                 } else {
                     ScrollView {
                         if !drafts.isEmpty { draftsSection }
-                        if !entries.isEmpty && !drafts.isEmpty { sectionHeader("Exported", count: entries.count) }
+                        if !entries.isEmpty && !drafts.isEmpty { sectionHeader(String(localized: "Exported"), count: entries.count) }
                         LazyVGrid(columns: columns, spacing: 8) {
                             ForEach(entries) { entry in
                                 Button { selected = entry } label: { LibraryCell(entry: entry) }
                                     .buttonStyle(.plain)
                                     .contextMenu {
-                                        ShareLink(item: library.url(for: entry)) { Label("Share", systemImage: "square.and.arrow.up") }
-                                        Button(role: .destructive) { pendingDelete = entry } label: { Label("Delete", systemImage: "trash") }
+                                        ShareLink(item: library.url(for: entry)) { Label(String(localized: "Share"), systemImage: "square.and.arrow.up") }
+                                        Button(role: .destructive) { pendingDelete = entry } label: { Label(String(localized: "Delete"), systemImage: "trash") }
                                     }
-                                    .accessibilityLabel(entry.isCarousel ? "Carousel of \(entry.slideCount) slides" : "\(entry.isVideo ? "Video" : "Picture") collage, \(entry.formatLabel)")
+                                    .accessibilityLabel(entry.isCarousel ? String(localized: "Carousel of \(entry.slideCount) slides") : (entry.isVideo ? String(localized: "Video collage, \(entry.localizedFormatLabel)") : String(localized: "Picture collage, \(entry.localizedFormatLabel)")))
                             }
                         }
                         .padding(12)
 
                         if !entries.isEmpty {
-                        Text("\(entries.count) \(entries.count == 1 ? noun : noun + "s") · \(ByteCountFormatter.string(fromByteCount: library.totalBytes, countStyle: .file)) on this iPhone. Touch and hold a collage to share or delete it.")
+                        Text(String(localized: "Saved designs: \(entries.count) · \(ByteCountFormatter.string(fromByteCount: library.totalBytes, countStyle: .file)) on this iPhone. Touch and hold a design to share or delete it."))
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -59,37 +59,37 @@ struct LibrarySheet: View {
                     .scrollEdgeEffectStyle(.soft, for: .top)
                 }
             }
-            .navigationTitle("My Library")
+            .navigationTitle(String(localized: "My Library"))
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(item: $selected) { LibraryDetail(entry: $0).toolbar(.visible, for: .navigationBar) }
             .toolbar {
                 if !embedded {
-                    ToolbarItem(placement: .confirmationAction) { Button("Done", systemImage: "checkmark") { dismiss() } }
+                    ToolbarItem(placement: .confirmationAction) { Button(String(localized: "Done"), systemImage: "checkmark") { dismiss() } }
                 }
             }
             .toolbar(embedded ? .hidden : .automatic, for: .navigationBar)
             .containerBackground(embedded ? AnyShapeStyle(Color.clear) : AnyShapeStyle(.background), for: .navigation)
-            .confirmationDialog("Delete this collage?", isPresented: Binding(
+            .confirmationDialog(String(localized: "Delete this collage?"), isPresented: Binding(
                 get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }
             ), titleVisibility: .visible) {
-                Button("Delete", role: .destructive) {
+                Button(String(localized: "Delete"), role: .destructive) {
                     if let e = pendingDelete { withAnimation { library.remove(e) } }
                     pendingDelete = nil
                 }
             } message: {
-                Text("It is removed from My Library. A copy you saved to Photos is not affected.")
+                Text(String(localized: "It is removed from My Library. A copy you saved to Photos is not affected."))
             }
-            .confirmationDialog("Delete this draft?", isPresented: Binding(
+            .confirmationDialog(String(localized: "Delete this draft?"), isPresented: Binding(
                 get: { pendingDraftDelete != nil }, set: { if !$0 { pendingDraftDelete = nil } }
             ), titleVisibility: .visible) {
-                Button("Delete draft", role: .destructive) {
+                Button(String(localized: "Delete draft"), role: .destructive) {
                     if let d = pendingDraftDelete { withAnimation { store.deleteDraft(d.id) } }
                     pendingDraftDelete = nil
                 }
             } message: {
                 Text(pendingDraftDelete?.id == store.draftId
-                     ? "This is the design that's open now. It's cleared and can't be brought back. Collages you exported stay."
-                     : "The design and its copies of your photos and videos are removed from this iPhone. Your Photos library is not affected.")
+                     ? String(localized: "This is the design that's open now. It's cleared and can't be brought back. Collages you exported stay.")
+                     : String(localized: "The design and its copies of your photos and videos are removed from this iPhone. Your Photos library is not affected."))
             }
         }
         .presentationDetents([.medium, .large], selection: $detent)
@@ -112,24 +112,24 @@ extension LibrarySheet {
 
     private var draftsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionHeader("Drafts", count: drafts.count)
+            sectionHeader(String(localized: "Drafts"), count: drafts.count)
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(alignment: .top, spacing: 10) {
                     ForEach(drafts) { d in
                         Button { open(d) } label: { DraftCell(draft: d, isOpen: d.id == store.draftId) }
                             .buttonStyle(.plain)
                             .contextMenu {
-                                Button { open(d) } label: { Label(d.id == store.draftId ? "Keep editing" : "Open", systemImage: "pencil") }
-                                Button(role: .destructive) { pendingDraftDelete = d } label: { Label("Delete draft", systemImage: "trash") }
+                                Button { open(d) } label: { Label(d.id == store.draftId ? String(localized: "Keep editing") : String(localized: "Open"), systemImage: "pencil") }
+                                Button(role: .destructive) { pendingDraftDelete = d } label: { Label(String(localized: "Delete draft"), systemImage: "trash") }
                             }
-                            .accessibilityLabel("Draft, \(d.format.label), \(d.summary), edited \(d.updatedAt.formatted(.relative(presentation: .named)))")
-                            .accessibilityHint(d.id == store.draftId ? "Open now" : "Opens this design")
+                            .accessibilityLabel(String(localized: "Draft, \(d.format.label), \(d.summary), edited \(d.updatedAt.formatted(.relative(presentation: .named)))"))
+                            .accessibilityHint(d.id == store.draftId ? String(localized: "Open now") : String(localized: "Opens this design"))
                     }
                 }
                 .padding(.horizontal, 12)
             }
             .scrollClipDisabled()
-            Text("Saved as you edit. Tap a draft to keep working on it; touch and hold to delete it.")
+            Text(String(localized: "Saved as you edit. Tap a draft to keep working on it; touch and hold to delete it."))
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 16)
@@ -168,7 +168,7 @@ private struct DraftCell: View {
                 }
                 .overlay(alignment: .topLeading) {
                     if isOpen {
-                        Text("Open now")
+                        Text(String(localized: "Open now"))
                             .font(.caption2.weight(.bold))
                             .padding(.horizontal, 7)
                             .padding(.vertical, 4)
@@ -213,7 +213,7 @@ private struct LibraryCell: View {
                         .glassEffect(.regular, in: .capsule)
                         .padding(6)
                 } else if entry.isCarousel {
-                    Label("\(entry.slideCount)", systemImage: "square.stack.fill")
+                    Label(String(localized: "\(entry.slideCount)"), systemImage: "square.stack.fill")
                         .font(.caption2.weight(.semibold).monospacedDigit())
                         .padding(.horizontal, 7)
                         .padding(.vertical, 4)
@@ -269,7 +269,7 @@ private struct LibraryDetail: View {
                         } else if FileManager.default.fileExists(atPath: url.path) {
                             AsyncFileImage(url: url, maxSide: 460)
                         } else {
-                            ContentUnavailableView("Can't open this collage", systemImage: "exclamationmark.triangle")
+                            ContentUnavailableView(String(localized: "Can't open this collage"), systemImage: "exclamationmark.triangle")
                         }
                     }
                     .aspectRatio(Double(entry.width) / Double(entry.height), contentMode: .fit)
@@ -290,11 +290,11 @@ private struct LibraryDetail: View {
                         Group {
                             if entry.isCarousel {
                                 ShareLink(items: library.urls(for: entry)) {
-                                    Label("Share all \(entry.slideCount) slides", systemImage: "square.and.arrow.up").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 6)
+                                    Label(String(localized: "Share all \(entry.slideCount) slides"), systemImage: "square.and.arrow.up").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 6)
                                 }
                             } else {
                                 ShareLink(item: url) {
-                                    Label("Share", systemImage: "square.and.arrow.up").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 6)
+                                    Label(String(localized: "Share"), systemImage: "square.and.arrow.up").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 6)
                                 }
                             }
                         }
@@ -315,14 +315,14 @@ private struct LibraryDetail: View {
                                 }
                             }
                         } label: {
-                            Label(saved ? "Saved to Photos" : (entry.isCarousel ? "Save all to Photos" : "Save to Photos"), systemImage: saved ? "checkmark" : "photo.badge.arrow.down")
+                            Label(saved ? String(localized: "Saved to Photos") : (entry.isCarousel ? String(localized: "Save all to Photos") : String(localized: "Save to Photos")), systemImage: saved ? "checkmark" : "photo.badge.arrow.down")
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.glass)
                         .disabled(saved)
 
                         Button(role: .destructive) { confirmDelete = true } label: {
-                            Label("Delete", systemImage: "trash").frame(maxWidth: .infinity)
+                            Label(String(localized: "Delete"), systemImage: "trash").frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.glass)
                     }
@@ -333,19 +333,19 @@ private struct LibraryDetail: View {
             }
             .padding(16)
         }
-        .navigationTitle(entry.isCarousel ? "Carousel" : (entry.isVideo ? "Video" : "Picture"))
+        .navigationTitle(entry.isCarousel ? String(localized: "Carousel") : (entry.isVideo ? String(localized: "Video") : String(localized: "Picture")))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { if entry.isVideo, player == nil { player = AVPlayer(url: url) } }
         .onDisappear { player?.pause() }
-        .confirmationDialog("Delete this collage?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) {
+        .confirmationDialog(String(localized: "Delete this collage?"), isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button(String(localized: "Delete"), role: .destructive) {
                 player?.pause()
                 player = nil
                 library.remove(entry)
                 dismiss()
             }
         } message: {
-            Text("It is removed from My Library. A copy you saved to Photos is not affected.")
+            Text(String(localized: "It is removed from My Library. A copy you saved to Photos is not affected."))
         }
     }
 }

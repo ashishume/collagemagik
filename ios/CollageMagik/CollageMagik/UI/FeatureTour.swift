@@ -25,25 +25,25 @@ private enum TourPage: Int, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .welcome: "Welcome to Collage Magic"
-        case .mix: "Videos that play inside"
-        case .carousel: "Carousels that flow"
-        case .templates: "Start from a template"
-        case .style: "Frames, filters, your style"
-        case .text: "Words and stickers"
-        case .export: "Ready for Instagram"
+        case .welcome: String(localized: "Welcome to Collage Magic")
+        case .mix: String(localized: "Videos that play inside")
+        case .carousel: String(localized: "Carousels that flow")
+        case .templates: String(localized: "Start from a template")
+        case .style: String(localized: "Frames, filters, your style")
+        case .text: String(localized: "Words and stickers")
+        case .export: String(localized: "Ready for Instagram")
         }
     }
 
     var text: String {
         switch self {
-        case .welcome: "The collage maker where your videos actually play. Mix clips and photos in one design, add music, post it."
-        case .mix: "Drop up to 3 videos next to your photos. They play right inside the collage. Trim them, set their sound, add a song."
-        case .carousel: "Pictures cross the edges of your slides, so people keep swiping. Up to 20 photos, slides added for you."
-        case .templates: "Dozens of ready-made looks: photo dumps, travel, birthdays, scrapbooks and more. Your photos and clips go straight in."
-        case .style: "Instant prints, film strips, washi tape, neon, hearts. Then a filter: warm, film, vintage, noir."
-        case .text: "Captions in 20 lettering styles, neon or vertical, plus emoji and shapes. Drag, pinch and twist to place them."
-        case .export: "Export a moving collage as an HD or 4K video, or a still. Carousel slides save in posting order."
+        case .welcome: String(localized: "The collage maker where your videos actually play. Mix clips and photos in one design, add music, post it.")
+        case .mix: String(localized: "Drop up to 3 videos next to your photos. They play right inside the collage. Trim them, set their sound, add a song.")
+        case .carousel: String(localized: "Pictures cross the edges of your slides, so people keep swiping. Up to 20 photos, slides added for you.")
+        case .templates: String(localized: "Dozens of ready-made looks: photo dumps, travel, birthdays, scrapbooks and more. Your photos and clips go straight in.")
+        case .style: String(localized: "Instant prints, film strips, washi tape, neon, hearts. Then a filter: warm, film, vintage, noir.")
+        case .text: String(localized: "Captions in 20 lettering styles, neon or vertical, plus emoji and shapes. Drag, pinch and twist to place them.")
+        case .export: String(localized: "Export a moving collage as an HD or 4K video, or a still. Carousel slides save in posting order.")
         }
     }
 }
@@ -60,7 +60,7 @@ struct FeatureTour: View {
                 HStack {
                     Spacer()
                     if page != .export {
-                        Button("Skip") { done() }
+                        Button(String(localized: "Skip")) { done() }
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.white.opacity(0.8))
                             .padding(.horizontal, 16)
@@ -85,7 +85,7 @@ struct FeatureTour: View {
                         withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) { page = TourPage(rawValue: page.rawValue + 1) ?? .export }
                     }
                 } label: {
-                    Text(page == .export ? "Start creating" : "Next")
+                    Text(page == .export ? String(localized: "Start creating") : String(localized: "Next"))
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 6)
@@ -137,7 +137,7 @@ struct FeatureTour: View {
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: page)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Page \(page.rawValue + 1) of \(TourPage.allCases.count)")
+        .accessibilityLabel(String(localized: "Page \(page.rawValue + 1) of \(TourPage.allCases.count)"))
     }
 }
 
@@ -327,7 +327,7 @@ private struct TemplatesArt: View {
     }
 
     @ViewBuilder private func card(_ i: Int) -> some View {
-        let names = ["Photo dump", "Travel diary", "Birthday"]
+        let names = [String(localized: "Photo dump"), String(localized: "Travel diary"), String(localized: "Birthday")]
         VStack(spacing: 4) {
             HStack(spacing: 3) { scene(i).resizable().scaledToFill(); scene(i + 4).resizable().scaledToFill() }.frame(height: 90).clipped()
             HStack(spacing: 3) { scene(i + 2).resizable().scaledToFill(); scene(i + 6).resizable().scaledToFill() }.frame(height: 90).clipped()
@@ -344,7 +344,7 @@ private struct TemplatesArt: View {
 /// One photo cycles through frames, then a filter.
 private struct StyleArt: View {
     let run: Bool
-    private let names = ["Instant", "Circle", "Film", "Noir"]
+    private let names = [String(localized: "Instant"), String(localized: "Circle"), String(localized: "Film"), String(localized: "Noir")]
 
     var body: some View {
         Ticker(run: run, every: 1.3, hold: 0) { t in
@@ -398,7 +398,7 @@ private struct StyleArt: View {
 /// A caption types itself out over a photo while stickers pop on.
 private struct TextArt: View {
     let run: Bool
-    private let words = Array("Summer in Lisbon")
+    private let words = Array(String(localized: "Summer in Lisbon"))
 
     var body: some View {
         Ticker(run: run, every: 0.16, hold: 40) { t in
@@ -450,7 +450,7 @@ private struct ExportArt: View {
                             .foregroundStyle(Color.musicGreen)
                             .transition(.scale.combined(with: .opacity))
                     } else {
-                        Text("\(Int(progress * 100))%").font(.title2.weight(.bold).monospacedDigit())
+                        Text(String(localized: "\(Int(progress * 100))%")).font(.title2.weight(.bold).monospacedDigit())
                     }
                 }
                 .frame(width: 150, height: 150)

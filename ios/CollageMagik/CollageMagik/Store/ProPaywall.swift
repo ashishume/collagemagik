@@ -45,7 +45,7 @@ struct ProPaywall: View {
             .buttonBorderShape(.circle)
             .padding(.trailing, 16)
             .padding(.top, 12)
-            .accessibilityLabel("Close")
+            .accessibilityLabel(String(localized: "Close"))
 
             if pro.confirming || welcomed {
                 statusOverlay
@@ -66,7 +66,7 @@ struct ProPaywall: View {
         }
         .manageSubscriptionsSheet(isPresented: $showManage)
         .alert("Collage Magic Pro", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
-            Button("OK", role: .cancel) {}
+            Button(String(localized: "OK"), role: .cancel) {}
         } message: {
             Text(message ?? "")
         }
@@ -103,7 +103,7 @@ struct ProPaywall: View {
             Text("Collage Magic Pro")
                 .font(.system(size: 28, weight: .bold, design: .rounded))
                 .foregroundStyle(LinearGradient(colors: [.white, Color(red: 0.85, green: 0.8, blue: 1)], startPoint: .top, endPoint: .bottom))
-            Text(pro.isPro ? "Thank you for supporting Collage Magic." : "Make photo and video collages with no ads, and help a tiny team keep the app going.")
+            Text(pro.isPro ? String(localized: "Thank you for supporting Collage Magic.") : String(localized: "Make photo and video collages with no ads, and help a tiny team keep the app going."))
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -115,10 +115,10 @@ struct ProPaywall: View {
 
     private var benefits: some View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
-            benefit("rectangle.slash", "No banner ads", "A clean editor")
-            benefit("play.slash", "No ads after export", "Results open at once")
-            benefit("heart.fill", "Support indie work", "Keeps the app going")
-            benefit("checkmark.seal", "All tools stay free", "Nothing else locked")
+            benefit("rectangle.slash", String(localized: "No banner ads"), String(localized: "A clean editor"))
+            benefit("play.slash", String(localized: "No ads after export"), String(localized: "Results open at once"))
+            benefit("heart.fill", String(localized: "Support indie work"), String(localized: "Keeps the app going"))
+            benefit("checkmark.seal", String(localized: "All tools stay free"), String(localized: "Nothing else locked"))
         }
     }
 
@@ -167,35 +167,33 @@ struct ProPaywall: View {
         switch plan {
         case .yearly:
             let perMonth = (p.price / 12).formatted(p.priceFormatStyle)
-            var badge = "Best value"
+            var badge = String(localized: "Best value")
             if let m = pro.products[.monthly], m.price > 0 {
                 let save = 1 - NSDecimalNumber(decimal: p.price).doubleValue / (NSDecimalNumber(decimal: m.price).doubleValue * 12)
-                if save >= 0.05 { badge = "Save \(Int((save * 100).rounded()))%" }
+                if save >= 0.05 { badge = String(localized: "Save \(Int((save * 100).rounded()))%") }
             }
-            return PlanDisplay(plan: plan, title: "Yearly", price: p.displayPrice, period: "/ year",
-                               detail: [trial, "Just \(perMonth) a month"].compactMap { $0 }.joined(separator: " · "),
-                               badge: badge, cta: trial != nil ? "Start free trial" : "Get Pro for a year")
+            return PlanDisplay(plan: plan, title: String(localized: "Yearly"), price: p.displayPrice, period: String(localized: "/ year"),
+                               detail: [trial, String(localized: "Just \(perMonth) a month")].compactMap { $0 }.joined(separator: " · "),
+                               badge: badge, cta: trial != nil ? String(localized: "Start free trial") : String(localized: "Get Pro for a year"))
         case .monthly:
-            return PlanDisplay(plan: plan, title: "Monthly", price: p.displayPrice, period: "/ month",
-                               detail: trial ?? "Cancel anytime", badge: nil, cta: trial != nil ? "Start free trial" : "Get Pro monthly")
+            return PlanDisplay(plan: plan, title: String(localized: "Monthly"), price: p.displayPrice, period: String(localized: "/ month"),
+                               detail: trial ?? String(localized: "Cancel anytime"), badge: nil, cta: trial != nil ? String(localized: "Start free trial") : String(localized: "Get Pro monthly"))
         case .lifetime:
-            return PlanDisplay(plan: plan, title: "Lifetime", price: p.displayPrice, period: "once",
-                               detail: "Pay once, no ads forever", badge: "No subscription", cta: "Get Pro forever")
+            return PlanDisplay(plan: plan, title: String(localized: "Lifetime"), price: p.displayPrice, period: String(localized: "once"),
+                               detail: String(localized: "Pay once, no ads forever"), badge: String(localized: "No subscription"), cta: String(localized: "Get Pro forever"))
         }
     }
 
     private func trialText(_ offer: Product.SubscriptionOffer) -> String? {
         guard offer.paymentMode == .freeTrial else { return nil }
         let n = offer.period.value
-        let unit: String
         switch offer.period.unit {
-        case .day: unit = "day"
-        case .week: unit = "week"
-        case .month: unit = "month"
-        case .year: unit = "year"
-        @unknown default: unit = "day"
+        case .day: return String(localized: "\(n)-day free trial")
+        case .week: return String(localized: "\(n)-week free trial")
+        case .month: return String(localized: "\(n)-month free trial")
+        case .year: return String(localized: "\(n)-year free trial")
+        @unknown default: return nil
         }
-        return "\(n)-\(unit) free trial" // "7-day free trial", "1-month free trial"
     }
 
     @ViewBuilder
@@ -205,11 +203,11 @@ struct ProPaywall: View {
             VStack(spacing: 12) {
                 if pro.loadingProducts {
                     ProgressView().controlSize(.large)
-                    Text("Loading plans…").font(.footnote).foregroundStyle(.secondary)
+                    Text(String(localized: "Loading plans…")).font(.footnote).foregroundStyle(.secondary)
                 } else {
-                    Label(pro.loadError ?? "The plans couldn't be loaded.", systemImage: "wifi.exclamationmark")
+                    Label(pro.loadError ?? String(localized: "The plans couldn't be loaded."), systemImage: "wifi.exclamationmark")
                         .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
-                    Button("Try again") { Task { await pro.loadProducts() } }.buttonStyle(.glass)
+                    Button(String(localized: "Try again")) { Task { await pro.loadProducts() } }.buttonStyle(.glass)
                 }
             }
             .frame(maxWidth: .infinity, minHeight: 180)
@@ -275,7 +273,7 @@ struct ProPaywall: View {
                 HStack {
                     if pro.purchasing != nil { ProgressView().tint(.white) }
                     // while Apple's payment sheet is opening or open, say so instead of a bare spinner
-                    Text(pro.purchasing != nil ? "Waiting for the App Store…" : (current?.cta ?? "Continue")).font(.headline)
+                    Text(pro.purchasing != nil ? String(localized: "Waiting for the App Store…") : (current?.cta ?? String(localized: "Continue"))).font(.headline)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 6)
@@ -285,18 +283,18 @@ struct ProPaywall: View {
             .disabled(current == nil || pro.purchasing != nil)
 
             Text(selected == .lifetime
-                 ? "One payment. No subscription, no renewals."
-                 : "Renews automatically until you cancel. Cancel anytime in Settings → Apple ID → Subscriptions, at least 24 hours before it renews.")
+                 ? String(localized: "One payment. No subscription, no renewals.")
+                 : String(localized: "Renews automatically until you cancel. Cancel anytime in Settings → Apple ID → Subscriptions, at least 24 hours before it renews."))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
 
             HStack(spacing: 18) {
-                Button(restoring ? "Restoring…" : "Restore purchases") { Task { await restore() } }
+                Button(restoring ? String(localized: "Restoring…") : String(localized: "Restore purchases")) { Task { await restore() } }
                     .disabled(restoring)
-                Link("Terms", destination: AppLinks.terms)
-                Link("Privacy", destination: AppLinks.privacy)
+                Link(String(localized: "Terms"), destination: AppLinks.terms)
+                Link(String(localized: "Privacy"), destination: AppLinks.privacy)
             }
             .font(.caption.weight(.medium))
         }
@@ -318,20 +316,20 @@ struct ProPaywall: View {
                         .font(.system(size: 54, weight: .semibold))
                         .foregroundStyle(Color.musicGreen)
                         .symbolEffect(.bounce, value: welcomed)
-                    Text("You're Pro!").font(.title2.weight(.bold))
-                    Text("Ads are gone. Thank you for supporting Collage Magic 💜")
+                    Text(String(localized: "You're Pro!")).font(.title2.weight(.bold))
+                    Text(String(localized: "Ads are gone. Thank you for supporting Collage Magic 💜"))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                     Button { welcomed = false; dismiss() } label: {
-                        Text("Done").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 4)
+                        Text(String(localized: "Done")).font(.headline).frame(maxWidth: .infinity).padding(.vertical, 4)
                     }
                     .buttonStyle(.glassProminent)
                     .controlSize(.large)
                 } else {
                     ProgressView().controlSize(.large).tint(.white)
-                    Text("Confirming your purchase…").font(.headline)
-                    Text("This takes a moment. Please keep the app open.")
+                    Text(String(localized: "Confirming your purchase…")).font(.headline)
+                    Text(String(localized: "This takes a moment. Please keep the app open."))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -350,7 +348,7 @@ struct ProPaywall: View {
 
     private var proActive: some View {
         VStack(spacing: 14) {
-            Label("Pro is active", systemImage: "checkmark.seal.fill")
+            Label(String(localized: "Pro is active"), systemImage: "checkmark.seal.fill")
                 .font(.headline)
                 .foregroundStyle(Color.musicGreen)
             Text(activeText)
@@ -359,12 +357,12 @@ struct ProPaywall: View {
                 .multilineTextAlignment(.center)
             if pro.activePlan != .lifetime {
                 Button { showManage = true } label: {
-                    Label("Manage subscription", systemImage: "creditcard").frame(maxWidth: .infinity)
+                    Label(String(localized: "Manage subscription"), systemImage: "creditcard").frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.glass)
                 .controlSize(.large)
             }
-            Button("Done") { dismiss() }
+            Button(String(localized: "Done")) { dismiss() }
                 .buttonStyle(.glassProminent)
                 .controlSize(.large)
         }
@@ -375,12 +373,12 @@ struct ProPaywall: View {
 
     private var activeText: String {
         switch pro.activePlan {
-        case .lifetime: return "Lifetime: no ads, forever."
+        case .lifetime: return String(localized: "Lifetime: no ads, forever.")
         case .some(let plan):
-            let name = plan == .yearly ? "Yearly" : "Monthly"
-            guard let date = pro.renewalDate else { return "\(name) plan. No ads anywhere in the app." }
-            return "\(name) plan · \(pro.willRenew ? "renews" : "ends") \(date.formatted(date: .abbreviated, time: .omitted))."
-        case nil: return "No ads anywhere in the app."
+            let name = plan == .yearly ? String(localized: "Yearly") : String(localized: "Monthly")
+            guard let date = pro.renewalDate else { return String(localized: "\(name) plan. No ads anywhere in the app.") }
+            return (pro.willRenew ? String(localized: "\(name) plan · renews \(date.formatted(date: .abbreviated, time: .omitted)).") : String(localized: "\(name) plan · ends \(date.formatted(date: .abbreviated, time: .omitted))."))
+        case nil: return String(localized: "No ads anywhere in the app.")
         }
     }
 
@@ -391,7 +389,7 @@ struct ProPaywall: View {
         case .purchased:
             welcomed = true
         case .pending:
-            message = "Your purchase is waiting for approval. Pro turns on by itself once it's approved."
+            message = String(localized: "Your purchase is waiting for approval. Pro turns on by itself once it's approved.")
         case .failed(let why):
             message = why
         case .cancelled:
@@ -403,17 +401,17 @@ struct ProPaywall: View {
         restoring = true
         let found = await pro.restore()
         restoring = false
-        message = found ? "Your Pro purchase is restored. Ads are gone." : "No Pro purchase was found for this Apple ID."
+        message = found ? String(localized: "Your Pro purchase is restored. Ads are gone.") : String(localized: "No Pro purchase was found for this Apple ID.")
     }
 
     #if DEBUG
     /// Placeholder plans so the page can be looked at in the Simulator without a StoreKit configuration (CM_PRO_MOCK=1).
     private static let mock: [PlanDisplay] = [
-        PlanDisplay(plan: .yearly, title: "Yearly", price: "₹999", period: "/ year", detail: "1-week free trial · Just ₹83.25 a month",
-                    badge: "Save 58%", cta: "Start free trial"),
-        PlanDisplay(plan: .monthly, title: "Monthly", price: "₹199", period: "/ month", detail: "Cancel anytime", badge: nil, cta: "Get Pro monthly"),
-        PlanDisplay(plan: .lifetime, title: "Lifetime", price: "₹2,499", period: "once", detail: "Pay once, no ads forever",
-                    badge: "No subscription", cta: "Get Pro forever"),
+        PlanDisplay(plan: .yearly, title: String(localized: "Yearly"), price: "₹999", period: String(localized: "/ year"), detail: String(localized: "1-week free trial · Just ₹83.25 a month"),
+                    badge: String(localized: "Save 58%"), cta: String(localized: "Start free trial")),
+        PlanDisplay(plan: .monthly, title: String(localized: "Monthly"), price: "₹199", period: String(localized: "/ month"), detail: String(localized: "Cancel anytime"), badge: nil, cta: String(localized: "Get Pro monthly")),
+        PlanDisplay(plan: .lifetime, title: String(localized: "Lifetime"), price: "₹2,499", period: String(localized: "once"), detail: String(localized: "Pay once, no ads forever"),
+                    badge: String(localized: "No subscription"), cta: String(localized: "Get Pro forever")),
     ]
     #endif
 }

@@ -24,7 +24,7 @@ struct StickerGrid: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(group.kind == .emoji ? "Add \(item)" : "Add shape \(item)")
+                    .accessibilityLabel(group.kind == .emoji ? String(localized: "Add \(item)") : String(localized: "Add shape \(item)"))
                 }
             }
             .padding(.horizontal, 2)
@@ -38,7 +38,7 @@ enum TextHomeSection: String, PanelSection {
     case text, faces, love, fun, shapes
     var id: String { rawValue }
     var stickerGroup: StickerGroup? { StickerGroup(rawValue: rawValue) }
-    var title: String { stickerGroup?.title ?? "Text" }
+    var title: String { stickerGroup?.title ?? String(localized: "Text") }
     var symbol: String { stickerGroup?.symbol ?? "textformat" }
 }
 
@@ -63,10 +63,10 @@ struct StickerTools: View {
 
     private func sizeTools(_ st: Sticker) -> some View {
         VStack(spacing: 6) {
-            slider("Size", symbol: "arrow.up.left.and.arrow.down.right",
+            slider(String(localized: "Size"), symbol: "arrow.up.left.and.arrow.down.right",
                    value: Binding(get: { st.w }, set: { v in store.updateSticker(st.id) { $0.w = v } }),
                    range: stickerSizeRange)
-            slider("Tilt", symbol: "rotate.right",
+            slider(String(localized: "Tilt"), symbol: "rotate.right",
                    value: Binding(
                        get: { clamp(st.tilt, -180, 180) },
                        set: { v in store.updateSticker(st.id) { $0.tilt = abs(v) < 2 ? 0 : v } }
@@ -88,10 +88,10 @@ struct StickerTools: View {
                             .overlay(Circle().strokeBorder(Color.brand, lineWidth: on ? 3 : 0).padding(-4))
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Colour \(c)")
+                    .accessibilityLabel(String(localized: "Color \(c)"))
                     .accessibilityAddTraits(on ? .isSelected : [])
                 }
-                ColorPicker("Custom colour", selection: Binding(
+                ColorPicker(String(localized: "Custom color"), selection: Binding(
                     get: { Color(hex: st.color) },
                     set: { v in store.updateSticker(st.id) { $0.color = v.hexString } }
                 ), supportsOpacity: false)
@@ -100,7 +100,7 @@ struct StickerTools: View {
             }
             .padding(.leading, 4)
         } else {
-            Text("Emoji keep their own colours. Shapes can take any colour.")
+            Text(String(localized: "Emoji keep their own colors. Shapes can take any color."))
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -111,16 +111,16 @@ struct StickerTools: View {
     private func layerTools(_ st: Sticker) -> some View {
         GlassEffectContainer(spacing: 6) {
             HStack(spacing: 6) {
-                CompactTool(title: "Flip", symbol: "arrow.left.and.right.righttriangle.left.righttriangle.right", isOn: st.flip) {
+                CompactTool(title: String(localized: "Flip"), symbol: "arrow.left.and.right.righttriangle.left.righttriangle.right", isOn: st.flip) {
                     withAnimation(.smooth) { store.updateSticker(st.id) { $0.flip.toggle() } }
                 }
-                CompactTool(title: "Forward", symbol: "square.2.layers.3d.top.filled") {
+                CompactTool(title: String(localized: "Forward"), symbol: "square.2.layers.3d.top.filled") {
                     withAnimation(.smooth) { store.restackSticker(st.id, up: true) }
                 }
-                CompactTool(title: "Copy", symbol: "plus.square.on.square") {
+                CompactTool(title: String(localized: "Copy"), symbol: "plus.square.on.square") {
                     withAnimation(.smooth) { store.duplicateSticker(st.id) }
                 }
-                CompactTool(title: "Delete", symbol: "trash", role: .destructive) {
+                CompactTool(title: String(localized: "Delete"), symbol: "trash", role: .destructive) {
                     withAnimation(.smooth) { store.removeSticker(st.id) }
                 }
             }
@@ -144,9 +144,9 @@ enum StickerSection: String, PanelSection {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .size: "Size"
-        case .colour: "Colour"
-        case .layer: "Layer"
+        case .size: String(localized: "Size")
+        case .colour: String(localized: "Color")
+        case .layer: String(localized: "Layer")
         }
     }
     var symbol: String {
@@ -167,7 +167,7 @@ struct BackdropPicker: View {
     var body: some View {
         let b = store.project.backdrop
         VStack(spacing: 6) {
-            Picker("Background", selection: Binding(
+            Picker(String(localized: "Background"), selection: Binding(
                 get: { b.kind },
                 set: { k in withAnimation(.smooth) { setKind(k) } }
             )) {
@@ -192,7 +192,7 @@ struct BackdropPicker: View {
     private func setKind(_ k: BackdropKind) {
         store.project.backdrop.kind = k
         if k == .blur && BackdropRenderer.blurSource(store.project) == nil {
-            store.notify("Add a photo first: the blur is made from one of your pictures.")
+            store.notify(String(localized: "Add a photo first: the blur is made from one of your pictures."))
         }
     }
 
@@ -209,13 +209,13 @@ struct BackdropPicker: View {
                                 .overlay(Circle().strokeBorder(Color.brand, lineWidth: on ? 3 : 0).padding(-4))
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("Background \(c)")
+                        .accessibilityLabel(String(localized: "Background \(c)"))
                         .accessibilityAddTraits(on ? .isSelected : [])
                     }
                 }
                 .padding(5)
             }
-            ColorPicker("Custom colour", selection: Binding(
+            ColorPicker(String(localized: "Custom color"), selection: Binding(
                 get: { Color(hex: store.project.bg) },
                 set: { store.project.bg = $0.hexString }
             ), supportsOpacity: false)
@@ -239,7 +239,7 @@ struct BackdropPicker: View {
                         }
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Gradient \(g.name)")
+                    .accessibilityLabel(String(localized: "Gradient \(g.name)"))
                     .accessibilityAddTraits(on ? .isSelected : [])
                 }
             }
@@ -273,7 +273,7 @@ struct BackdropPicker: View {
     private func blurRow(_ b: Backdrop) -> some View {
         let source = BackdropRenderer.blurSource(store.project)
         if store.items.isEmpty {
-            Text("Add a photo first: the blur is made from one of your pictures.")
+            Text(String(localized: "Add a photo first: the blur is made from one of your pictures."))
                 .font(.footnote).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .frame(height: 44)
@@ -293,7 +293,7 @@ struct BackdropPicker: View {
                             }
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("Blur follows the pictures")
+                        .accessibilityLabel(String(localized: "Blur follows the pictures"))
                         .accessibilityAddTraits(on ? .isSelected : [])
                     }
                     ForEach(store.items) { item in
@@ -304,7 +304,7 @@ struct BackdropPicker: View {
                             }
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("Blur \(item.name)")
+                        .accessibilityLabel(String(localized: "Blur \(item.name)"))
                         .accessibilityAddTraits(on ? .isSelected : [])
                     }
                 }

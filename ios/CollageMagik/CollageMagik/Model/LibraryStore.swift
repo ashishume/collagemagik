@@ -53,7 +53,7 @@ enum LibraryDisk {
         do {
             try FileManager.default.copyItem(at: file, to: dest)
             guard let jpeg = await thumbnailJPEG(of: dest, isVideo: isVideo) else {
-                throw ImportError("The collage couldn't be read back after saving.")
+                throw ImportError(String(localized: "The collage couldn't be read back after saving."))
             }
             try jpeg.write(to: thumbDest, options: .atomic)
             let bytes = Int64((try? dest.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0)
@@ -82,7 +82,7 @@ enum LibraryDisk {
                 copied.append(name)
             }
             guard let first = copied.first, let jpeg = await thumbnailJPEG(of: fileURL(first), isVideo: false) else {
-                throw ImportError("The carousel couldn't be read back after saving.")
+                throw ImportError(String(localized: "The carousel couldn't be read back after saving."))
             }
             try jpeg.write(to: fileURL(thumbName), options: .atomic)
             let bytes = copied.reduce(Int64(0)) { $0 + Int64((try? fileURL($1).resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0) }
@@ -219,9 +219,15 @@ final class LibraryStore {
 // MARK: - Formatting
 
 extension LibraryEntry {
+    /// Derive display copy from dimensions so old exports also follow the app language.
+    var localizedFormatLabel: String {
+        let format: FormatId = width == height ? .square : (height * 4 == width * 5 ? .post : .story)
+        return isCarousel ? String(localized: "Carousel \(format.short)") : format.label
+    }
+
     var summary: String {
-        var parts = [formatLabel, "\(width)×\(height)"]
-        if isCarousel { parts.insert("\(slideCount) slides", at: 1) }
+        var parts = [localizedFormatLabel, "\(width)×\(height)"]
+        if isCarousel { parts.insert(String(localized: "\(slideCount) slides"), at: 1) }
         if isVideo { parts.append(formatTime(duration)) }
         parts.append(ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file))
         return parts.joined(separator: " · ")

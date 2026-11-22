@@ -36,9 +36,9 @@ struct MediaPanel: View {
             .scrollClipDisabled()
             if !store.items.isEmpty {
                 Label(
-                    store.selectedOverlay != nil ? "Tap a photo to put it in the selected photo on top"
-                        : store.selectedCell != nil ? "Tap to put it in the selected cell · hold and drag onto the design to put it on top"
-                        : "Tap to fill a cell · hold and drag onto the design to put it on top",
+                    store.selectedOverlay != nil ? String(localized: "Tap a photo to put it in the selected photo on top")
+                        : store.selectedCell != nil ? String(localized: "Tap to put it in the selected cell · hold and drag onto the design to put it on top")
+                        : String(localized: "Tap to fill a cell · hold and drag onto the design to put it on top"),
                     systemImage: "square.on.square"
                 )
                     .font(.caption2)
@@ -51,19 +51,19 @@ struct MediaPanel: View {
 
     /// "5 of 25 in tray · 5 of 12 in collage · 1 of 3 videos": the tray holds more than the collage can show.
     private func trayCaption(placed: Int) -> String {
-        var text = "\(store.items.count) of \(maxTrayItems) in tray  ·  \(placed) of \(store.cellLimit) in \(store.isCarousel ? "carousel" : "collage")"
-        if !store.isCarousel { text += "  ·  \(store.videoCount) of \(maxVideos) videos" }
+        var text = String(localized: "\(store.items.count) of \(maxTrayItems) in tray  ·  \(placed) of \(store.cellLimit) in the design")
+        if !store.isCarousel { text += String(localized: "  ·  \(store.videoCount) of \(maxVideos) videos") }
         return text
     }
 
     private var addTile: some View {
         Menu {
-            Button { store.openAdd() } label: { Label("Photo Library", systemImage: "photo.on.rectangle") }
-            Button { store.openFiles() } label: { Label("Files", systemImage: "folder") }
+            Button { store.openAdd() } label: { Label(String(localized: "Photo Library"), systemImage: "photo.on.rectangle") }
+            Button { store.openFiles() } label: { Label(String(localized: "Files"), systemImage: "folder") }
         } label: {
             VStack(spacing: 2) {
                 Image(systemName: "plus").font(.title3.weight(.semibold))
-                Text("Add").font(.caption2.weight(.medium))
+                Text(String(localized: "Add")).font(.caption2.weight(.medium))
             }
             .frame(width: 58, height: 58)
             .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -72,7 +72,7 @@ struct MediaPanel: View {
         .buttonStyle(.plain)
         // Not disabled when the tray is full: tapping explains how to make room.
         .disabled(store.importing)
-        .accessibilityLabel("Add photos or videos")
+        .accessibilityLabel(String(localized: "Add photos or videos"))
     }
 
     private var emptySlot: some View {
@@ -111,7 +111,7 @@ struct MediaPanel: View {
                         Image(systemName: "film").font(.system(size: 9, weight: .bold))
                         Text(formatTime(m.duration)).font(.system(size: 10, weight: .semibold).monospacedDigit())
                     } else if !used {
-                        Text("In tray").font(.system(size: 9, weight: .semibold))
+                        Text(String(localized: "In tray")).font(.system(size: 9, weight: .semibold))
                     }
                 }
                 .padding(.horizontal, 5)
@@ -134,13 +134,13 @@ struct MediaPanel: View {
                 .rotationEffect(.degrees(-4))
         }
         .contextMenu {
-            Button { store.placeMedia(m.id, cell: store.selectedCell) } label: { Label("Use in selected cell", systemImage: "square.and.arrow.down") }
+            Button { store.placeMedia(m.id, cell: store.selectedCell) } label: { Label(String(localized: "Use in selected cell"), systemImage: "square.and.arrow.down") }
             if m.kind == .photo {
-                Button { withAnimation(.smooth) { _ = store.addOverlay(m.id) } } label: { Label("Put on top", systemImage: "square.on.square") }
+                Button { withAnimation(.smooth) { _ = store.addOverlay(m.id) } } label: { Label(String(localized: "Put on top"), systemImage: "square.on.square") }
             }
-            Button(role: .destructive) { withAnimation(.smooth) { store.removeMedia(m.id) } } label: { Label("Remove", systemImage: "trash") }
+            Button(role: .destructive) { withAnimation(.smooth) { store.removeMedia(m.id) } } label: { Label(String(localized: "Remove"), systemImage: "trash") }
         }
-        .accessibilityLabel("\(m.kind == .video ? "Video" : "Photo") \(m.name). \(used ? "In the collage" : "In the tray. Tap to put it in the selected cell")")
+        .accessibilityLabel(String(localized: "\(m.kind == .video ? String(localized: "Video") : String(localized: "Photo")) \(m.name). \(used ? String(localized: "In the collage") : String(localized: "In the tray. Tap to put it in the selected cell"))"))
     }
 }
 
@@ -200,7 +200,7 @@ struct LayoutPanel: View {
                 if carousel {
                     // nobody picks the slide count: it follows the pictures and the style
                     let photos = store.project.cellCount, slides = store.project.slides
-                    Label("\(photos) \(photos == 1 ? "photo" : "photos") · \(slides) slides, added for you", systemImage: "rectangle.split.3x1")
+                    Label(String(localized: "Photos: \(photos) · Slides added for you: \(slides)"), systemImage: "rectangle.split.3x1")
                         .font(.caption.weight(.medium))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -210,8 +210,8 @@ struct LayoutPanel: View {
                     // nobody picks the cell count either: one cell per picture, and the layouts follow
                     let photos = store.project.cells.filter { $0.mediaId != nil }.count
                     Label(
-                        photos == 0 ? "Add photos and up to \(maxVideos) videos, the layouts fit how many you add"
-                            : "\(photos) \(photos == 1 ? "picture" : "pictures") · up to \(maxCells) fit in a collage",
+                        photos == 0 ? String(localized: "Add photos and up to \(maxVideos) videos, the layouts fit how many you add")
+                            : String(localized: "Pictures: \(photos) · Up to \(maxCells) fit in a collage"),
                         systemImage: "info.circle"
                     )
                     .font(.caption.weight(.medium))
@@ -221,14 +221,14 @@ struct LayoutPanel: View {
                     Spacer(minLength: 0)
                 }
                 Button { templatesOpen = true } label: {
-                    Label("Templates", systemImage: "sparkles.rectangle.stack")
+                    Label(String(localized: "Templates"), systemImage: "sparkles.rectangle.stack")
                         .font(.caption.weight(.semibold))
                         .padding(.horizontal, 10)
                         .frame(height: 30)
                         .glassEffect(.regular.tint(Color.brand.opacity(0.55)).interactive(), in: .capsule)
                 }
                 .buttonStyle(.plain)
-                GlassIconButton(symbol: "shuffle", label: "Try another arrangement", size: 30) {
+                GlassIconButton(symbol: "shuffle", label: String(localized: "Try another arrangement"), size: 30) {
                     withAnimation(.smooth) { store.shuffleLayout() }
                 }
             }
@@ -254,18 +254,18 @@ struct LayoutPanel: View {
             .scrollClipDisabled()
             if !carousel && store.project.resizableGrid?.dividers.isEmpty == false {
                 HStack(spacing: 6) {
-                    Label("Drag the borders between pictures to resize them", systemImage: "arrow.left.and.right")
+                    Label(String(localized: "Drag the borders between pictures to resize them"), systemImage: "arrow.left.and.right")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
                     Spacer(minLength: 0)
                     if store.project.hasCustomSizes {
-                        ChipButton(title: "Reset sizes", symbol: "arrow.uturn.backward") {
+                        ChipButton(title: String(localized: "Reset sizes"), symbol: "arrow.uturn.backward") {
                             withAnimation(.smooth) { store.project.cellSizes = nil }
                         }
                         .transition(.opacity)
-                        .accessibilityHint("Puts every cell back to the layout's own size")
+                        .accessibilityHint(String(localized: "Puts every cell back to the layout's own size"))
                     }
                 }
                 .frame(minHeight: 28)
@@ -283,10 +283,10 @@ enum StyleSection: String, PanelSection {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .size: "Size"
-        case .spacing: "Spacing"
-        case .background: "Background"
-        case .frame: "Frame"
+        case .size: String(localized: "Size")
+        case .spacing: String(localized: "Spacing")
+        case .background: String(localized: "Background")
+        case .frame: String(localized: "Frame")
         }
     }
     var symbol: String {
@@ -300,10 +300,10 @@ enum StyleSection: String, PanelSection {
     /// One line under the tabs that says what the group changes.
     var hint: String {
         switch self {
-        case .size: "The shape of the picture you'll post"
-        case .spacing: "Space between pictures, and how round their corners are"
-        case .background: "What shows behind and between your pictures"
-        case .frame: "A frame around every photo and video in the layout"
+        case .size: String(localized: "The shape of the picture you'll post")
+        case .spacing: String(localized: "Space between pictures, and how round their corners are")
+        case .background: String(localized: "What shows behind and between your pictures")
+        case .frame: String(localized: "A frame around every photo and video in the layout")
         }
     }
 }
@@ -382,7 +382,7 @@ extension StylePanel {
         }
         if store.project.format == .story {
             Toggle(isOn: $store.project.safeZone) {
-                Label("Show the area Instagram covers", systemImage: store.project.safeZone ? "eye.slash" : "eye")
+                Label(String(localized: "Show the area Instagram covers"), systemImage: store.project.safeZone ? "eye.slash" : "eye")
                     .font(.footnote)
             }
         }
@@ -414,8 +414,8 @@ extension StylePanel {
     @ViewBuilder
     var spacingSection: some View {
         @Bindable var store = store
-        labeledSlider("Gap", symbol: "arrow.left.and.right", value: $store.project.gap, range: 0...48)
-        labeledSlider("Corners", symbol: "square.on.circle", value: $store.project.radius, range: 0...80)
+        labeledSlider(String(localized: "Gap"), symbol: "arrow.left.and.right", value: $store.project.gap, range: 0...48)
+        labeledSlider(String(localized: "Corners"), symbol: "square.on.circle", value: $store.project.radius, range: 0...80)
     }
 
     // MARK: Frame
@@ -442,7 +442,7 @@ extension StylePanel {
         .frame(height: 34)
         if frame.usesColor {
             HStack(spacing: 10) {
-                rowLabel(frame == .neon ? "Light" : "Colour", symbol: "paintbrush")
+                rowLabel(frame == .neon ? String(localized: "Light") : String(localized: "Color"), symbol: "paintbrush")
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
                         ForEach(frameSwatches, id: \.self) { c in
@@ -454,13 +454,13 @@ extension StylePanel {
                                     .overlay(Circle().strokeBorder(Color.brand, lineWidth: on ? 3 : 0).padding(-4))
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel("Frame colour \(c)")
+                            .accessibilityLabel(String(localized: "Frame color \(c)"))
                             .accessibilityAddTraits(on ? .isSelected : [])
                         }
                     }
                     .padding(5)
                 }
-                ColorPicker("Custom frame colour", selection: Binding(
+                ColorPicker(String(localized: "Custom frame color"), selection: Binding(
                     get: { Color(hex: store.project.frameColor) },
                     set: { store.project.frameColor = $0.hexString }
                 ), supportsOpacity: false)
@@ -469,7 +469,7 @@ extension StylePanel {
             .frame(height: Self.sliderRowHeight)
         }
         if frame.hasEdge {
-            labeledSlider("Thickness", symbol: "lineweight", value: $store.project.frameWidth, range: 6...60)
+            labeledSlider(String(localized: "Thickness"), symbol: "lineweight", value: $store.project.frameWidth, range: 6...60)
         }
     }
 
@@ -489,7 +489,7 @@ extension StylePanel {
             rowLabel(title, symbol: symbol)
             Slider(value: value, in: range)
                 .accessibilityLabel(title)
-            Text("\(Int(value.wrappedValue.rounded()))")
+            Text(String(localized: "\(Int(value.wrappedValue.rounded()))"))
                 .font(.footnote.monospacedDigit())
                 .foregroundStyle(.secondary)
                 .frame(width: 26, alignment: .trailing)
@@ -512,7 +512,7 @@ struct AudioPanel: View {
         let lanes = placedLanes(store.project)
         VStack(alignment: .leading, spacing: 6) {
             if lanes.isEmpty {
-                HintRow(symbol: "waveform.slash", text: "Add a video to control its sound and add background music.")
+                HintRow(symbol: "waveform.slash", text: String(localized: "Add a video to control its sound and add background music."))
             } else {
                 ForEach(Array(lanes.enumerated()), id: \.element.mediaId) { i, lane in
                     laneRow(i, lane)
@@ -539,12 +539,12 @@ struct AudioPanel: View {
                     get: { lane.volume },
                     set: { v in store.setLane(lane.mediaId) { $0.volume = v } }
                 ), in: 0...1)
-                .accessibilityLabel("Volume of video \(name)")
+                .accessibilityLabel(String(localized: "Volume of video \(name)"))
             } else {
-                Text("No sound in this video").font(.footnote).foregroundStyle(.secondary)
+                Text(String(localized: "No sound in this video")).font(.footnote).foregroundStyle(.secondary)
                 Spacer()
             }
-            ChipButton(title: "Loop", symbol: "repeat", isOn: lane.loop) {
+            ChipButton(title: String(localized: "Loop"), symbol: "repeat", isOn: lane.loop) {
                 store.setLane(lane.mediaId) { $0.loop.toggle() }
             }
         }
@@ -560,23 +560,23 @@ struct AudioPanel: View {
                 Spacer()
                 Button(role: .destructive) { store.removeMusic() } label: { Image(systemName: "trash").font(.footnote) }
                     .buttonStyle(.glass).buttonBorderShape(.circle).controlSize(.small)
-                    .accessibilityLabel("Remove music")
+                    .accessibilityLabel(String(localized: "Remove music"))
             }
             HStack(spacing: 8) {
-                Text("Volume").font(.footnote).foregroundStyle(.secondary).frame(width: 50, alignment: .leading)
+                Text(String(localized: "Volume")).font(.footnote).foregroundStyle(.secondary).frame(width: 50, alignment: .leading)
                 Slider(value: Binding(
                     get: { music.volume },
                     set: { v in store.project.music?.volume = v }
                 ), in: 0...1)
-                .accessibilityLabel("Music volume")
+                .accessibilityLabel(String(localized: "Music volume"))
             }
-            Toggle("Fade out at the end", isOn: Binding(
+            Toggle(String(localized: "Fade out at the end"), isOn: Binding(
                 get: { music.fadeOut },
                 set: { v in store.project.music?.fadeOut = v }
             ))
             .font(.footnote)
         } else {
-            ChipButton(title: "Add background music", symbol: "music.note.list") { store.openMusicImporter() }
+            ChipButton(title: String(localized: "Add background music"), symbol: "music.note.list") { store.openMusicImporter() }
         }
     }
 }
@@ -592,14 +592,14 @@ struct PicturePanel: View {
             let filled = cell.mediaId != nil
             if store.swapFrom != nil {
                 HStack {
-                    Label("Tap another cell in the preview to swap.", systemImage: "arrow.left.arrow.right")
+                    Label(String(localized: "Tap another cell in the preview to swap."), systemImage: "arrow.left.arrow.right")
                         .font(.footnote)
                     Spacer()
-                    ChipButton(title: "Cancel", symbol: "xmark") { withAnimation { store.swapFrom = nil } }
+                    ChipButton(title: String(localized: "Cancel"), symbol: "xmark") { withAnimation { store.swapFrom = nil } }
                 }
             } else if !filled {
                 HStack(spacing: 8) {
-                    ChipButton(title: "Add photo or video", symbol: "photo.badge.plus") { store.openAdd(cell: sel) }
+                    ChipButton(title: String(localized: "Add photo or video"), symbol: "photo.badge.plus") { store.openAdd(cell: sel) }
                     Spacer(minLength: 0)
                     doneButton
                 }
@@ -607,27 +607,27 @@ struct PicturePanel: View {
                 VStack(spacing: 8) {
                     GlassEffectContainer(spacing: 6) {
                         HStack(spacing: 6) {
-                            CompactTool(title: "Change", symbol: "photo.badge.plus") { store.openAdd(cell: sel) }
-                            CompactTool(title: "Swap", symbol: "arrow.left.arrow.right") { withAnimation { store.swapFrom = sel } }
-                            CompactTool(title: "Resize", symbol: "arrow.up.left.and.arrow.down.right", isOn: store.resizeOpen || cell.fit) {
+                            CompactTool(title: String(localized: "Change"), symbol: "photo.badge.plus") { store.openAdd(cell: sel) }
+                            CompactTool(title: String(localized: "Swap"), symbol: "arrow.left.arrow.right") { withAnimation { store.swapFrom = sel } }
+                            CompactTool(title: String(localized: "Resize"), symbol: "arrow.up.left.and.arrow.down.right", isOn: store.resizeOpen || cell.fit) {
                                 withAnimation(.smooth) { store.adjustOpen = false; store.resizeOpen.toggle() }
                             }
                             if let id = cell.mediaId, store.item(id)?.kind == .photo {
-                                CompactTool(title: "Look", symbol: "camera.filters", isOn: store.adjustOpen || !cell.look.isOriginal) {
+                                CompactTool(title: String(localized: "Look"), symbol: "camera.filters", isOn: store.adjustOpen || !cell.look.isOriginal) {
                                     withAnimation(.smooth) { store.resizeOpen = false; store.adjustOpen.toggle() }
                                 }
                             }
-                            CompactTool(title: "Rotate", symbol: "rotate.right") { withAnimation(.smooth) { store.rotateCell(sel) } }
-                            CompactTool(title: "Flip", symbol: "arrow.left.and.right.righttriangle.left.righttriangle.right", isOn: cell.flip) {
+                            CompactTool(title: String(localized: "Rotate"), symbol: "rotate.right") { withAnimation(.smooth) { store.rotateCell(sel) } }
+                            CompactTool(title: String(localized: "Flip"), symbol: "arrow.left.and.right.righttriangle.left.righttriangle.right", isOn: cell.flip) {
                                 withAnimation(.smooth) { store.flipCell(sel) }
                             }
-                            CompactTool(title: "Crop", symbol: "crop") { store.cropCell = sel }
+                            CompactTool(title: String(localized: "Crop"), symbol: "crop") { store.cropCell = sel }
                             // this picture's own frame; Style → Frame sets every picture at once
-                            CompactMenuTool(title: "Frame", symbol: "photo.artframe", isOn: cell.frame != nil) {
+                            CompactMenuTool(title: String(localized: "Frame"), symbol: "photo.artframe", isOn: cell.frame != nil) {
                                 Button {
                                     withAnimation(.smooth) { store.setCellFrame(sel, nil) }
                                 } label: {
-                                    Label("Same as all (\(store.project.frame.title))", systemImage: cell.frame == nil ? "checkmark" : "square.stack")
+                                    Label(String(localized: "Same as all (\(store.project.frame.title))"), systemImage: cell.frame == nil ? "checkmark" : "square.stack")
                                 }
                                 Divider()
                                 ForEach(PhotoFrame.allCases) { f in
@@ -638,7 +638,7 @@ struct PicturePanel: View {
                                     }
                                 }
                             }
-                            CompactTool(title: "Delete", symbol: "xmark", role: .destructive) { store.clearCell(sel) }
+                            CompactTool(title: String(localized: "Delete"), symbol: "xmark", role: .destructive) { store.clearCell(sel) }
                         }
                     }
                     if store.adjustOpen, let id = cell.mediaId, let item = store.item(id), item.kind == .photo {
@@ -648,8 +648,8 @@ struct PicturePanel: View {
                     } else {
                     if let id = cell.mediaId, store.item(id)?.kind == .video {
                         HStack(spacing: 6) {
-                            ChipButton(title: "Edit timeline", symbol: "film.stack") { store.openVideo(.timeline) }
-                            ChipButton(title: "Sound", symbol: "speaker.wave.2") { store.openVideo(.sound) }
+                            ChipButton(title: String(localized: "Edit timeline"), symbol: "film.stack") { store.openVideo(.timeline) }
+                            ChipButton(title: String(localized: "Sound"), symbol: "speaker.wave.2") { store.openVideo(.sound) }
                             Spacer(minLength: 0)
                         }
                     }
@@ -659,9 +659,9 @@ struct PicturePanel: View {
                             get: { cell.zoom },
                             set: { v in store.setCellView(sel) { $0.zoom = v } }
                         ), in: 1...4)
-                        .accessibilityLabel("Zoom")
+                        .accessibilityLabel(String(localized: "Zoom"))
                         Image(systemName: "plus.magnifyingglass").font(.footnote).foregroundStyle(.secondary)
-                        GlassIconButton(symbol: "arrow.counterclockwise", label: "Reset zoom, position, rotation and flip", size: 30) {
+                        GlassIconButton(symbol: "arrow.counterclockwise", label: String(localized: "Reset zoom, position, rotation and flip"), size: 30) {
                             withAnimation(.smooth) { store.resetCell(sel) }
                         }
                         doneButton
@@ -670,7 +670,7 @@ struct PicturePanel: View {
                 }
             }
         } else {
-            HintRow(symbol: "hand.tap", text: "Tap a picture in the preview to replace, swap, rotate, flip, crop and zoom it.")
+            HintRow(symbol: "hand.tap", text: String(localized: "Tap a picture in the preview to replace, swap, rotate, flip, crop and zoom it."))
         }
     }
 
@@ -680,14 +680,14 @@ struct PicturePanel: View {
         HStack(spacing: 8) {
             GlassEffectContainer(spacing: 6) {
                 HStack(spacing: 6) {
-                    ChipButton(title: "Fill cell", symbol: "rectangle.fill", isOn: !cell.fit) {
+                    ChipButton(title: String(localized: "Fill cell"), symbol: "rectangle.fill", isOn: !cell.fit) {
                         withAnimation(.smooth) { store.setCellView(sel) { $0.fit = false } }
                     }
-                    .accessibilityHint("Fills the cell; the edges of the picture may be cut off")
-                    ChipButton(title: "Fit whole picture", symbol: "rectangle.portrait.inset.filled", isOn: cell.fit) {
+                    .accessibilityHint(String(localized: "Fills the cell; the edges of the picture may be cut off"))
+                    ChipButton(title: String(localized: "Fit whole picture"), symbol: "rectangle.portrait.inset.filled", isOn: cell.fit) {
                         withAnimation(.smooth) { store.setCellView(sel) { $0.fit = true; $0.zoom = 1; $0.panX = 0; $0.panY = 0 } }
                     }
-                    .accessibilityHint("Shows the whole picture, with blurred or coloured sides")
+                    .accessibilityHint(String(localized: "Shows the whole picture, with blurred or colored sides"))
                 }
             }
             Spacer(minLength: 0)
@@ -697,11 +697,11 @@ struct PicturePanel: View {
             .buttonStyle(.glassProminent)
             .buttonBorderShape(.circle)
             .controlSize(.small)
-            .accessibilityLabel("Done resizing")
+            .accessibilityLabel(String(localized: "Done resizing"))
         }
         if cell.fit {
             HStack(spacing: 10) {
-                Text("Sides").font(.footnote).foregroundStyle(.secondary)
+                Text(String(localized: "Sides")).font(.footnote).foregroundStyle(.secondary)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
                         let blurOn = cell.fitBars == fitBlur
@@ -719,7 +719,7 @@ struct PicturePanel: View {
                             .overlay(Circle().strokeBorder(Color.brand, lineWidth: blurOn ? 3 : 0).padding(-4))
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("Blurred picture")
+                        .accessibilityLabel(String(localized: "Blurred picture"))
                         .accessibilityAddTraits(blurOn ? .isSelected : [])
                         ForEach(fitBarSwatches, id: \.self) { c in
                             let on = cell.fitBars.lowercased() == c
@@ -730,13 +730,13 @@ struct PicturePanel: View {
                                     .overlay(Circle().strokeBorder(Color.brand, lineWidth: on ? 3 : 0).padding(-4))
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel("Sides colour \(c)")
+                            .accessibilityLabel(String(localized: "Sides color \(c)"))
                             .accessibilityAddTraits(on ? .isSelected : [])
                         }
                     }
                     .padding(5)
                 }
-                ColorPicker("Custom sides colour", selection: Binding(
+                ColorPicker(String(localized: "Custom sides color"), selection: Binding(
                     get: { Color(hex: cell.fitBars == fitBlur ? "#ffffff" : cell.fitBars) },
                     set: { c in store.setCellView(sel) { $0.fitBars = c.hexString } }
                 ), supportsOpacity: false)
@@ -752,7 +752,7 @@ struct PicturePanel: View {
         .buttonStyle(.glassProminent)
         .buttonBorderShape(.circle)
         .controlSize(.small)
-        .accessibilityLabel("Done")
+        .accessibilityLabel(String(localized: "Done"))
     }
 }
 
@@ -764,10 +764,10 @@ enum OverlaySection: String, PanelSection {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .photo: "Photo"
-        case .frame: "Frame"
-        case .size: "Size"
-        case .layer: "Layer"
+        case .photo: String(localized: "Photo")
+        case .frame: String(localized: "Frame")
+        case .size: String(localized: "Size")
+        case .layer: String(localized: "Layer")
         }
     }
     var symbol: String {
@@ -797,7 +797,7 @@ struct OverlayPanel: View {
                 }
             }
         } else {
-            HintRow(symbol: "hand.draw", text: "Hold a photo in the tray and drag it onto the design to lay it on top.")
+            HintRow(symbol: "hand.draw", text: String(localized: "Hold a photo in the tray and drag it onto the design to lay it on top."))
         }
     }
 
@@ -806,10 +806,10 @@ struct OverlayPanel: View {
         VStack(spacing: 8) {
             GlassEffectContainer(spacing: 6) {
                 HStack(spacing: 6) {
-                    CompactTool(title: "Change", symbol: "photo.badge.plus") { store.openAdd(overlay: o.id) }
-                    CompactTool(title: "Crop", symbol: "crop") { store.cropOverlay = o.id }
-                    CompactTool(title: "Rotate", symbol: "rotate.right") { withAnimation(.smooth) { store.rotateOverlay(o.id) } }
-                    CompactTool(title: "Flip", symbol: "arrow.left.and.right.righttriangle.left.righttriangle.right", isOn: o.flip) {
+                    CompactTool(title: String(localized: "Change"), symbol: "photo.badge.plus") { store.openAdd(overlay: o.id) }
+                    CompactTool(title: String(localized: "Crop"), symbol: "crop") { store.cropOverlay = o.id }
+                    CompactTool(title: String(localized: "Rotate"), symbol: "rotate.right") { withAnimation(.smooth) { store.rotateOverlay(o.id) } }
+                    CompactTool(title: String(localized: "Flip"), symbol: "arrow.left.and.right.righttriangle.left.righttriangle.right", isOn: o.flip) {
                         withAnimation(.smooth) { store.flipOverlay(o.id) }
                     }
                 }
@@ -817,9 +817,9 @@ struct OverlayPanel: View {
             HStack(spacing: 8) {
                 Image(systemName: "minus.magnifyingglass").font(.footnote).foregroundStyle(.secondary)
                 Slider(value: Binding(get: { o.zoom }, set: { v in store.updateOverlay(o.id) { $0.zoom = v } }), in: 1...4)
-                    .accessibilityLabel("Zoom")
+                    .accessibilityLabel(String(localized: "Zoom"))
                 Image(systemName: "plus.magnifyingglass").font(.footnote).foregroundStyle(.secondary)
-                GlassIconButton(symbol: "arrow.counterclockwise", label: "Reset zoom, position, rotation and flip", size: 30) {
+                GlassIconButton(symbol: "arrow.counterclockwise", label: String(localized: "Reset zoom, position, rotation and flip"), size: 30) {
                     withAnimation(.smooth) { store.resetOverlayView(o.id) }
                 }
             }
@@ -859,10 +859,10 @@ struct OverlayPanel: View {
                                 .overlay(Circle().strokeBorder(Color.brand, lineWidth: on ? 3 : 0).padding(-4))
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("Frame colour \(c)")
+                        .accessibilityLabel(String(localized: "Frame color \(c)"))
                         .accessibilityAddTraits(on ? .isSelected : [])
                     }
-                    ColorPicker("Custom frame colour", selection: Binding(
+                    ColorPicker(String(localized: "Custom frame color"), selection: Binding(
                         get: { Color(hex: o.frameColor) },
                         set: { v in store.updateOverlay(o.id) { $0.frameColor = v.hexString } }
                     ), supportsOpacity: false)
@@ -871,7 +871,7 @@ struct OverlayPanel: View {
                 }
                 .padding(.leading, 4)
             } else {
-                Text(o.frame == .none ? "Pick a frame to give this photo an edge." : "This frame has no colour to pick.")
+                Text(o.frame == .none ? String(localized: "Pick a frame to give this photo an edge.") : String(localized: "This frame has no color to pick."))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -882,10 +882,10 @@ struct OverlayPanel: View {
 
     private func sizeTools(_ o: PhotoOverlay) -> some View {
         VStack(spacing: 6) {
-            labeledSlider("Size", symbol: "arrow.up.left.and.arrow.down.right",
+            labeledSlider(String(localized: "Size"), symbol: "arrow.up.left.and.arrow.down.right",
                           value: Binding(get: { o.w }, set: { v in store.updateOverlay(o.id) { $0.w = v } }),
                           range: overlayWidthRange)
-            labeledSlider("Tilt", symbol: "rotate.right",
+            labeledSlider(String(localized: "Tilt"), symbol: "rotate.right",
                           value: Binding(
                               get: { clamp(o.tilt, -45, 45) },
                               // level holds on a little, so a straight photo is easy to get back
@@ -909,16 +909,16 @@ struct OverlayPanel: View {
     private func layerTools(_ o: PhotoOverlay) -> some View {
         GlassEffectContainer(spacing: 6) {
             HStack(spacing: 6) {
-                CompactTool(title: "Forward", symbol: "square.2.layers.3d.top.filled") {
+                CompactTool(title: String(localized: "Forward"), symbol: "square.2.layers.3d.top.filled") {
                     withAnimation(.smooth) { store.restackOverlay(o.id, up: true) }
                 }
-                CompactTool(title: "Back", symbol: "square.2.layers.3d.bottom.filled") {
+                CompactTool(title: String(localized: "Back"), symbol: "square.2.layers.3d.bottom.filled") {
                     withAnimation(.smooth) { store.restackOverlay(o.id, up: false) }
                 }
-                CompactTool(title: "Duplicate", symbol: "plus.square.on.square") {
+                CompactTool(title: String(localized: "Duplicate"), symbol: "plus.square.on.square") {
                     withAnimation(.smooth) { store.duplicateOverlay(o.id) }
                 }
-                CompactTool(title: "Delete", symbol: "trash", role: .destructive) {
+                CompactTool(title: String(localized: "Delete"), symbol: "trash", role: .destructive) {
                     withAnimation(.smooth) { store.removeOverlay(o.id) }
                 }
             }
@@ -940,10 +940,10 @@ struct PhotoLookTools: View {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .light: "Light"
-            case .contrast: "Contrast"
-            case .colour: "Colour"
-            case .warmth: "Warmth"
+            case .light: String(localized: "Light")
+            case .contrast: String(localized: "Contrast")
+            case .colour: String(localized: "Color")
+            case .warmth: String(localized: "Warmth")
             }
         }
         var keyPath: WritableKeyPath<PhotoLook, Double> {
@@ -980,7 +980,7 @@ struct PhotoLookTools: View {
                             .frame(width: 50)
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("\(f.title) filter")
+                        .accessibilityLabel(String(localized: "\(f.title) filter"))
                         .accessibilityAddTraits(on ? .isSelected : [])
                     }
                 }
@@ -988,7 +988,7 @@ struct PhotoLookTools: View {
                 .padding(.top, 3)
             }
             .frame(height: 56)
-            Picker("Adjust", selection: $adjusting) {
+            Picker(String(localized: "Adjust"), selection: $adjusting) {
                 ForEach(Adjustment.allCases) { a in Text(a.title).tag(a) }
             }
             .pickerStyle(.segmented)
@@ -999,14 +999,14 @@ struct PhotoLookTools: View {
                     set: { v in store.setCellLook(sel) { $0[keyPath: adjusting.keyPath] = abs(v) < 0.04 ? 0 : v } }
                 ), in: -1...1)
                 .accessibilityLabel(adjusting.title)
-                Text("\(Int((cell.look[keyPath: adjusting.keyPath] * 100).rounded()))")
+                Text(String(localized: "\(Int((cell.look[keyPath: adjusting.keyPath] * 100).rounded()))"))
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .frame(width: 34, alignment: .trailing)
-                GlassIconButton(symbol: "arrow.counterclockwise", label: "Back to the original photo", size: 30) {
+                GlassIconButton(symbol: "arrow.counterclockwise", label: String(localized: "Back to the original photo"), size: 30) {
                     withAnimation(.smooth) { store.setCellLook(sel) { $0 = PhotoLook() } }
                 }
-                GlassIconButton(symbol: "checkmark", label: "Done", size: 30, action: done)
+                GlassIconButton(symbol: "checkmark", label: String(localized: "Done"), size: 30, action: done)
             }
             .frame(height: 30)
         }

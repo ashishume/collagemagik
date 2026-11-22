@@ -52,20 +52,20 @@ enum PhotoFrame: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .none: "None"
-        case .border: "Border"
-        case .instant: "Instant"
-        case .film: "Film"
-        case .tape: "Tape"
-        case .stamp: "Stamp"
-        case .gallery: "Gallery"
-        case .torn: "Torn"
-        case .shadow: "Shadow"
-        case .date: "Date"
-        case .neon: "Neon"
-        case .circle: "Circle"
-        case .heart: "Heart"
-        case .arch: "Arch"
+        case .none: String(localized: "None")
+        case .border: String(localized: "Border")
+        case .instant: String(localized: "Instant")
+        case .film: String(localized: "Film")
+        case .tape: String(localized: "Tape")
+        case .stamp: String(localized: "Stamp")
+        case .gallery: String(localized: "Gallery")
+        case .torn: String(localized: "Torn")
+        case .shadow: String(localized: "Shadow")
+        case .date: String(localized: "Date")
+        case .neon: String(localized: "Neon")
+        case .circle: String(localized: "Circle")
+        case .heart: String(localized: "Heart")
+        case .arch: String(localized: "Arch")
         }
     }
     var symbol: String {
@@ -225,6 +225,14 @@ enum FormatId: String, CaseIterable, Identifiable {
     }
     var label: String {
         switch self {
+        case .story: String(localized: "Story 9:16")
+        case .post: String(localized: "Post 4:5")
+        case .square: String(localized: "Square 1:1")
+        }
+    }
+    /// Stable metadata for saved exports; presentation uses `label` in the current language.
+    var storageLabel: String {
+        switch self {
         case .story: "Story 9:16"
         case .post: "Post 4:5"
         case .square: "Square 1:1"
@@ -246,7 +254,7 @@ enum FormatId: String, CaseIterable, Identifiable {
 enum EditMode: String, CaseIterable, Identifiable {
     case collage, carousel
     var id: String { rawValue }
-    var label: String { self == .collage ? "Collage" : "Carousel" }
+    var label: String { self == .collage ? String(localized: "Collage") : String(localized: "Carousel") }
 }
 
 struct Project: Equatable, Codable {
@@ -289,13 +297,13 @@ enum Tab: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .media: "Media"
-        case .layout: "Layout"
-        case .style: "Style"
-        case .text: "Text"
-        case .video: "Video"
-        case .picture: "Picture"
-        case .overlay: "On top"
+        case .media: String(localized: "Media")
+        case .layout: String(localized: "Layout")
+        case .style: String(localized: "Style")
+        case .text: String(localized: "Text")
+        case .video: String(localized: "Video")
+        case .picture: String(localized: "Picture")
+        case .overlay: String(localized: "On top")
         }
     }
     var symbol: String {
@@ -317,8 +325,8 @@ enum Tab: String, CaseIterable, Identifiable {
     func label(in mode: EditMode) -> String {
         guard mode == .carousel else { return label }
         switch self {
-        case .media: return "Photos"
-        case .layout: return "Slides"
+        case .media: return String(localized: "Photos")
+        case .layout: return String(localized: "Slides")
         default: return label
         }
     }
@@ -340,7 +348,7 @@ enum Tab: String, CaseIterable, Identifiable {
 enum VideoSection: String, CaseIterable, Identifiable {
     case timeline, sound
     var id: String { rawValue }
-    var label: String { self == .timeline ? "Timeline" : "Sound" }
+    var label: String { self == .timeline ? String(localized: "Timeline") : String(localized: "Sound") }
 }
 
 // MARK: - Colour helpers

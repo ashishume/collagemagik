@@ -185,6 +185,8 @@ struct StageView: View {
                     .position(x: geo.size.width / 2, y: geo.size.height / 2)
             }
         }
+        // Match the renderer's physical coordinates; captions still use Unicode text shaping.
+        .environment(\.layoutDirection, .leftToRight)
     }
 
     private func rects(_ size: CGSize) -> [PxRect] {
@@ -205,7 +207,7 @@ struct StageView: View {
         .clipShape(RoundedRectangle(cornerRadius: interactive ? 6 : 0, style: .continuous))
         .shadow(color: .black.opacity(interactive ? 0.45 : 0), radius: 22, y: 10)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Collage preview. Tap a picture, photo on top or caption to select it; drag, pinch or twist then edits only what is selected. Tap outside it to deselect. Press and hold a picture then drag to swap.")
+        .accessibilityLabel(String(localized: "Collage preview. Tap a picture, photo on top or caption to select it; drag, pinch or twist then edits only what is selected. Tap outside it to deselect. Press and hold a picture then drag to swap."))
     }
 
     /// Shown while a tray photo is dragged over the design.
@@ -213,7 +215,7 @@ struct StageView: View {
         ZStack {
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .strokeBorder(Color.brand, lineWidth: 3)
-            Label("Drop to place on top", systemImage: "square.on.square")
+            Label(String(localized: "Drop to place on top"), systemImage: "square.on.square")
                 .font(.footnote.weight(.semibold))
                 .padding(.horizontal, 12).padding(.vertical, 7)
                 .glassEffect(.regular.tint(Color.brand.opacity(0.6)), in: .capsule)
@@ -249,7 +251,7 @@ struct StageView: View {
         .onAppear { store.viewportSlides = frame.viewportSlides }
         .onChange(of: frame.viewportSlides) { _, v in store.viewportSlides = v }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Carousel preview, slide \(store.visibleSlide) of \(p.slides). Drag to swipe between slides. Tap a picture to edit it.")
+        .accessibilityLabel(String(localized: "Carousel preview, slide \(store.visibleSlide) of \(p.slides). Drag to swipe between slides. Tap a picture to edit it."))
     }
 
     /// Dashed lines where one slide ends and the next begins, and a number on each slide.
@@ -490,7 +492,7 @@ struct StageView: View {
             .rotationEffect(.degrees(g.outer.tilt))
             .offset(x: g.outer.x, y: g.outer.y)
             .allowsHitTesting(false)
-            .accessibilityLabel("Photo on top: \(item.name)")
+            .accessibilityLabel(String(localized: "Photo on top: \(item.name)"))
         }
     }
 
@@ -520,7 +522,7 @@ struct StageView: View {
                 .rotationEffect(.degrees(r.tilt))
                 .position(r.center)
                 .allowsHitTesting(false)
-                .accessibilityLabel(st.kind == .emoji ? "Sticker \(st.content)" : "Shape sticker")
+                .accessibilityLabel(st.kind == .emoji ? String(localized: "Sticker \(st.content)") : String(localized: "Shape sticker"))
         }
     }
 
@@ -540,7 +542,7 @@ struct StageView: View {
                 .rotationEffect(.radians(l.rotationRad))
                 .position(l.center)
                 .allowsHitTesting(false)
-                .accessibilityLabel("Caption: \(c.text)")
+                .accessibilityLabel(String(localized: "Caption: \(c.text)"))
         }
     }
 
@@ -591,7 +593,7 @@ struct StageView: View {
             .stroke(Color.yellow, style: StrokeStyle(lineWidth: 1, dash: [6, 4]))
             .allowsHitTesting(false)
         }
-        Text("\(Int(normalizedDegrees(degrees).rounded()))°")
+        Text(String(localized: "\(Int(normalizedDegrees(degrees).rounded()))°"))
             .font(.caption.weight(.bold).monospacedDigit())
             .foregroundStyle(locked ? .black : .white)
             .padding(.horizontal, 9).padding(.vertical, 4)

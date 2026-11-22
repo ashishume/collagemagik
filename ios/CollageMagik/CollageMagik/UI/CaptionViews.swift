@@ -39,7 +39,7 @@ struct CaptionFontStrip: View {
                             }
                             .buttonStyle(.plain)
                             .id(f)
-                            .accessibilityLabel("\(f.label) lettering")
+                            .accessibilityLabel(String(localized: "\(f.label) lettering"))
                             .accessibilityAddTraits(on ? .isSelected : [])
                         }
                     }
@@ -70,13 +70,13 @@ struct CaptionColorStrip: View {
                                 .overlay(Circle().strokeBorder(Color.brand, lineWidth: on ? 3 : 0).padding(-4))
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("Caption colour \(c)")
+                        .accessibilityLabel(String(localized: "Caption color \(c)"))
                         .accessibilityAddTraits(on ? .isSelected : [])
                     }
                 }
                 .padding(5)
             }
-            ColorPicker("Custom caption colour", selection: Binding(
+            ColorPicker(String(localized: "Custom caption color"), selection: Binding(
                 get: { Color(hex: selection) },
                 set: { pick($0.hexString) }
             ), supportsOpacity: false)
@@ -101,7 +101,7 @@ struct CaptionFormatRow: View {
                     }
                     .accessibilityAddTraits(on ? .isSelected : [])
                 }
-                GlassIconButton(symbol: caption.align.symbol, label: "Line up the words: \(caption.align.rawValue)", size: size) {
+                GlassIconButton(symbol: caption.align.symbol, label: String(localized: "Line up the words: \(caption.align.title)"), size: size) {
                     update { $0.align = $0.align.next }
                 }
                 Spacer(minLength: 0)
@@ -147,7 +147,7 @@ struct CaptionExtrasRow: View {
                 GlassEffectContainer(spacing: 6) {
                     HStack(spacing: 6) {
                         ForEach(CaptionOrnament.allCases) { o in
-                            GlassIconButton(symbol: o.symbol, label: "Decoration: \(o.title)", isOn: caption.ornament == o, size: 30) {
+                            GlassIconButton(symbol: o.symbol, label: String(localized: "Decoration: \(o.title)"), isOn: caption.ornament == o, size: 30) {
                                 update { $0.ornament = o }
                             }
                         }
@@ -156,22 +156,22 @@ struct CaptionExtrasRow: View {
                 }
             }
             Menu {
-                Picker("Two sizes", selection: Binding(get: { caption.mix }, set: { m in update { $0.mix = m } })) {
+                Picker(String(localized: "Two sizes"), selection: Binding(get: { caption.mix }, set: { m in update { $0.mix = m } })) {
                     ForEach(CaptionMix.allCases) { m in Text(m.title).tag(m) }
                 }
-                Picker("Small lines lettering", selection: Binding(get: { caption.accentFont }, set: { f in update { $0.accentFont = f } })) {
+                Picker(String(localized: "Small lines lettering"), selection: Binding(get: { caption.accentFont }, set: { f in update { $0.accentFont = f } })) {
                     ForEach(CaptionFont.allCases) { f in Text(f.label).tag(f) }
                 }
                 .pickerStyle(.menu)
             } label: {
-                Label("Mix: \(caption.mix.short)", systemImage: "textformat.size")
+                Label(String(localized: "Mix: \(caption.mix.short)"), systemImage: "textformat.size")
                     .font(.footnote.weight(.medium))
                     .lineLimit(1)
                     .padding(.horizontal, 10)
                     .frame(height: 30)
                     .glassEffect(caption.mix == .none ? .regular.interactive() : .regular.tint(Color.brand.opacity(0.7)).interactive(), in: .capsule)
             }
-            .accessibilityHint("Makes the first or last line small, in its own lettering. Put each part on its own line.")
+            .accessibilityHint(String(localized: "Makes the first or last line small, in its own lettering. Put each part on its own line."))
         }
     }
 }
@@ -215,7 +215,7 @@ struct TextPanel: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
                     Button { store.addCaption() } label: {
-                        Label("Add caption", systemImage: "plus").font(.footnote.weight(.semibold))
+                        Label(String(localized: "Add caption"), systemImage: "plus").font(.footnote.weight(.semibold))
                     }
                     .buttonStyle(.glassProminent)
                     .controlSize(.small)
@@ -228,7 +228,7 @@ struct TextPanel: View {
                         }
                         .buttonStyle(.glass)
                         .controlSize(.small)
-                        .accessibilityLabel("Caption: \(c.text)")
+                        .accessibilityLabel(String(localized: "Caption: \(c.text)"))
                     }
                 }
                 .padding(.vertical, 2)
@@ -237,8 +237,8 @@ struct TextPanel: View {
             HintRow(
                 symbol: "hand.draw",
                 text: captions.isEmpty
-                    ? "Write on your \(store.isCarousel ? "carousel" : "collage") in \(CaptionFont.allCases.count) lettering styles."
-                    : "Tap a caption to style it. Drag, pinch or twist to place it."
+                    ? String(localized: "Write on your design in \(CaptionFont.allCases.count) lettering styles.")
+                    : String(localized: "Tap a caption to style it. Drag, pinch or twist to place it.")
             )
             .lineLimit(1)
             .minimumScaleFactor(0.8)
@@ -257,7 +257,7 @@ struct TextPanel: View {
                             get: { c.size },
                             set: { v in store.updateCaption(c.id) { $0.size = v } }
                         ), in: captionSizeRange)
-                        .accessibilityLabel("Caption size")
+                        .accessibilityLabel(String(localized: "Caption size"))
                         Image(systemName: "textformat.size.larger").font(.footnote).foregroundStyle(.secondary)
                     }
                 }
@@ -274,11 +274,11 @@ struct TextPanel: View {
             case .edit:
                 GlassEffectContainer(spacing: 6) {
                     HStack(spacing: 6) {
-                        CompactTool(title: "Edit words", symbol: "pencil") { store.editingCaption = c.id }
-                        CompactTool(title: "Duplicate", symbol: "plus.square.on.square") {
+                        CompactTool(title: String(localized: "Edit words"), symbol: "pencil") { store.editingCaption = c.id }
+                        CompactTool(title: String(localized: "Duplicate"), symbol: "plus.square.on.square") {
                             withAnimation(.smooth) { store.duplicateCaption(c.id) }
                         }
-                        CompactTool(title: "Delete", symbol: "trash", role: .destructive) {
+                        CompactTool(title: String(localized: "Delete"), symbol: "trash", role: .destructive) {
                             withAnimation(.smooth) { store.removeCaption(c.id) }
                         }
                     }
@@ -294,10 +294,10 @@ enum CaptionSection: String, PanelSection {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .font: "Font"
-        case .colour: "Colour"
-        case .style: "Style"
-        case .edit: "Edit"
+        case .font: String(localized: "Font")
+        case .colour: String(localized: "Color")
+        case .style: String(localized: "Style")
+        case .edit: String(localized: "Edit")
         }
     }
     var symbol: String {
@@ -340,11 +340,11 @@ struct CaptionEditor: View {
                 HStack {
                     CaptionFormatRow(caption: c, size: 32) { patch in store.updateCaption(id, patch) }
                     Spacer()
-                    Text("\(c.text.count)/\(maxCaptionLength)")
+                    Text(String(localized: "\(c.text.count)/\(maxCaptionLength)"))
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(.secondary)
                         .opacity(c.text.count > maxCaptionLength - 30 ? 1 : 0)
-                    Button("Done") { store.finishEditingCaption() }
+                    Button(String(localized: "Done")) { store.finishEditingCaption() }
                         .font(.headline)
                         .buttonStyle(.glassProminent)
                 }
@@ -352,7 +352,7 @@ struct CaptionEditor: View {
 
                 Spacer(minLength: 0)
 
-                TextField("Type your caption", text: Binding(
+                TextField(String(localized: "Type your caption"), text: Binding(
                     get: { c.text },
                     set: { v in store.updateCaption(id) { $0.text = v } }
                 ), axis: .vertical)

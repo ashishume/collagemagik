@@ -45,7 +45,7 @@ struct FullScreenPreview: View {
     private var controls: some View {
         VStack {
             HStack {
-                GlassIconButton(symbol: "xmark", label: "Close preview", size: 44) { dismiss() }
+                GlassIconButton(symbol: "xmark", label: String(localized: "Close preview"), size: 44) { dismiss() }
                 Spacer()
             }
             Spacer()
@@ -69,15 +69,15 @@ struct FullScreenPreview: View {
             }
             .buttonStyle(.glass)
             .buttonBorderShape(.circle)
-            .accessibilityLabel(pb.isPlaying ? "Pause" : "Play")
+            .accessibilityLabel(pb.isPlaying ? String(localized: "Pause") : String(localized: "Play"))
 
             Slider(
                 value: Binding(get: { pb.playhead }, set: { pb.seek(to: $0); scheduleHide() }),
                 in: 0...max(store.totalDuration, 0.1)
             )
-            .accessibilityLabel("Playhead")
+            .accessibilityLabel(String(localized: "Playhead"))
 
-            Text("\(formatTime(pb.playhead)) / \(formatTime(store.totalDuration))")
+            Text(String(localized: "\(formatTime(pb.playhead)) / \(formatTime(store.totalDuration))"))
                 .font(.footnote.monospacedDigit())
                 .foregroundStyle(.secondary)
         }

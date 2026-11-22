@@ -59,10 +59,10 @@ struct TopBar: View {
                     store.saveDraftNow()
                     store.editorOpen = false
                 } label: {
-                    BarIcon(symbol: "chevron.left")
+                    BarIcon(symbol: "chevron.backward")
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Home")
+                .accessibilityLabel(String(localized: "Home"))
             }
             // the two sides are equal-width columns, so the title is always exactly in the middle
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -86,7 +86,7 @@ struct TopBar: View {
                 .buttonStyle(.plain)
                 .disabled(store.placedMediaCount == 0)
                 .opacity(store.placedMediaCount == 0 ? 0.4 : 1)
-                .accessibilityLabel("Full screen preview")
+                .accessibilityLabel(String(localized: "Full screen preview"))
 
                 Button {
                     store.playback.pause()
@@ -97,23 +97,23 @@ struct TopBar: View {
                 .buttonStyle(.plain)
                 .disabled(store.placedMediaCount == 0)
                 .opacity(store.placedMediaCount == 0 ? 0.4 : 1)
-                .accessibilityLabel("Export")
+                .accessibilityLabel(String(localized: "Export"))
 
                 Menu {
                     if let version = updates.availableVersion {
-                        Link(destination: AppLinks.appStore) { Label("Update to \(version)", systemImage: "arrow.down.app") }
+                        Link(destination: AppLinks.appStore) { Label(String(localized: "Update to \(version)"), systemImage: "arrow.down.app") }
                         Divider()
                     }
-                    Button { store.openAdd() } label: { Label("Add from Photos", systemImage: "photo.on.rectangle") }
-                    Button { store.openFiles() } label: { Label("Add from Files", systemImage: "folder") }
+                    Button { store.openAdd() } label: { Label(String(localized: "Add from Photos"), systemImage: "photo.on.rectangle") }
+                    Button { store.openFiles() } label: { Label(String(localized: "Add from Files"), systemImage: "folder") }
                     Divider()
-                    Button { themeOpen = true } label: { Label("Theme", systemImage: "paintpalette") }
-                    Button { store.helpOpen = true } label: { Label("How it works", systemImage: "questionmark.circle") }
-                    Button { store.aboutOpen = true } label: { Label("About & Privacy", systemImage: "hand.raised") }
-                    Link(destination: AppLinks.writeReview) { Label("Rate Collage Magic", systemImage: "star") }
+                    Button { themeOpen = true } label: { Label(String(localized: "Theme"), systemImage: "paintpalette") }
+                    Button { store.helpOpen = true } label: { Label(String(localized: "How it works"), systemImage: "questionmark.circle") }
+                    Button { store.aboutOpen = true } label: { Label(String(localized: "About & Privacy"), systemImage: "hand.raised") }
+                    Link(destination: AppLinks.writeReview) { Label(String(localized: "Rate Collage Magic"), systemImage: "star") }
                     Divider()
                     Button { ProStore.shared.openPaywall() } label: {
-                        Label(ProStore.shared.isPro ? "Collage Magic Pro" : "Remove ads (Pro)", systemImage: "sparkles")
+                        Label(ProStore.shared.isPro ? "Collage Magic Pro" : String(localized: "Remove ads (Pro)"), systemImage: "sparkles")
                     }
                 } label: {
                     // a menu icon rather than three dots: it holds adding photos, help, theme and Pro
@@ -122,7 +122,7 @@ struct TopBar: View {
                             if updates.updateAvailable { UpdateDot().offset(x: -3, y: 3) }
                         }
                 }
-                .accessibilityLabel("Menu")
+                .accessibilityLabel(String(localized: "Menu"))
                 .sheet(isPresented: $themeOpen) { ThemePicker() }
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
@@ -162,14 +162,14 @@ struct UpdateBanner: View {
                             .fill(LinearGradient(colors: [Color.brand, Color.laneA], startPoint: .topLeading, endPoint: .bottomTrailing))
                             .shadow(color: Color.laneA.opacity(glow ? 0.8 : 0.2), radius: glow ? 8 : 2)
                     }
-                Text("A new version (\(version)) is ready")
+                Text(String(localized: "A new version (\(version)) is ready"))
                     .font(.footnote.weight(.medium))
                     .foregroundStyle(.white.opacity(0.9))
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
                 Spacer(minLength: 4)
                 Link(destination: AppLinks.appStore) {
-                    Text("Update")
+                    Text(String(localized: "Update"))
                         .font(.footnote.weight(.bold))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 12)
@@ -186,7 +186,7 @@ struct UpdateBanner: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Hide")
+                .accessibilityLabel(String(localized: "Hide"))
             }
             .padding(.leading, 5)
             .padding(.trailing, 4)
@@ -197,7 +197,7 @@ struct UpdateBanner: View {
             }
             .transition(.move(edge: .top).combined(with: .opacity))
             .accessibilityElement(children: .contain)
-            .accessibilityLabel("Update available, version \(version)")
+            .accessibilityLabel(String(localized: "Update available, version \(version)"))
         }
     }
 }
@@ -210,8 +210,8 @@ struct UndoRedoPill: View {
     var body: some View {
         if store.canUndo || store.canRedo {
             HStack(spacing: 0) {
-                button("arrow.uturn.backward", label: "Undo", enabled: store.canUndo) { store.undo() }
-                button("arrow.uturn.forward", label: "Redo", enabled: store.canRedo) { store.redo() }
+                button("arrow.uturn.backward", label: String(localized: "Undo"), enabled: store.canUndo) { store.undo() }
+                button("arrow.uturn.forward", label: String(localized: "Redo"), enabled: store.canRedo) { store.redo() }
             }
             .padding(2)
             .glassEffect(.regular.interactive(), in: .capsule)

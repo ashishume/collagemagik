@@ -23,7 +23,7 @@ struct ImportProgress: Equatable {
 
     /// The whole import, 0...1.
     var fraction: Double { min(1, (Double(current - 1) + itemFraction) / Double(total)) }
-    var title: String { heading ?? (total == 1 ? "Adding 1 item" : "Adding \(current) of \(total)") }
+    var title: String { heading ?? (total == 1 ? String(localized: "Adding 1 item") : String(localized: "Adding \(current) of \(total)")) }
 
     mutating func start(item: Int, detail: String) {
         current = min(max(1, item), total)
@@ -54,9 +54,9 @@ enum ImportSource {
     /// What happens before the item can be read: "Getting video…" (from Photos, maybe iCloud), "Copying photo…".
     var fetchVerb: String {
         switch self {
-        case .picker: return "Getting"
-        case .external: return "Copying"
-        case .local: return "Reading"
+        case .picker: return String(localized: "Getting")
+        case .external: return String(localized: "Copying")
+        case .local: return String(localized: "Reading")
         }
     }
 
@@ -83,7 +83,7 @@ enum ImportSource {
 
     var label: String {
         switch self {
-        case .picker: return kindHint == .video ? "A video" : "A photo"
+        case .picker: return kindHint == .video ? String(localized: "A video") : String(localized: "A photo")
         case .external(let u), .local(let u): return u.lastPathComponent
         }
     }
@@ -100,7 +100,7 @@ enum ImportSource {
         case .picker(let p):
             if kindHint == .video, let url = try await Self.transfer(p, as: PickedMovie.self, onProgress: onProgress) { return url }
             if let url = try await Self.transfer(p, as: PickedImage.self, onProgress: onProgress) { return url }
-            throw ImportError("this item couldn't be read.")
+            throw ImportError(String(localized: "this item couldn't be read."))
         }
     }
 

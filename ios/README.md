@@ -258,3 +258,66 @@ All are ignored in release builds.
 | `CM_CONSENT_EEA=1`, `CM_LIVE_ADS=1` | Tests the EU consent form; uses the live ad units (don't tap them) |
 
 If the simulator shows "Apple Account Verification" (StoreKit asking for the sandbox account), tap Not Now.
+
+## Localization
+
+The native app uses Apple's string catalogs: `CollageMagik/CollageMagik/Localizable.xcstrings` for the interface,
+accessibility, model labels, editable template defaults and errors, and `InfoPlist.xcstrings` for the Photos and
+tracking permission prompts. **English (U.S.), `en-US`, is the source and fallback language.** Language selection
+follows iOS preferred languages, including the app-specific language in Settings; there is no separate in-app picker.
+The existing StoreKit price formatting continues to use the App Store's currency and pricing information.
+
+The catalogs contain all 50 requested locales:
+
+- English (U.S., Australia, Canada, U.K.); Arabic; Bangla; Catalan; Chinese (Simplified and Traditional);
+  Croatian; Czech; Danish; Dutch; Finnish; French (France and Canada); German; Greek; Gujarati; Hebrew;
+  Hindi; Hungarian; Indonesian; Italian; Japanese; Kannada; Korean; Malay; Malayalam; Marathi;
+  Norwegian Bokmål; Odia; Polish; Portuguese (Brazil and Portugal); Punjabi; Romanian; Russian;
+  Slovak; Slovenian; Spanish (Mexico and Spain); Swedish; Tamil; Telugu; Thai; Turkish; Ukrainian;
+  Urdu; Vietnamese.
+
+**Translation status:** non-English translations are initial Google machine translation drafts, with count forms and
+terminology corrections, and are marked `needs_review` in Xcode. They are functional in builds, but require native
+speaker review before release, especially permission explanations, purchase terms, and regional French, Portuguese
+and Spanish variants. No translation service is called at runtime. App Store listing text and screenshots are separate
+from these app resources.
+
+Interface controls mirror for Arabic, Hebrew and Urdu. The design canvas, crop preview, filmstrip, timeline and slide
+navigation keep their physical left-to-right coordinates so gestures, slide order, playback and exported pixels agree.
+Saved enum values, asset names, preference keys and file paths remain language independent. Existing user-written
+captions are never translated. Template captions are localized defaults and stay as editable project content once used.
+Library format labels are derived from saved dimensions so old exports also display in the current app language.
+
+Use `String(localized: "…")` for user-facing strings constructed outside SwiftUI's literal localization APIs, including
+strings passed into helper views or returned by model properties. Translate complete sentences instead of combining
+English nouns and plural suffixes. Photo, video and slide counts use catalog plural variations.
+
+Validate the catalogs:
+
+```bash
+python3 ios/scripts/validate-localizations.py
+```
+
+After adding text, build first, then synchronize the compiler's extracted strings (substitute your DerivedData path):
+
+```bash
+xcrun xcstringstool sync ios/CollageMagik/CollageMagik/Localizable.xcstrings \
+  --stringsdata /path/to/CollageMagik.build/Objects-normal/arm64/*.stringsdata
+python3 ios/scripts/validate-localizations.py \
+  --extracted-dir /path/to/CollageMagik.build/Objects-normal/arm64
+```
+
+New keys must receive all locale values; keep generated translations marked for review until approved. Preserve
+format argument types and positions (`%1$lld`, `%2$@`, etc.). Keep brands and technical notation marked
+`shouldTranslate: false` when appropriate. The validator checks locale completeness, compiler-extracted coverage,
+empty translations and format argument integrity, and reports how many translations still need review.
+
+To inspect a simulator build in Arabic (use `en-US`, `hi`, `de`, `he`, `ur`, etc. for other languages):
+
+```bash
+SIMCTL_CHILD_CM_PRO=1 xcrun simctl launch booted com.axpo.collagemagik \
+  -AppleLanguages '(ar)' -AppleLocale ar_SA -cm.tour.seen.v1 YES
+```
+
+Terminate the app between language runs. Check Home, the editor, long help and purchase text, and physical editing
+coordinates on both iPhone and iPad. Launch without these arguments to return to the simulator's preferred language.

@@ -17,18 +17,18 @@ struct RateUsLink: View {
     var body: some View {
         Link(destination: AppLinks.writeReview) {
             HStack(spacing: 8) {
-                Text("Enjoying Collage Magic?").foregroundStyle(.secondary)
+                Text(String(localized: "Enjoying Collage Magic?")).foregroundStyle(.secondary)
                 HStack(spacing: 1) {
                     ForEach(0..<5, id: \.self) { _ in Image(systemName: "star.fill") }
                 }
                 .font(.caption2)
                 .foregroundStyle(.yellow)
-                Text("Rate us").fontWeight(.semibold)
+                Text(String(localized: "Rate us")).fontWeight(.semibold)
             }
             .font(.footnote)
             .padding(.vertical, 6)
         }
-        .accessibilityLabel("Enjoying Collage Magic? Rate us on the App Store")
+        .accessibilityLabel(String(localized: "Enjoying Collage Magic? Rate us on the App Store"))
     }
 }
 
@@ -42,10 +42,10 @@ struct AboutSheet: View {
 
     private var trackingStatus: String {
         switch ATTrackingManager.trackingAuthorizationStatus {
-        case .authorized: "Allowed"
-        case .denied, .restricted: "Not allowed"
-        case .notDetermined: "Not asked yet"
-        @unknown default: "Not asked yet"
+        case .authorized: String(localized: "Allowed")
+        case .denied, .restricted: String(localized: "Not allowed")
+        case .notDetermined: String(localized: "Not asked yet")
+        @unknown default: String(localized: "Not asked yet")
         }
     }
 
@@ -69,7 +69,7 @@ struct AboutSheet: View {
                             .accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Collage Magic").font(.headline)
-                            Text("Version \(version)").font(.footnote).foregroundStyle(.secondary)
+                            Text(String(localized: "Version \(version)")).font(.footnote).foregroundStyle(.secondary)
                         }
                     }
                     .padding(.vertical, 4)
@@ -79,8 +79,8 @@ struct AboutSheet: View {
                     Button { ProStore.shared.openPaywall() } label: {
                         Label {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(ProStore.shared.isPro ? "Collage Magic Pro is active" : "Collage Magic Pro").foregroundStyle(.primary)
-                                Text(ProStore.shared.isPro ? "No ads. Thank you for your support!" : "Remove all ads: monthly, yearly or once for life.")
+                                Text(ProStore.shared.isPro ? String(localized: "Collage Magic Pro is active") : "Collage Magic Pro").foregroundStyle(.primary)
+                                Text(ProStore.shared.isPro ? String(localized: "No ads. Thank you for your support!") : String(localized: "Remove all ads: monthly, yearly or once for life."))
                                     .font(.caption).foregroundStyle(.secondary)
                             }
                         } icon: {
@@ -88,7 +88,7 @@ struct AboutSheet: View {
                         }
                     }
                     Button { Task { _ = await ProStore.shared.restore() } } label: {
-                        Label("Restore purchases", systemImage: "arrow.clockwise")
+                        Label(String(localized: "Restore purchases"), systemImage: "arrow.clockwise")
                     }
                 }
 
@@ -96,8 +96,8 @@ struct AboutSheet: View {
                     Link(destination: AppLinks.writeReview) {
                         Label {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Rate Collage Magic")
-                                Text("A quick rating on the App Store helps a lot. Thank you!").font(.caption).foregroundStyle(.secondary)
+                                Text(String(localized: "Rate Collage Magic"))
+                                Text(String(localized: "A quick rating on the App Store helps a lot. Thank you!")).font(.caption).foregroundStyle(.secondary)
                             }
                         } icon: {
                             Image(systemName: "star.fill").foregroundStyle(.yellow)
@@ -105,60 +105,60 @@ struct AboutSheet: View {
                     }
                 }
 
-                Section("Your privacy") {
-                    Label("No account or sign-in. Your photos, videos and music are processed on this iPhone and never uploaded.", systemImage: "lock.shield")
-                    Label("Collages you export are kept in My Library on this iPhone, and only there.", systemImage: "internaldrive")
+                Section(String(localized: "Your privacy")) {
+                    Label(String(localized: "No account or sign-in. Your photos, videos and music are processed on this iPhone and never uploaded."), systemImage: "lock.shield")
+                    Label(String(localized: "Collages you export are kept in My Library on this iPhone, and only there."), systemImage: "internaldrive")
                     if gads.isEnabled {
-                        Label("Ads come from Google AdMob and keep this app free. They never get your photos, videos, music or collages.", systemImage: "megaphone")
+                        Label(String(localized: "Ads come from Google AdMob and keep this app free. They never get your photos, videos, music or collages."), systemImage: "megaphone")
                     }
                 }
 
                 if gads.isEnabled {
                     Section {
-                        LabeledContent("Tracking (Apple)", value: trackingStatus)
+                        LabeledContent(String(localized: "Tracking (Apple)"), value: trackingStatus)
                         if gads.privacyOptionsRequired {
-                            Button { gads.presentPrivacyOptions() } label: { Label("Ad privacy choices", systemImage: "slider.horizontal.3") }
+                            Button { gads.presentPrivacyOptions() } label: { Label(String(localized: "Ad privacy choices"), systemImage: "slider.horizontal.3") }
                         }
                         if [.denied, .authorized].contains(ATTrackingManager.trackingAuthorizationStatus) {
                             Link(destination: URL(string: UIApplication.openSettingsURLString)!) {
-                                Label("Change tracking in Settings", systemImage: "gearshape")
+                                Label(String(localized: "Change tracking in Settings"), systemImage: "gearshape")
                             }
                         }
                     } header: {
-                        Text("Ads")
+                        Text(String(localized: "Ads"))
                     } footer: {
-                        Text("A small banner sits above the tool bar, and one full-screen ad appears after you export. Ads never cover your collage while you edit.")
+                        Text(String(localized: "A small banner sits above the tool bar, and one full-screen ad appears after you export. Ads never cover your collage while you edit."))
                     }
                 }
 
-                Section("Legal & help") {
-                    Link(destination: AppLinks.privacy) { Label("Privacy Policy", systemImage: "hand.raised") }
-                    Link(destination: AppLinks.terms) { Label("Terms of Use", systemImage: "doc.text") }
-                    Link(destination: AppLinks.support) { Label("Support", systemImage: "lifepreserver") }
-                    Link(destination: AppLinks.dataDeletion) { Label("How to delete your data", systemImage: "trash.slash") }
+                Section(String(localized: "Legal & help")) {
+                    Link(destination: AppLinks.privacy) { Label(String(localized: "Privacy Policy"), systemImage: "hand.raised") }
+                    Link(destination: AppLinks.terms) { Label(String(localized: "Terms of Use"), systemImage: "doc.text") }
+                    Link(destination: AppLinks.support) { Label(String(localized: "Support"), systemImage: "lifepreserver") }
+                    Link(destination: AppLinks.dataDeletion) { Label(String(localized: "How to delete your data"), systemImage: "trash.slash") }
                 }
 
                 Section {
-                    LabeledContent("My Library") {
-                        Text("\(library.entries.count) \(library.entries.count == 1 ? "collage" : "collages") · \(ByteCountFormatter.string(fromByteCount: library.totalBytes, countStyle: .file))")
+                    LabeledContent(String(localized: "My Library")) {
+                        Text(String(localized: "Saved designs: \(library.entries.count) · \(ByteCountFormatter.string(fromByteCount: library.totalBytes, countStyle: .file))"))
                     }
                     Button(role: .destructive) { confirmDelete = true } label: {
-                        Label("Delete all my data", systemImage: "trash")
+                        Label(String(localized: "Delete all my data"), systemImage: "trash")
                     }
                     .disabled(library.entries.isEmpty && store.items.isEmpty)
                 } header: {
-                    Text("Data on this iPhone")
+                    Text(String(localized: "Data on this iPhone"))
                 } footer: {
-                    Text("Deletes every collage in My Library and clears the collage you are working on. Pictures you saved to the Photos app are yours and are not touched. Deleting the app removes all of this too.")
+                    Text(String(localized: "Deletes every collage in My Library and clears the collage you are working on. Pictures you saved to the Photos app are yours and are not touched. Deleting the app removes all of this too."))
                 }
             }
-            .navigationTitle("About & Privacy")
+            .navigationTitle(String(localized: "About & Privacy"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done", systemImage: "checkmark") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) { Button(String(localized: "Done"), systemImage: "checkmark") { dismiss() } }
             }
-            .confirmationDialog("Delete all your data?", isPresented: $confirmDelete, titleVisibility: .visible) {
-                Button("Delete everything", role: .destructive) {
+            .confirmationDialog(String(localized: "Delete all your data?"), isPresented: $confirmDelete, titleVisibility: .visible) {
+                Button(String(localized: "Delete everything"), role: .destructive) {
                     withAnimation(.smooth) {
                         store.newCollage()
                         library.removeAll()
@@ -167,7 +167,7 @@ struct AboutSheet: View {
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
                 }
             } message: {
-                Text("All collages in My Library and your current collage will be permanently deleted. This can't be undone.")
+                Text(String(localized: "All collages in My Library and your current collage will be permanently deleted. This can't be undone."))
             }
         }
         .proPaywallHost()
