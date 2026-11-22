@@ -108,6 +108,7 @@ private final class VideoExportFrames: @unchecked Sendable {
     private let hdr: Bool
     private var composer: Composer
     private var feeders: [String: LaneFrameFeeder]
+    private var preparedFrame: CVPixelBuffer?
     #if DEBUG
     private let forceGPUFailure = ProcessInfo.processInfo.environment["CM_EXPORT_FORCE_GPU_FAILURE"] == "1"
     private var referenceFeeders: [String: LaneFrameFeeder] = [:]
@@ -148,6 +149,33 @@ private final class VideoExportFrames: @unchecked Sendable {
         feeders = makeFeeders(false)
     }
 
+    /// Validate a planar GPU frame before creating the writer pool so fallback can keep the RGB CPU path.
+    func prepareFirstFrame(in buffer: CVPixelBuffer) throws {
+        do {
+            try render(at: 0, to: buffer, firstFrame: false)
+            preparedFrame = buffer
+            makeCPU = nil
+        } catch {
+            try fallBackToCPU(error)
+        }
+    }
+
+    func takePreparedFrame() -> CVPixelBuffer? {
+        defer { preparedFrame = nil }
+        return preparedFrame
+    }
+
+    func fallBackToCPU(_ error: Error) throws {
+        guard let makeCPU else { throw error }
+        Self.logFallback(error)
+        composer = .cpu(try makeCPU())
+        feeders = makeFeeders(false)
+        self.makeCPU = nil
+        #if DEBUG
+        referenceFeeders.removeAll()
+        #endif
+    }
+
     func render(at time: Double, to buffer: CVPixelBuffer, firstFrame: Bool) throws {
         switch composer {
         case .gpu(let gpu):
@@ -171,16 +199,9 @@ private final class VideoExportFrames: @unchecked Sendable {
                 }
                 if firstFrame { makeCPU = nil }
             } catch {
-                guard firstFrame, let makeCPU else { throw error }
-                Self.logFallback(error)
-                let cpu = try makeCPU()
-                composer = .cpu(cpu)
-                feeders = makeFeeders(false)
-                self.makeCPU = nil
-                #if DEBUG
-                referenceFeeders.removeAll()
-                #endif
-                try cpu.render(at: time, to: buffer, feeders: feeders)
+                guard firstFrame else { throw error }
+                try fallBackToCPU(error)
+                try render(at: time, to: buffer, firstFrame: false)
             }
         case .cpu(let cpu):
             try cpu.render(at: time, to: buffer, feeders: feeders)
@@ -304,7 +325,8 @@ final class CollageExporter: @unchecked Sendable {
     }
 
     /// One frame reader per placed video. For HDR, frames are scaled to the biggest size a cell shows them at.
-    private func makeFeeders(W: Double = 0, H: Double = 0, hdr: Bool = false, fps: Int = 30, metalCompatible: Bool = false) -> [String: LaneFrameFeeder] {
+    private func makeFeeders(W: Double = 0, H: Double = 0, hdr: Bool = false, fps: Int = 30,
+                             metalCompatible: Bool = false, planarSDR: Bool = false) -> [String: LaneFrameFeeder] {
         let project = snapshot.project
         // a motion design shows a video at many sizes: read it for the biggest
         let poses = hdr ? project.motionSamples() : []
@@ -319,7 +341,8 @@ final class CollageExporter: @unchecked Sendable {
                     maxPx = max(maxPx, need.w, need.h)
                 }
             }
-            out[lane.mediaId] = LaneFrameFeeder(lane: lane, url: item.url, hdr: hdr, maxPixels: maxPx, fps: fps, metalCompatible: metalCompatible)
+            out[lane.mediaId] = LaneFrameFeeder(lane: lane, url: item.url, hdr: hdr, maxPixels: maxPx, fps: fps,
+                                                metalCompatible: metalCompatible, planarSDR: planarSDR)
         }
         return out
     }
@@ -400,16 +423,6 @@ final class CollageExporter: @unchecked Sendable {
         }
         let vInput = AVAssetWriterInput(mediaType: .video, outputSettings: vSettings)
         vInput.expectsMediaDataInRealTime = false
-        let adaptor = AVAssetWriterInputPixelBufferAdaptor(
-            assetWriterInput: vInput,
-            sourcePixelBufferAttributes: [
-                kCVPixelBufferPixelFormatTypeKey as String: hdr ? kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange : kCVPixelFormatType_32BGRA,
-                kCVPixelBufferIOSurfacePropertiesKey as String: [:] as [String: Any],
-                kCVPixelBufferMetalCompatibilityKey as String: true,
-                kCVPixelBufferWidthKey as String: w,
-                kCVPixelBufferHeightKey as String: h,
-            ]
-        )
         guard writer.canAdd(vInput) else { throw ExportFailure(String(localized: "Couldn't set up the video encoder.")) }
         writer.add(vInput)
 
@@ -456,12 +469,43 @@ final class CollageExporter: @unchecked Sendable {
             }
         }
 
+        let planarSDR: Bool
+        #if DEBUG
+        let planarOverride = ProcessInfo.processInfo.environment["CM_EXPORT_PLANAR_SDR"].map { $0 == "1" }
+        planarSDR = !hdr && (planarOverride ?? (w * h > 4_000_000))
+        #else
+        planarSDR = !hdr && w * h > 4_000_000
+        #endif
         let photos = CollageRenderer.decodePhotos(snapshot: snapshot, W: Double(w), H: Double(h))
         let captionLayers = CaptionRenderer.layers(project: snapshot.project, W: w, H: h)
         let frames = try VideoExportFrames(engine: .requested, snapshot: snapshot, photos: photos, captions: captionLayers,
-                                           width: w, height: h, hdr: hdr) { [self] metalCompatible in
-            makeFeeders(W: Double(w), H: Double(h), hdr: hdr, fps: fps, metalCompatible: metalCompatible)
+                                           width: w, height: h, hdr: hdr) { [self, planarSDR] metalCompatible in
+            makeFeeders(W: Double(w), H: Double(h), hdr: hdr, fps: fps,
+                        metalCompatible: metalCompatible, planarSDR: planarSDR)
         }
+        var poolAttributes: [String: Any] = [
+            kCVPixelBufferPixelFormatTypeKey as String: hdr ? kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange : kCVPixelFormatType_32BGRA,
+            kCVPixelBufferIOSurfacePropertiesKey as String: [:] as [String: Any],
+            kCVPixelBufferWidthKey as String: w,
+            kCVPixelBufferHeightKey as String: h,
+        ]
+        if frames.engine == .gpu { poolAttributes[kCVPixelBufferMetalCompatibilityKey as String] = true }
+        if planarSDR && frames.engine == .gpu {
+            // There is no RGB-to-YUV conversion in the writer when the composer supplies encoder-ready buffers.
+            let format = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange
+            var planarAttributes = poolAttributes
+            planarAttributes[kCVPixelBufferPixelFormatTypeKey as String] = format
+            var first: CVPixelBuffer?
+            let status = CVPixelBufferCreate(nil, w, h, format, planarAttributes as CFDictionary, &first)
+            if status == kCVReturnSuccess, let first {
+                try frames.prepareFirstFrame(in: first)
+                if frames.engine == .gpu { poolAttributes = planarAttributes }
+            } else {
+                try frames.fallBackToCPU(GPUFrameComposer.SetupError.rasterAllocationFailed)
+            }
+            if frames.engine == .cpu { poolAttributes[kCVPixelBufferMetalCompatibilityKey as String] = nil }
+        }
+        let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: vInput, sourcePixelBufferAttributes: poolAttributes)
         let frameCount = max(1, Int((total * Double(fps)).rounded(.up)))
 
         guard writer.startWriting() else { throw ExportFailure(writer.error?.localizedDescription ?? String(localized: "Couldn't start the export.")) }
@@ -484,16 +528,28 @@ final class CollageExporter: @unchecked Sendable {
                     return
                 }
                 autoreleasepool {
-                    guard let pool = encoder.adaptor.pixelBufferPool else { queues.fail(ExportFailure(String(localized: "Couldn't allocate video memory."))); return }
-                    var pbOut: CVPixelBuffer?
-                    CVPixelBufferPoolCreatePixelBuffer(nil, pool, &pbOut)
-                    guard let pb = pbOut else { queues.fail(ExportFailure(String(localized: "Couldn't allocate video memory."))); return }
-                    let t = Double(frameIndex) / Double(fps)
-                    do {
-                        try frames.render(at: t, to: pb, firstFrame: frameIndex == 0)
-                    } catch {
-                        queues.fail(error)
-                        return
+                    let pb: CVPixelBuffer
+                    if let preparedFrame = frames.takePreparedFrame() {
+                        pb = preparedFrame
+                    } else {
+                        guard let pool = encoder.adaptor.pixelBufferPool else {
+                            queues.fail(ExportFailure(String(localized: "Couldn't allocate video memory.")))
+                            return
+                        }
+                        var pbOut: CVPixelBuffer?
+                        CVPixelBufferPoolCreatePixelBuffer(nil, pool, &pbOut)
+                        guard let created = pbOut else {
+                            queues.fail(ExportFailure(String(localized: "Couldn't allocate video memory.")))
+                            return
+                        }
+                        pb = created
+                        let time = Double(frameIndex) / Double(fps)
+                        do {
+                            try frames.render(at: time, to: pb, firstFrame: frameIndex == 0)
+                        } catch {
+                            queues.fail(error)
+                            return
+                        }
                     }
                     if !encoder.adaptor.append(pb, withPresentationTime: CMTime(value: CMTimeValue(frameIndex), timescale: CMTimeScale(fps))) {
                         queues.fail(encoder.writer.error ?? ExportFailure(String(localized: "The video encoder stopped.")))

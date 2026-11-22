@@ -143,6 +143,11 @@ final class GPUFrameComposer: @unchecked Sendable {
             let alpha = pose.captions.first { $0.scene == scene }.map(pose.captionAlpha) ?? 0
             if alpha > 0.001 { canvas = Self.opacity(layer, alpha).composited(over: canvas) }
         }
+        if CVPixelBufferGetPixelFormatType(output) == kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange {
+            CVBufferSetAttachment(output, kCVImageBufferColorPrimariesKey, kCVImageBufferColorPrimaries_ITU_R_709_2, .shouldPropagate)
+            CVBufferSetAttachment(output, kCVImageBufferTransferFunctionKey, kCVImageBufferTransferFunction_ITU_R_709_2, .shouldPropagate)
+            CVBufferSetAttachment(output, kCVImageBufferYCbCrMatrixKey, kCVImageBufferYCbCrMatrix_ITU_R_709_2, .shouldPropagate)
+        }
         let destination = CIRenderDestination(pixelBuffer: output)
         destination.colorSpace = outputSpace
         let task = try context.startTask(toRender: canvas, from: bounds, to: destination, at: .zero)

@@ -27,7 +27,7 @@ fixture() {
     shift 3
     [[ -s "$target" ]] && return 0
     # The ad files are only read. All generated fixtures live under the comparison directory.
-    ffmpeg -hide_banner -loglevel error -y -ss "$start" -i "$source" -t 5 "$@" \
+    ffmpeg -nostdin -hide_banner -loglevel error -y -ss "$start" -i "$source" -t 5 "$@" \
         -c:a aac "$target.partial.${target##*.}"
     mv "$target.partial.${target##*.}" "$target"
 }
@@ -138,8 +138,8 @@ run_case() {
     [[ "$frames_ref" = "$frames_actual" && "$frames_actual" =~ ^[0-9]+$ ]] || {
         echo "$name frame count differs ($frames_ref vs $frames_actual)" >&2; return 1;
     }
-    (cd "$folder" && ffmpeg -hide_banner -nostats -i "$reference.mp4" -i "$actual.mp4" \
-        -lavfi "ssim=stats_file=$mode.ssim" -an -f null - 2>"$mode.ffmpeg.log") || return 1
+    (cd "$folder" && ffmpeg -nostdin -hide_banner -nostats -threads 2 -i "$reference.mp4" -threads 2 -i "$actual.mp4" \
+        -filter_complex_threads 2 -lavfi "ssim=stats_file=$mode.ssim" -an -f null - 2>"$mode.ffmpeg.log") || return 1
     local overall minimum
     overall=$(sed -n 's/.* All:\([0-9.]*\).*/\1/p' "$folder/$mode.ffmpeg.log" | tail -1)
     minimum=$(awk -F'All:' 'NF>1 { split($2, a, " "); if (!n++ || a[1]+0<min) min=a[1]+0 }
@@ -184,10 +184,10 @@ run tilt-overlays CM_EXPORT=video "CM_BATCH=$a,$photos" CM_LAYOUT=4 CM_LAYOUT_ID
     CM_OVERLAYS=1 CM_OVERLAY_FRAME=torn CM_STICKERS=😍,heart.fill CM_CAPTIONS=1
 run fit-looks CM_EXPORT=video "CM_BATCH=$photos,$a" CM_FIT=0 CM_LOOK=film CM_ROTATE=0 CM_FLIP=0 CM_ANGLE=0:12
 for backdrop in blur gradient:3 pattern:1; do
-    run "backdrop-$backdrop" CM_EXPORT=video "CM_BATCH=$a,$photos" "CM_BACKDROP=$backdrop"
+    run "backdrop-$backdrop" CM_EXPORT=video "CM_BATCH=$a,$photos" "CM_BACKDROP=$backdrop" CM_GAP=50 CM_RADIUS=18
 done
 while IFS= read -r template; do
-    run "$template" CM_EXPORT=video "CM_START_TEMPLATE=$template" "CM_BATCH=$a,$b,$photos"
+    run "$template" CM_EXPORT=video "CM_START_TEMPLATE=$template" "CM_BATCH=$a,$b,$photos" </dev/null
 done < <(sed -n 's/.*id: "\([^"]*\)",.*category: \.motion,.*/\1/p' ios/CollageMagik/CollageMagik/Model/Templates.swift)
 run 4k60-heavy CM_EXPORT=ultra CM_FPS=60 CM_START_TEMPLATE=living-night "CM_BATCH=$large,$hdr,$small"
 run hdr CM_HDR=1 CM_EXPORT=ultra "CM_BATCH=$hdr,$photos"

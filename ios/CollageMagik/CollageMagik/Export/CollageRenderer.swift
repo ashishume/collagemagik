@@ -272,6 +272,7 @@ final class LaneFrameFeeder {
     }
 
     private let metalCompatible: Bool
+    private let planarSDR: Bool
     private var current: TimedFrame?
     private var pending: TimedFrame?
     private(set) var heldImage: CGImage?
@@ -281,12 +282,14 @@ final class LaneFrameFeeder {
     private var holdCache: [Int: CGImage] = [:]
     private let halfFrame: Double
 
-    init(lane: Lane, url: URL, hdr: Bool = false, maxPixels: Int = 0, fps: Int = 30, metalCompatible: Bool = false) {
+    init(lane: Lane, url: URL, hdr: Bool = false, maxPixels: Int = 0, fps: Int = 30,
+         metalCompatible: Bool = false, planarSDR: Bool = false) {
         self.lane = lane
         halfFrame = 0.5 / Double(max(1, fps))
         self.hdr = hdr
         self.maxPixels = maxPixels
         self.metalCompatible = metalCompatible
+        self.planarSDR = planarSDR && metalCompatible
         asset = AVURLAsset(url: url)
         generator = AVAssetImageGenerator(asset: asset)
         generator.appliesPreferredTrackTransform = true
@@ -357,7 +360,8 @@ final class LaneFrameFeeder {
         var settings: [String: Any] = hdr ? [
             kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange,
         ] : [
-            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+            kCVPixelBufferPixelFormatTypeKey as String: planarSDR
+                ? kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange : kCVPixelFormatType_32BGRA,
             // Convert HDR (HLG / Dolby Vision / HDR10) iPhone clips to ordinary SDR colour.
             AVVideoColorPropertiesKey: [
                 AVVideoColorPrimariesKey: AVVideoColorPrimaries_ITU_R_709_2,
