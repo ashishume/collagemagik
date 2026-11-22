@@ -5,12 +5,13 @@ import UIKit
 
 /// What a template is for, shown as chips in the Templates browser.
 enum TemplateCategory: String, CaseIterable, Identifiable {
-    case video, photoDump, travel, birthday, love, wedding, baby, friends, pets, food, fitness, graduation, holidays, business,
+    case motion, video, photoDump, travel, birthday, love, wedding, baby, friends, pets, food, fitness, graduation, holidays, business,
          quote, minimal, moodboard, beforeAfter, scrapbook
 
     var id: String { rawValue }
     var title: String {
         switch self {
+        case .motion: String(localized: "Motion")
         case .video: String(localized: "With video")
         case .photoDump: String(localized: "Photo dump")
         case .travel: String(localized: "Travel")
@@ -61,6 +62,8 @@ struct DesignTemplate: Identifiable {
     var filter: PhotoFilter = .none
     var captions: [Caption] = []
     var stickers: [Sticker] = []
+    /// A motion template: its pictures move through these scenes (collage only). Its layout is the last scene's.
+    var motion: Motion? = nil
 
     /// Gives slot `index` the template's own frame and filter.
     func dress(_ cell: inout CellState, index: Int) {
@@ -69,7 +72,10 @@ struct DesignTemplate: Identifiable {
     }
 
     /// Picture slots: fixed for a collage, the usual opening count for a carousel.
-    var slots: Int { mode == .collage ? layout(byId: layoutId).count : initialCarouselCells }
+    var slots: Int {
+        if mode == .collage, let motion { return motion.slotCount }
+        return mode == .collage ? layout(byId: layoutId).count : initialCarouselCells
+    }
 
     /// The design this template makes with these pictures (ids in order). A collage keeps its own slot count (spare
     /// pictures stay in the tray, missing ones leave empty slots); a carousel gets one slot per picture.
@@ -79,7 +85,7 @@ struct DesignTemplate: Identifiable {
         p.format = format
         let count: Int
         if mode == .collage {
-            count = layout(byId: layoutId).count
+            count = slots
         } else {
             count = min(max(1, pictures.isEmpty ? initialCarouselCells : pictures.count), maxCarouselPhotos)
         }
@@ -89,7 +95,7 @@ struct DesignTemplate: Identifiable {
             dress(&c, index: i)
             return c
         }
-        p.layoutId = mode == .collage ? layoutId : carouselLayoutId(carouselStyles(for: count).contains(style) ? style : defaultCarouselStyle(count: count))
+        p.layoutId = mode == .collage ? (layout(byId: layoutId).count == count ? layoutId : defaultLayout(for: count).id) : carouselLayoutId(carouselStyles(for: count).contains(style) ? style : defaultCarouselStyle(count: count))
         p.cellSizes = nil
         p.gap = gap
         p.radius = radius
@@ -102,6 +108,9 @@ struct DesignTemplate: Identifiable {
         p.captions = captions.map { var c = $0; c.id = UUID().uuidString; return c }
         p.stickers = stickers.map { var s = $0; s.id = UUID().uuidString; return s }
         if mode == .carousel { p.lanes = []; p.music = nil }
+        p.motion = mode == .collage ? motion : nil
+        // a motion design sets its own length: its videos repeat to fill it
+        if p.motion != nil { for i in p.lanes.indices { p.lanes[i].loop = true } }
         return p
     }
 }
@@ -137,34 +146,156 @@ private func shape(_ symbol: String, color: String, x: Double, y: Double, w: Dou
     Sticker(kind: .shape, content: symbol, color: color, cx: x, cy: y, w: w, tilt: tilt)
 }
 
+/// A caption shown only during scene `k` of a motion template.
+private func sceneCaption(_ c: Caption, _ k: Int) -> Caption {
+    var c = c
+    c.scene = k
+    return c
+}
+
 private func gradient(_ index: Int) -> Backdrop { Backdrop(kind: .gradient, gradient: index) }
 private func pattern(_ p: BackdropPattern) -> Backdrop { Backdrop(kind: .pattern, pattern: p.rawValue) }
 
 /// Every template that ships with the app. Add one by adding an entry: the browser, previews and filters pick it up.
 let allTemplates: [DesignTemplate] = [
-    // Living templates put the main clip in the first slot. Their sample cards show motion before media is added.
+    // Motion templates: the pictures move through scenes. Clips go into the first slots; a picture in two scenes in a
+    // row glides between its places. The last scene shows every picture (it is the design's still look).
     DesignTemplate(
-        id: "living-weekend", name: String(localized: "weekend"), category: .video, mode: .collage,
+        id: "living-weekend", name: String(localized: "weekend"), category: .motion, mode: .collage,
         format: .story, layoutId: "4-hero-prints", isLiving: true, bg: "#f0ddbe",
         frameColor: "#fff6e5", frameWidth: 18, cellFrames: [.shadow, .instant, .instant, .instant],
-        captions: [caption(String(localized: "WEEKEND EDITION · NO. 12"), .typewriter, y: 0.05, size: 48, color: "#442b24")]
+        captions: [caption(String(localized: "WEEKEND EDITION · NO. 12"), .typewriter, y: 0.05, size: 48, color: "#442b24")],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 2.4, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "4-hero-prints", slots: [0, 1, 2, 3], length: 4, transition: .fade, move: .zoomOut, entrance: .drop),
+        ])
     ),
     DesignTemplate(
-        id: "living-night", name: String(localized: "Neon nights"), category: .video, mode: .collage,
+        id: "living-night", name: String(localized: "Neon nights"), category: .motion, mode: .collage,
         format: .story, layoutId: "3-big-top", isLiving: true, gap: 14, radius: 18, bg: "#120d29",
         backdrop: gradient(5), frame: .neon, frameColor: "#a85eff", frameWidth: 16,
-        captions: [caption(String(localized: "NEON NIGHTS"), .poster, y: 0.55, size: 80, color: "#e5b6ff", look: .neon)]
+        captions: [caption(String(localized: "NEON NIGHTS"), .poster, y: 0.55, size: 80, color: "#e5b6ff", look: .neon)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.2, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [1], length: 1.8, transition: .slideUp, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [2], length: 1.8, transition: .zoom, move: .zoomIn),
+            MotionScene(layoutId: "3-big-top", slots: [0, 1, 2], length: 3.6, transition: .fade, entrance: .pop),
+        ])
     ),
     DesignTemplate(
-        id: "living-before-after", name: String(localized: "Before & after"), category: .video, mode: .collage,
+        id: "living-before-after", name: String(localized: "Before & after"), category: .motion, mode: .collage,
         format: .post, layoutId: "2-side", isLiving: true, gap: 24, radius: 14, bg: "#102327",
-        captions: [caption(String(localized: "Before & after"), .rounded, y: 0.88, size: 62, look: .plate)]
+        captions: [
+            sceneCaption(caption(String(localized: "Before"), .rounded, y: 0.88, size: 62, look: .plate), 0),
+            sceneCaption(caption(String(localized: "After"), .rounded, y: 0.88, size: 62, look: .plate), 1),
+            sceneCaption(caption(String(localized: "Before & after"), .rounded, y: 0.88, size: 62, look: .plate), 2),
+        ],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.4, move: .drift),
+            MotionScene(layoutId: "1-full", slots: [1], length: 2.4, transition: .slideLeft, move: .drift),
+            MotionScene(layoutId: "2-side", slots: [0, 1], length: 3.4, transition: .fade, entrance: .rise),
+        ])
     ),
     DesignTemplate(
-        id: "living-postcard", name: String(localized: "Postcards"), category: .video, mode: .collage,
+        id: "living-postcard", name: String(localized: "Postcards"), category: .motion, mode: .collage,
         format: .post, layoutId: "4-magazine", isLiving: true, bg: "#d5e7de", backdrop: pattern(.dots),
         frameColor: "#fff9ea", frameWidth: 14, cellFrames: [.border, .stamp, .stamp, .stamp],
-        captions: [caption(String(localized: "greetings from"), .script, y: 0.08, size: 95, color: "#224d46", ornament: .swash)]
+        captions: [caption(String(localized: "greetings from"), .script, y: 0.08, size: 95, color: "#224d46", ornament: .swash)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.4, move: .zoomOut),
+            MotionScene(layoutId: "4-magazine", slots: [0, 1, 2, 3], length: 3.8, transition: .fade, move: .zoomIn, entrance: .pop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-spotlight", name: String(localized: "Spotlight"), category: .motion, mode: .collage,
+        format: .story, layoutId: "3-big-top", isLiving: true, gap: 14, radius: 22, bg: "#0f0f14",
+        captions: [
+            sceneCaption(caption(String(localized: "the weekend"), .script, y: 0.82, size: 120), 0),
+            sceneCaption(caption(String(localized: "BEST BITS"), .poster, y: 0.92, size: 64, look: .plate), 2),
+        ],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.6, move: .zoomIn),
+            MotionScene(layoutId: "2-stack", slots: [0, 1], length: 2.6, transition: .slideUp, move: .zoomIn),
+            MotionScene(layoutId: "3-big-top", slots: [0, 1, 2], length: 3.6, transition: .fade, move: .zoomOut, entrance: .pop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-trio", name: String(localized: "Trio"), category: .motion, mode: .collage,
+        format: .story, layoutId: "3-rows", isLiving: true, gap: 10, radius: 16, bg: "#f4ecdc",
+        captions: [caption(String(localized: "three of a kind"), .typewriter, y: 0.05, size: 44, color: "#2b2118")],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.2, move: .drift),
+            MotionScene(layoutId: "1-full", slots: [1], length: 2.2, transition: .slideLeft, move: .drift),
+            MotionScene(layoutId: "1-full", slots: [2], length: 2.2, transition: .zoom, move: .zoomIn),
+            MotionScene(layoutId: "3-rows", slots: [0, 1, 2], length: 3.4, transition: .fade, entrance: .rise),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-split", name: String(localized: "Split open"), category: .motion, mode: .collage,
+        format: .story, layoutId: "4-grid", isLiving: true, gap: 12, radius: 20, bg: "#16161c",
+        captions: [sceneCaption(caption(String(localized: "it all adds up"), .rounded, y: 0.5, size: 70, look: .plate), 2)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.2, move: .zoomIn),
+            MotionScene(layoutId: "2-stack", slots: [0, 1], length: 2.2, transition: .fade, move: .zoomIn),
+            MotionScene(layoutId: "4-grid", slots: [0, 1, 2, 3], length: 3.4, transition: .fade, move: .zoomOut),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-dump", name: String(localized: "Photo dump"), category: .motion, mode: .collage,
+        format: .story, layoutId: "6-grid", isLiving: true, gap: 8, radius: 10, bg: "#ffffff",
+        captions: [sceneCaption(caption(String(localized: "photo dump"), .marker, y: 0.5, size: 110, color: "#ffffff", rotation: -4), 6)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 0.8, transition: .cut, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [1], length: 0.8, transition: .cut, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [2], length: 0.8, transition: .cut, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [3], length: 0.8, transition: .cut, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [4], length: 0.8, transition: .cut, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [5], length: 0.8, transition: .cut, move: .zoomIn),
+            MotionScene(layoutId: "6-grid", slots: [0, 1, 2, 3, 4, 5], length: 3.4, transition: .fade, entrance: .pop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-prints", name: String(localized: "Print drop"), category: .motion, mode: .collage,
+        format: .post, layoutId: "4-tossed", isLiving: true, bg: "#e8dccb", backdrop: pattern(.grid),
+        frame: .instant, frameColor: "#fbfaf6", frameWidth: 16,
+        captions: [caption(String(localized: "developed today"), .note, y: 0.94, size: 54, color: "#4a3527")],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-tilt", slots: [0], length: 2.4, move: .zoomIn, entrance: .drop),
+            MotionScene(layoutId: "4-tossed", slots: [0, 1, 2, 3], length: 4, transition: .fade, entrance: .drop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-film", name: String(localized: "Film reel"), category: .motion, mode: .collage,
+        format: .story, layoutId: "3-filmstrip", isLiving: true, bg: "#141416", frame: .film, frameColor: "#101016", frameWidth: 22,
+        filter: .film,
+        captions: [caption(String(localized: "roll 01"), .typewriter, y: 0.05, size: 40, color: "#ff9a3c")],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "3-filmstrip", slots: [0, 1, 2], length: 2.8, move: .drift, entrance: .rise),
+            MotionScene(layoutId: "1-centre", slots: [1], length: 2.4, transition: .zoom, move: .zoomIn),
+            MotionScene(layoutId: "3-filmstrip", slots: [2, 0, 1], length: 3.2, transition: .fade, move: .drift),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-recap", name: String(localized: "Weekend recap"), category: .motion, mode: .collage,
+        format: .story, layoutId: "5-hero", isLiving: true, gap: 10, radius: 14, bg: "#fdf1e4", backdrop: gradient(2),
+        captions: [
+            sceneCaption(caption(String(localized: "weekend\nrecap"), .poster, y: 0.18, size: 120, color: "#2b1a12"), 0),
+            sceneCaption(caption(String(localized: "see you next time"), .script, y: 0.5, size: 80), 1),
+        ],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 2.6, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "5-hero", slots: [0, 1, 2, 3, 4], length: 4.2, transition: .fade, move: .zoomOut, entrance: .rise),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-shuffle", name: String(localized: "Shuffle"), category: .motion, mode: .collage,
+        format: .square, layoutId: "4-big-top", isLiving: true, gap: 10, radius: 16, bg: "#1b1030", backdrop: gradient(4),
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "4-grid", slots: [0, 1, 2, 3], length: 2.2, entrance: .pop),
+            MotionScene(layoutId: "4-grid", slots: [3, 0, 1, 2], length: 1.8, transition: .fade),
+            MotionScene(layoutId: "4-grid", slots: [2, 3, 0, 1], length: 1.8, transition: .fade),
+            MotionScene(layoutId: "4-big-top", slots: [0, 1, 2, 3], length: 3.2, transition: .fade, move: .zoomIn),
+        ])
     ),
 
     // MARK: With video (first: playing videos inside a collage is what the app is for)
@@ -765,17 +896,21 @@ enum TemplatePreview {
 
     private static let motionCache: NSCache<NSString, NSArray> = {
         let cache = NSCache<NSString, NSArray>()
-        cache.countLimit = 4
+        cache.countLimit = 8
         return cache
     }()
     static let motionFrameCount = 12
 
+    /// Seconds each frame of a card's animation stays up. A motion template's card plays the design itself, in real time.
+    static func frameInterval(_ t: DesignTemplate) -> Double { t.motion == nil ? 0.16 : 0.2 }
+
     static func motionFrames(_ t: DesignTemplate) async -> [UIImage] {
         if let frames = motionCache.object(forKey: t.id as NSString) as? [UIImage] { return frames }
         var frames: [UIImage] = []
-        for index in 0..<motionFrameCount {
+        let count = t.motion.map { max(2, Int(($0.total / frameInterval(t)).rounded())) } ?? motionFrameCount
+        for index in 0..<count {
             guard !Task.isCancelled else { return [] }
-            let phase = Double(index) * 2 * .pi / Double(motionFrameCount)
+            let phase = Double(index) * 2 * .pi / Double(count)
             if let frame = draw(t, photos: [], phase: phase) { frames.append(frame) }
             await Task.yield()
         }
@@ -799,16 +934,22 @@ enum TemplatePreview {
         let ids = (0..<wanted).map { items[$0 % items.count].id }
         let unique = t.mode == .collage ? ids : Array(ids.prefix(items.count))
         var project = t.project(basedOn: Project(), pictures: unique)
-        if let phase, !project.cells.isEmpty {
+        // a motion template's card runs through its scenes; a living one sways its main picture
+        var time = 0.0
+        if let phase, let motion = project.motion {
+            time = phase / (2 * .pi) * motion.total
+        } else if let phase, !project.cells.isEmpty {
             project.cells[0].zoom = 1.24 + 0.12 * cos(phase)
             project.cells[0].panX = 0.55 * sin(phase)
         }
         let byId = Dictionary(items.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-        let maxSide = phase == nil ? 520.0 : 360.0
+        let maxSide = phase == nil ? 520.0 : (project.motion == nil ? 360.0 : 280.0)
         let k = maxSide / max(project.canvasWidth, project.canvasHeight)
         let w = max(1, Int((project.canvasWidth * k).rounded())), h = max(1, Int((project.canvasHeight * k).rounded()))
         guard let ctx = CollageRenderer.makeContext(width: w, height: h) else { return nil }
-        CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: ExportSnapshot(project: project, items: byId)) { id in
+        // a still card of a motion template shows its last scene, with every picture in it
+        if phase == nil, let motion = project.motion { time = motion.total }
+        CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: ExportSnapshot(project: project, items: byId), t: time) { id in
             // a small card: the 420 px tray thumbnail is plenty, and decodes nothing new
             guard let item = byId[id] else { return nil }
             return (item.fixedPreview ?? item.thumbnail).cgImage

@@ -118,6 +118,10 @@ final class CollageStore {
     }
 
     var totalDuration: Double { CollageMagik.totalDuration(project) }
+
+    /// The design as the preview shows it now: a motion design posed at the playhead (so the preview follows the
+    /// clock), anything else as it is. Edits always go to `project`.
+    var shown: Project { project.isMotion ? project.posed(at: playback.playhead) : project }
     var currentLayout: CollageLayout { layout(for: project) }
     /// Most pictures this kind of project holds: 9 in a collage, 10 in a carousel.
     var cellLimit: Int { project.mode == .carousel ? maxCarouselPhotos : maxCells }
@@ -126,6 +130,8 @@ final class CollageStore {
     func item(_ id: String) -> MediaItem? { items.first { $0.id == id } }
     var videoCount: Int { items.filter { $0.kind == .video }.count }
     var hasPlacedVideo: Bool { !placedLanes(project).isEmpty }
+    /// The design changes over time (a video in it, or a motion design), so the preview gets play and scrub controls.
+    var playsOverTime: Bool { hasPlacedVideo || project.isMotion }
     var trayIsFull: Bool { items.count >= maxTrayItems }
     /// What the "tray is full" alert says, including where to remove pictures from.
     var trayFullMessage: String {
@@ -351,7 +357,10 @@ final class CollageStore {
             if Task.isCancelled { cancelled = true; break }
             items.append(item)
             if item.kind == .video {
-                project.lanes.append(newLane(mediaId: item.id, duration: item.duration, volume: project.lanes.isEmpty ? 1 : 0))
+                var lane = newLane(mediaId: item.id, duration: item.duration, volume: project.lanes.isEmpty ? 1 : 0)
+                // a motion design sets its own length: its videos repeat to fill it
+                if project.isMotion { lane.loop = true }
+                project.lanes.append(lane)
             }
             if let o = overlayTarget, item.kind == .photo, overlay(o) != nil {
                 // "Change" on a photo on top: the new photo takes its place in the same print
@@ -422,7 +431,7 @@ final class CollageStore {
         }
         warmPreviews()
         playback.projectChanged()
-        if isLivingFirstImport, !cancelled, editorOpen, hasPlacedVideo, !UIAccessibility.isReduceMotionEnabled {
+        if isLivingFirstImport, !cancelled, editorOpen, playsOverTime, !UIAccessibility.isReduceMotionEnabled {
             playback.play()
         }
     }
@@ -484,8 +493,10 @@ final class CollageStore {
         cells[idx] = placed
         project.cells = cells
         if count != project.cellCount {
+            let previous = project.cellCount
             project.cellCount = count
             project.layoutId = defaultLayoutId(for: project)
+            fitMotion(previousCount: previous)
         }
         project.cellCount = count
         clampCarouselOffset()
@@ -573,9 +584,12 @@ final class CollageStore {
         } else {
             keep = layout(byId: project.layoutId).count == count
         }
+        let previous = project.cellCount
         project.cells = cells
         project.cellCount = count
         if !keep { project.layoutId = defaultLayoutId(for: project) }
+        // a motion design: new pictures join the last scene, removed ones leave every scene
+        fitMotion(previousCount: previous)
         if let s = selectedCell, s >= count { selectedCell = nil }
         swapFrom = nil
         clampCarouselOffset()
@@ -616,7 +630,7 @@ final class CollageStore {
         let placed = project.cells.prefix(project.cellCount).compactMap(\.mediaId)
         var order = placed + items.map(\.id).filter { !placed.contains($0) }
         // a "With video" template puts the clips in its first (biggest) slots
-        if t.category == .video {
+        if t.category == .video || t.motion != nil {
             order = videoFirst(order)
         }
         if t.mode == .carousel {
@@ -670,6 +684,8 @@ final class CollageStore {
     }
 
     func setLayout(_ id: String) {
+        // picking a layout by hand makes a motion design a still one, in that layout
+        if project.isMotion { project.motion = nil; playback.projectChanged() }
         project.layoutId = id
         clampCarouselOffset()
     }
@@ -716,6 +732,7 @@ final class CollageStore {
         let ids = items.map(\.id)
         // The cells take the first pictures that fit; any others stay in the tray, not deleted.
         let n = ids.isEmpty ? (mode == .carousel ? initialCarouselCells : initialCellCount) : min(ids.count, cellLimit)
+        project.motion = nil
         project.cellCount = n
         project.cells = (0..<n).map { CellState(mediaId: ids.indices.contains($0) ? ids[$0] : nil) }
         project.layoutId = defaultLayoutId(for: project)

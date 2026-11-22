@@ -64,6 +64,9 @@ Code is under `ios/CollageMagik/CollageMagik/`.
 - **Pure model maths**: `Layouts.swift` (cell rects as 0..1 fractions; a new collage starts with `initialCellCount` = 4),
   `CellSizes.swift` (user-dragged borders), `Geometry.swift` (cover/zoom/pan/rotate/straighten placement, formats),
   `Timeline.swift` (lanes, trim/split/move/speed, what a video shows at time *t*, music ribbon).
+- **Motion designs**: `Model/Motion.swift`. A collage with `project.motion` plays as scenes (layout + slots + length +
+  transition). Draw `project.posed(at: t)`, never the raw project, wherever the design is shown at a moment:
+  `CollageRenderer.draw` takes `t`, and the preview reads `store.shown`.
 - **Layers drawn over the cells**, each with one model + renderer shared by the preview and every export:
   `Backdrop.swift` (colour, gradients, blurred photo, patterns), `Overlays.swift` (free-floating photo prints with
   frames from `Frames.swift`), `Captions.swift` (`CaptionRenderer`, up to 8, always fit inside the design),

@@ -21,8 +21,9 @@ struct TemplateCard: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 16, style: .continuous).fill(.white.opacity(0.06))
                     if showsMotion && !motionFrames.isEmpty {
-                        TimelineView(.periodic(from: .now, by: 0.16)) { context in
-                            let offset = Int(context.date.timeIntervalSinceReferenceDate / 0.16)
+                        let step = TemplatePreview.frameInterval(template)
+                        TimelineView(.periodic(from: .now, by: step)) { context in
+                            let offset = Int(context.date.timeIntervalSinceReferenceDate / step)
                             artwork(motionFrames[offset % motionFrames.count])
                         }
                     } else if let img = image ?? TemplatePreview.cached(template, pictures: pictures) {
@@ -52,7 +53,7 @@ struct TemplateCard: View {
                     withAnimation(.easeOut(duration: 0.15)) { image = img }
                 }
                 .overlay(alignment: .topLeading) {
-                    Image(systemName: template.mode == .carousel ? "rectangle.split.3x1" : "square.grid.2x2")
+                    Image(systemName: template.motion != nil ? "sparkles" : template.mode == .carousel ? "rectangle.split.3x1" : "square.grid.2x2")
                         .font(.system(size: 10, weight: .bold))
                         .foregroundStyle(.white)
                         .padding(5)
@@ -60,7 +61,7 @@ struct TemplateCard: View {
                         .padding(6)
                 }
                 HStack(spacing: 4) {
-                    if template.category == .video {
+                    if template.category == .video || template.motion != nil {
                         Image(systemName: "play.fill").font(.system(size: 9, weight: .bold)).foregroundStyle(Color.brand)
                     }
                     Text(template.name)
@@ -75,7 +76,9 @@ struct TemplateCard: View {
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel((template.mode == .carousel ? String(localized: "\(template.name) carousel template") : String(localized: "\(template.name) template, \(template.slots) photos")))
+        .accessibilityLabel((template.mode == .carousel ? String(localized: "\(template.name) carousel template")
+                             : template.motion != nil ? String(localized: "\(template.name) motion template, \(template.slots) photos")
+                             : String(localized: "\(template.name) template, \(template.slots) photos")))
     }
     private func artwork(_ image: UIImage) -> some View {
         Image(uiImage: image)

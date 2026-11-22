@@ -204,7 +204,7 @@ struct RootView: View {
     @ViewBuilder private var stageBar: some View {
         if store.isCarousel {
             SlideBar()
-        } else if store.hasPlacedVideo && store.tab != .video {
+        } else if store.playsOverTime && store.tab != .video {
             // always there while the collage has a video: play, scrub, and the way into the timeline
             TransportBar()
         }
@@ -252,6 +252,7 @@ struct PanelCard: View {
         // collages with borders to drag get a row with the hint and "Reset sizes"
         case .layout:
             if store.isCarousel { return 100 + pad }
+            if store.project.isMotion { return MotionPanel.height + pad }
             return (store.project.resizableGrid?.dividers.isEmpty == false ? 138 : 106) + pad
         // group tabs over the open group of style tools
         case .style: return StylePanel.height(for: store) + pad

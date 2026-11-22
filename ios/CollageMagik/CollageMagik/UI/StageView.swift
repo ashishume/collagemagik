@@ -190,7 +190,7 @@ struct StageView: View {
     }
 
     private func rects(_ size: CGSize) -> [PxRect] {
-        store.project.cellRects(W: size.width, H: size.height)
+        store.shown.cellRects(W: size.width, H: size.height)
     }
 
     // MARK: Collage and full-screen preview
@@ -282,7 +282,7 @@ struct StageView: View {
     /// Everything drawn on the design itself, in canvas coordinates.
     @ViewBuilder
     private func canvas(size: CGSize) -> some View {
-        let project = store.project
+        let project = store.shown
         let px = rects(size)
         let radius = project.cornerRadius(W: size.width)
 
@@ -291,9 +291,19 @@ struct StageView: View {
             ZStack(alignment: .topLeading) {
                 BackdropLayer(project: project, size: size)
 
-                ForEach(Array(px.enumerated()), id: \.offset) { i, r in
-                    cell(i, r, size: size)
+                // a motion design moves, fades and restacks the cells as it plays
+                let order = project.cellDrawOrder
+                ZStack(alignment: .topLeading) {
+                    ForEach(Array(px.enumerated()), id: \.offset) { i, r in
+                        cell(i, r, size: size)
+                            .opacity(project.cellAlpha(i))
+                            .zIndex(Double(order.firstIndex(of: i) ?? i))
+                            // motion cells follow the clock: an animated change elsewhere (a tab opening) must not
+                            // tween them, or one coming in from its hiding place off the design can be left short
+                            .transaction { if project.isMotion { $0.animation = nil } }
+                    }
                 }
+                .frame(width: size.width, height: size.height, alignment: .topLeading)
 
                 ForEach(Array(project.overlays.enumerated()), id: \.element.id) { k, o in
                     overlayView(o, index: k, size)
@@ -304,7 +314,7 @@ struct StageView: View {
                 }
 
                 ForEach(project.captions) { c in
-                    if !c.text.isEmpty { captionView(c, size) }
+                    if !c.text.isEmpty { captionView(c, size).opacity(project.captionAlpha(c)) }
                 }
             }
             .frame(width: size.width, height: size.height, alignment: .topLeading)
@@ -394,7 +404,7 @@ struct StageView: View {
 
     @ViewBuilder
     private func cell(_ i: Int, _ r: PxRect, size: CGSize) -> some View {
-        let project = store.project
+        let project = store.shown
         let state = project.cells.indices.contains(i) ? project.cells[i] : CellState()
         let item = state.mediaId.flatMap { store.item($0) }
         let outers = project.frameRects(W: size.width, H: size.height)
@@ -605,7 +615,7 @@ struct StageView: View {
 
     /// The caption under a touch (the one on top wins). A little slack makes small captions easy to grab.
     private func captionAt(_ p: CGPoint, _ size: CGSize) -> Caption? {
-        store.project.captions.last { c in
+        store.shown.captions.last { c in
             !c.text.isEmpty && CaptionRenderer.layout(c, project: store.project, W: size.width, H: size.height).contains(p, slack: 12)
         }
     }

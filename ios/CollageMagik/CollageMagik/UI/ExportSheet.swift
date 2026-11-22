@@ -288,7 +288,7 @@ struct ExportSheet: View {
                     row(String(localized: "Sound"), soundSummary)
                     if hasHDRVideo { row(String(localized: "Color"), exportsHDR ? "HDR (HLG)" : "SDR") }
                 } else {
-                    row(String(localized: "Frame"), store.hasPlacedVideo ? String(localized: "At \(formatTime(store.playback.playhead))") : String(localized: "Collage"))
+                    row(String(localized: "Frame"), store.playsOverTime ? String(localized: "At \(formatTime(store.playback.playhead))") : String(localized: "Collage"))
                 }
             }
             .padding(16)

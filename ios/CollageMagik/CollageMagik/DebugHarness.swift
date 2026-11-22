@@ -226,6 +226,11 @@ enum DebugHarness {
         if env["CM_PREVIEW"] == "1" { store.previewOpen = true }
         if env["CM_PLAY"] == "1" { store.playback.play() }
         if let seek = env["CM_SEEK"], let t = Double(seek) { store.playback.seek(to: t) }
+        if env["CM_SEEK"] != nil, store.project.isMotion {
+            for (i, r) in store.shown.cellRects(W: 1080, H: 1920).enumerated() {
+                NSLog("CM_DEBUG motion cell %d x=%.0f y=%.0f w=%.0f h=%.0f alpha=%.2f", i, r.x, r.y, r.w, r.h, store.shown.cellAlpha(i))
+            }
+        }
     }
 }
 #endif

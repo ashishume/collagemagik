@@ -23,6 +23,8 @@ struct TransportBar: View {
                 in: 0...max(store.totalDuration, 0.1)
             )
             .accessibilityLabel(String(localized: "Playhead"))
+            // a motion design: a tick where each scene after the first begins
+            .background { sceneTicks }
 
             Text(String(localized: "\(formatTime(pb.playhead)) / \(formatTime(store.totalDuration))"))
                 .font(.caption.monospacedDigit())
@@ -32,19 +34,39 @@ struct TransportBar: View {
 
             // The video tools aren't in the dock (a collage often has no video): this is the way in, shown only
             // while there is a video to cut.
-            Button { store.openVideo(.timeline) } label: {
-                Label(String(localized: "Timeline"), systemImage: "film.stack")
-                    .font(.caption.weight(.semibold))
-                    .lineLimit(1)
-                    .fixedSize()
+            if store.hasPlacedVideo {
+                Button { store.openVideo(.timeline) } label: {
+                    Label(String(localized: "Timeline"), systemImage: "film.stack")
+                        .font(.caption.weight(.semibold))
+                        .lineLimit(1)
+                        .fixedSize()
+                }
+                .buttonStyle(.glassProminent)
+                .controlSize(.small)
+                .accessibilityHint(String(localized: "Cut the video, choose its part, and set its sound and background music"))
             }
-            .buttonStyle(.glassProminent)
-            .controlSize(.small)
-            .accessibilityHint(String(localized: "Cut the video, choose its part, and set its sound and background music"))
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 2)
         .glassEffect(.regular, in: .capsule)
+    }
+
+    @ViewBuilder private var sceneTicks: some View {
+        if store.project.isMotion, let m = store.project.motion, m.scenes.count > 1 {
+            let total = max(store.totalDuration, 0.1)
+            GeometryReader { geo in
+                // the track runs between the thumb's centres, about 12 pt in from each end
+                let inset: CGFloat = 12, w = max(1, geo.size.width - 2 * inset)
+                ForEach(Array(m.starts.dropFirst().enumerated()), id: \.offset) { _, t in
+                    Capsule()
+                        .fill(Color.white.opacity(0.7))
+                        .frame(width: 2, height: 10)
+                        .position(x: inset + w * min(1, t / total), y: geo.size.height / 2)
+                }
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
     }
 }
 

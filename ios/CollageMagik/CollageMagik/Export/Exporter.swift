@@ -96,14 +96,18 @@ final class CollageExporter: @unchecked Sendable {
     /// One frame reader per placed video. For HDR, frames are scaled to the biggest size a cell shows them at.
     private func makeFeeders(W: Double = 0, H: Double = 0, hdr: Bool = false) -> [String: LaneFrameFeeder] {
         let project = snapshot.project
-        let rects = hdr ? project.cellRects(W: W, H: H) : []
+        // a motion design shows a video at many sizes: read it for the biggest
+        let poses = hdr ? project.motionSamples() : []
         var out: [String: LaneFrameFeeder] = [:]
         for lane in placedLanes(project) {
             guard let item = snapshot.items[lane.mediaId] else { continue }
             var maxPx = 0
-            for (i, cell) in project.cells.enumerated() where i < rects.count && cell.mediaId == lane.mediaId {
-                let need = neededPhotoSize(srcW: item.width, srcH: item.height, cell: rects[i], view: cell.view)
-                maxPx = max(maxPx, need.w, need.h)
+            for pose in poses {
+                let rects = pose.cellRects(W: W, H: H)
+                for (i, cell) in pose.cells.enumerated() where i < rects.count && cell.mediaId == lane.mediaId && pose.cellAlpha(i) > 0.001 {
+                    let need = neededPhotoSize(srcW: item.width, srcH: item.height, cell: rects[i], view: cell.view)
+                    maxPx = max(maxPx, need.w, need.h)
+                }
             }
             out[lane.mediaId] = LaneFrameFeeder(lane: lane, url: item.url, hdr: hdr, maxPixels: maxPx, fps: fps)
         }
@@ -118,7 +122,7 @@ final class CollageExporter: @unchecked Sendable {
         let photos = CollageRenderer.decodePhotos(snapshot: snapshot, W: Double(w), H: Double(h))
         let feeders = makeFeeders()
         guard let ctx = CollageRenderer.makeContext(width: w, height: h) else { throw ExportFailure(String(localized: "Couldn't create the picture.")) }
-        CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot) { id in
+        CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot, t: t) { id in
             photos[id] ?? feeders[id]?.frame(at: t)
         }
         guard let image = ctx.makeImage() else { throw ExportFailure(String(localized: "Couldn't create the picture.")) }
@@ -240,7 +244,7 @@ final class CollageExporter: @unchecked Sendable {
 
         let photos = CollageRenderer.decodePhotos(snapshot: snapshot, W: Double(w), H: Double(h))
         let feeders = makeFeeders(W: Double(w), H: Double(h), hdr: hdr)
-        let captionLayer = CaptionRenderer.layer(project: snapshot.project, W: w, H: h)
+        let captionLayers = CaptionRenderer.layers(project: snapshot.project, W: w, H: h)
         // HDR: every frame is drawn into one half-float canvas, then Core Image writes it into the 10-bit HLG buffer.
         let hdrRowBytes = w * 8
         let hdrCanvas: UnsafeMutableRawPointer? = hdr ? UnsafeMutableRawPointer.allocate(byteCount: hdrRowBytes * h, alignment: 64) : nil
@@ -274,7 +278,7 @@ final class CollageExporter: @unchecked Sendable {
                     guard let pb = pbOut else { failure = ExportFailure(String(localized: "Couldn't allocate video memory.")); return }
                     let t = Double(frameIndex) / Double(fps)
                     if let ctx = hdrContext, let canvas = hdrCanvas {
-                        CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot, captionLayer: captionLayer) { id in
+                        CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot, t: t, captionLayers: captionLayers) { id in
                             photos[id] ?? feeders[id]?.frame(at: t)
                         }
                         let data = Data(bytesNoCopy: canvas, count: hdrRowBytes * h, deallocator: .none)
@@ -288,7 +292,7 @@ final class CollageExporter: @unchecked Sendable {
                         if let ctx = CollageRenderer.makeContext(
                             width: w, height: h, data: CVPixelBufferGetBaseAddress(pb), bytesPerRow: CVPixelBufferGetBytesPerRow(pb)
                         ) {
-                            CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot, captionLayer: captionLayer) { id in
+                            CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot, t: t, captionLayers: captionLayers) { id in
                                 photos[id] ?? feeders[id]?.frame(at: t)
                             }
                         }

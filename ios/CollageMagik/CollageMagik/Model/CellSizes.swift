@@ -66,7 +66,7 @@ extension LayoutGrid {
 
 extension Project {
     /// The collage grid on show (with any dragged sizes), or nil when the layout can't be resized (or in a carousel).
-    var resizableGrid: LayoutGrid? { mode == .collage ? layout(for: self).grid : nil }
+    var resizableGrid: LayoutGrid? { mode == .collage && !isMotion ? layout(for: self).grid : nil }
 
     /// True when the cells have been dragged away from the layout's own sizes.
     var hasCustomSizes: Bool {

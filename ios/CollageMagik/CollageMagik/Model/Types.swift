@@ -36,7 +36,7 @@ struct MediaItem: Identifiable {
 }
 
 /// x, y, width, height as fractions (0...1) of the collage area.
-struct LayoutRect: Hashable {
+struct LayoutRect: Hashable, Codable {
     var x: Double
     var y: Double
     var w: Double
@@ -287,6 +287,11 @@ struct Project: Equatable, Codable {
     var backdrop = Backdrop()
     /// Emoji and shapes laid on the design (drawn in order, above the photos on top and under the captions).
     var stickers: [Sticker] = []
+    /// A design that plays as a sequence of scenes (collage only); nil for a still design.
+    var motion: Motion? = nil
+    /// Where the cells are at one moment of a motion design. Only on copies made to be drawn (`posed(at:)`); never
+    /// set on the store's project, so never saved.
+    var pose: MotionPose? = nil
 }
 
 /// The editor's tools. Only Media, Layout, Style and Text are in the bottom dock. Picture and On top open by themselves

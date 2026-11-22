@@ -193,9 +193,17 @@ struct LayoutPanel: View {
     @State private var templatesOpen = false
 
     var body: some View {
+        if store.project.isMotion {
+            MotionPanel()
+        } else {
+            stillBody
+        }
+    }
+
+    private var stillBody: some View {
         let options = layoutOptions(for: store.project)
         let carousel = store.isCarousel
-        VStack(spacing: 6) {
+        return VStack(spacing: 6) {
             HStack(spacing: 6) {
                 if carousel {
                     // nobody picks the slide count: it follows the pictures and the style
@@ -228,6 +236,13 @@ struct LayoutPanel: View {
                         .glassEffect(.regular.tint(Color.brand.opacity(0.55)).interactive(), in: .capsule)
                 }
                 .buttonStyle(.plain)
+                if !carousel {
+                    // makes the collage move through scenes, exported as a video
+                    GlassIconButton(symbol: "sparkles", label: String(localized: "Animate"), size: 30) {
+                        withAnimation(.smooth) { store.animateDesign() }
+                    }
+                    .accessibilityHint(String(localized: "Your pictures move through scenes, saved as a video"))
+                }
                 GlassIconButton(symbol: "shuffle", label: String(localized: "Try another arrangement"), size: 30) {
                     withAnimation(.smooth) { store.shuffleLayout() }
                 }

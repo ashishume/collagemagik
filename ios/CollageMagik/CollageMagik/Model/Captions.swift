@@ -313,6 +313,8 @@ struct Caption: Identifiable, Equatable, Codable {
     var allCaps: Bool = false
     /// Letters stacked top to bottom, one under the other.
     var vertical: Bool = false
+    /// Motion designs: shown only during this scene (fading in and out with it); nil = shown throughout.
+    var scene: Int? = nil
 
     /// Stacked letters are all one size, so the small-line mix is off while they are.
     var activeMix: CaptionMix { vertical ? .none : mix }
@@ -817,16 +819,43 @@ enum CaptionRenderer {
     /// Every caption of the project, drawn onto a canvas `W` × `H` pixels.
     static func drawAll(ctx: CGContext, project: Project, W: Double, H: Double) {
         for c in project.captions where !c.text.isEmpty {
+            let alpha = project.captionAlpha(c)
+            guard alpha > 0.001 else { continue }
             let l = layout(c, project: project, W: W, H: H)
             ctx.saveGState()
+            if alpha < 0.999 {
+                ctx.setAlpha(alpha)
+                ctx.beginTransparencyLayer(auxiliaryInfo: nil)
+            }
             ctx.translateBy(x: l.center.x, y: l.center.y)
             ctx.rotate(by: l.rotationRad)
             draw(l, in: ctx)
+            if alpha < 0.999 { ctx.endTransparencyLayer() }
             ctx.restoreGState()
         }
     }
 
-    /// All captions on a clear layer the size of the canvas. A video export draws this once and stamps it on every frame.
+    /// Ready-made caption layers for a video export: the captions shown throughout on one layer, and for a motion design
+    /// one more layer per scene, faded in and out with it.
+    static func layers(project: Project, W: Int, H: Int) -> CaptionLayers {
+        var still = project
+        still.pose = nil
+        still.captions = project.captions.filter { $0.scene == nil }
+        var out = CaptionLayers(always: layer(project: still, W: W, H: H))
+        guard project.isMotion else {
+            // a still design shows every caption all the time
+            out.always = layer(project: { var p = still; p.captions = project.captions; return p }(), W: W, H: H)
+            return out
+        }
+        for k in Set(project.captions.compactMap(\.scene)) {
+            var p = still
+            p.captions = project.captions.filter { $0.scene == k }.map { var c = $0; c.scene = nil; return c }
+            out.scenes[k] = layer(project: p, W: W, H: H)
+        }
+        return out
+    }
+
+    /// All captions on a clear layer (each at its own visibility) the size of the canvas. A video export draws this once and stamps it on every frame.
     static func layer(project: Project, W: Int, H: Int) -> CGImage? {
         guard project.captions.contains(where: { !$0.text.isEmpty }),
               let ctx = CollageRenderer.makeContext(width: W, height: H) else { return nil }
@@ -851,4 +880,11 @@ enum CaptionRenderer {
         imageCache.setObject(img, forKey: key)
         return img
     }
+}
+
+/// Captions drawn ahead of a video export, so the words aren't laid out again for every frame.
+struct CaptionLayers {
+    var always: CGImage?
+    /// Motion designs: the captions of each scene, by scene index.
+    var scenes: [Int: CGImage] = [:]
 }

@@ -199,7 +199,9 @@ enum DraftDisk {
         guard let ctx = CollageRenderer.makeContext(width: w, height: h) else { return nil }
         let byId = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0) })
         let snapshot = ExportSnapshot(project: project, items: byId)
-        CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot) { id in
+        // a motion design is shown at its last scene, which has every picture in it
+        let t = project.isMotion ? totalDuration(project) : 0
+        CollageRenderer.draw(ctx: ctx, W: Double(w), H: Double(h), snapshot: snapshot, t: t) { id in
             guard let item = byId[id] else { return nil }
             // a 420 px picture: the tray thumbnail is enough, and a save never decodes previews
             return item.thumbnail.cgImage

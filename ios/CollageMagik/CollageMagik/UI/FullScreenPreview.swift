@@ -32,7 +32,7 @@ struct FullScreenPreview: View {
         .onAppear {
             let pb = store.playback
             pb.seek(to: 0)
-            if store.hasPlacedVideo { pb.play() }
+            if store.playsOverTime { pb.play() }
             scheduleHide()
         }
         .onDisappear {
@@ -49,7 +49,7 @@ struct FullScreenPreview: View {
                 Spacer()
             }
             Spacer()
-            if store.hasPlacedVideo { transport }
+            if store.playsOverTime { transport }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)

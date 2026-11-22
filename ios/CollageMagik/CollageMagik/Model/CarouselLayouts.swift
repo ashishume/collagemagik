@@ -449,6 +449,9 @@ func layout(for project: Project) -> CollageLayout {
         let style = project.carouselStyleInUse
         return carouselLayout(style, count: project.cellCount, slides: project.slides, format: project.format, seed: carouselSeed(of: project.layoutId))
     }
+    if let pose = project.pose, pose.rects.count == project.cellCount {
+        return CollageLayout(id: project.layoutId, name: "", rects: pose.rects)
+    }
     let base = layout(byId: project.layoutId)
     if let sizes = project.cellSizes, let grid = base.grid, grid.sameShape(sizes) {
         return CollageLayout(id: base.id, name: base.name, rects: sizes.rects, grid: sizes)

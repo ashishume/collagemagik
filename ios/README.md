@@ -71,10 +71,30 @@ renderer (`TemplatePreview`), with sample scenes on Home and the person's own pi
 it re-lays the pictures already there, and Undo brings the previous design back. A collage template keeps its slots as
 pictures are added (extras wait in the tray); a carousel template keeps its style as the slide count changes.
 
-Four living templates lead the Collage tab: Weekend, Neon Nights, Before & After, and Postcards. Their sample cards
-loop a silent animation in the main slot. On the first import into a new living template, videos go into the first
-slots in selection order and the timeline starts playing when a video is present. Later imports and targeted
-replacements follow the normal editor behavior. Reduce Motion keeps the sample cards and initial playback still.
+**Motion templates** lead the Collage tab in their own row (category Motion, a sparkles badge on the card, which plays
+the design itself): Weekend, Neon nights, Before & after, Postcards, Spotlight, Trio, Split open, Photo dump, Print drop,
+Film reel, Weekend recap and Shuffle. All are free. On the first import into a new one, videos go into the first slots
+in selection order and the design starts playing. Later imports and targeted replacements follow the normal editor
+behavior. Reduce Motion keeps the sample cards and initial playback still.
+
+**Motion templates** (`Model/Motion.swift`): a collage can carry a `Motion`, a list of scenes. Each scene has a layout,
+the slot (cell) shown in each of its places, a length, a transition in (cut, fade, slide left/up, zoom), a slow photo
+move (zoom in/out, drift) and an optional staggered entrance (pop, drop, rise). A slot in two scenes in a row glides
+and resizes between its places. `Project.posed(at:)` gives the design as it is at time *t* (cells moved, faded and
+restacked through `MotionPose`, which `layout(for:)` uses); the preview (`store.shown`, posed at the playhead), every
+export and the template cards draw that copy, so they match. Videos play through scene changes and repeat to fill the
+design, whose length is the sum of its scenes. Captions with a `scene` show only during that scene and fade with it.
+The last scene of a template shows every picture (the design's still look in cards and drafts).
+
+**Editing scenes** (`UI/MotionPanel.swift`, actions in `Model/MotionEditing.swift`): in a motion design the Layout
+tab becomes the scene editor. A strip of scenes (tap one to jump to it, + adds a copy after it), the scene on screen
+with move earlier / later and delete, and a More menu (Slower, Faster, Templates, Make it still). Below, the scene's
+Layout (layouts for its number of pictures), Pictures (tap to show or hide a picture in this scene; numbers are their
+places), Transition (in, plus how new pictures arrive) and Timing (length 0.5–10 s, photo move). The scene being
+edited is always the one at the playhead. Up to 12 scenes, 60 s in all. A still collage gets motion from the sparkles
+button in the Layout tab. Pictures added to a motion design join its last scene; removed ones leave every scene.
+The play bar marks where each scene begins. `CM_START_TEMPLATE=motion-spotlight`, `CM_SEEK=3` pauses the preview at a
+moment (and logs each cell's place).
 
 ## Frames, captions and photo looks
 

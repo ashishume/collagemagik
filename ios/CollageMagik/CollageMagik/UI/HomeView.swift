@@ -106,11 +106,27 @@ private struct KindHome: View {
 
                     newCard
 
+                    // collages lead with the moving templates: pictures that travel through scenes, exported as a video
+                    if mode == .collage {
+                        VStack(alignment: .leading, spacing: 10) {
+                            sectionTitle(String(localized: "Motion templates"), action: (String(localized: "See all"), seeAllTemplates))
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                LazyHStack(alignment: .top, spacing: 14) {
+                                    ForEach(templates(for: mode, category: .motion)) { t in
+                                        TemplateCard(template: t, height: 150) { startDesign(store, mode: mode, template: t) }
+                                            .frame(width: 140)
+                                    }
+                                }
+                                .padding(.horizontal, 16)
+                            }
+                        }
+                    }
+
                     VStack(alignment: .leading, spacing: 10) {
                         sectionTitle(String(localized: "Start from a template"), action: (String(localized: "See all"), seeAllTemplates))
                         ScrollView(.horizontal, showsIndicators: false) {
                             LazyHStack(alignment: .top, spacing: 14) {
-                                ForEach(templates(for: mode).prefix(8)) { t in
+                                ForEach(templates(for: mode).filter { $0.motion == nil }.prefix(8)) { t in
                                     TemplateCard(template: t, height: 150) { startDesign(store, mode: mode, template: t) }
                                         .frame(width: mode == .carousel ? 220 : 140)
                                 }

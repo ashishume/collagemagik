@@ -13,12 +13,13 @@ struct ExportSnapshot {
 
 /// Draws the whole collage into a Core Graphics context. Mirrors the live preview, so what you see is what you get.
 enum CollageRenderer {
+    /// `t` is the moment drawn (a motion design moves its pictures over time; anything else looks the same throughout).
     static func draw(
-        ctx: CGContext, W: Double, H: Double, snapshot: ExportSnapshot,
-        captionLayer: CGImage? = nil,
+        ctx: CGContext, W: Double, H: Double, snapshot: ExportSnapshot, t: Double = 0,
+        captionLayers: CaptionLayers? = nil,
         image: (String) -> CGImage?
     ) {
-        let project = snapshot.project
+        let project = snapshot.project.posed(at: t)
         ctx.saveGState()
         ctx.interpolationQuality = .high
         BackdropRenderer.draw(ctx: ctx, W: W, H: H, project: project) { id in
@@ -28,10 +29,25 @@ enum CollageRenderer {
         let rects = project.cellRects(W: W, H: H)
         let outers = project.frameRects(W: W, H: H)
         let unit = W / project.canvasWidth
-        for (i, r) in rects.enumerated() {
-            guard i < project.cells.count else { break }
+        for i in project.cellDrawOrder where i < rects.count {
+            guard i < project.cells.count else { continue }
+            let r = rects[i]
             let cell = project.cells[i]
             let framed = project.isFramed(i)
+            // a motion design fades pictures in and out: the whole print (frame, shadow and all) as one layer
+            let alpha = project.cellAlpha(i)
+            guard alpha > 0.001 else { continue }
+            if alpha < 0.999 {
+                ctx.saveGState()
+                ctx.setAlpha(alpha)
+                ctx.beginTransparencyLayer(in: outers[i].cgRect.insetBy(dx: -outers[i].w * 0.5, dy: -outers[i].h * 0.5), auxiliaryInfo: nil)
+            }
+            defer {
+                if alpha < 0.999 {
+                    ctx.endTransparencyLayer()
+                    ctx.restoreGState()
+                }
+            }
             drawPrint(
                 ctx, outer: outers[i], picture: r, radius: project.pictureRadius(i, W: W),
                 frame: framed ? project.frame(of: i) : .none, frameColor: project.frameColor,
@@ -59,12 +75,22 @@ enum CollageRenderer {
         // Emoji and shapes, over the photos and under the captions.
         StickerRenderer.drawAll(ctx: ctx, project: project, W: W, H: H)
         // Captions go on top. A video hands in a ready-made layer so the words aren't laid out again for every frame.
-        if let captionLayer {
-            ctx.saveGState()
-            ctx.translateBy(x: 0, y: H)
-            ctx.scaleBy(x: 1, y: -1)
-            ctx.draw(captionLayer, in: CGRect(x: 0, y: 0, width: W, height: H))
-            ctx.restoreGState()
+        if let captionLayers {
+            func stamp(_ layer: CGImage?, alpha: Double) {
+                guard let layer, alpha > 0.001 else { return }
+                ctx.saveGState()
+                ctx.setAlpha(alpha)
+                ctx.translateBy(x: 0, y: H)
+                ctx.scaleBy(x: 1, y: -1)
+                ctx.draw(layer, in: CGRect(x: 0, y: 0, width: W, height: H))
+                ctx.restoreGState()
+            }
+            stamp(captionLayers.always, alpha: 1)
+            for (k, layer) in captionLayers.scenes.sorted(by: { $0.key < $1.key }) {
+                // every caption of a scene fades together, so any one of them tells how visible the scene's layer is
+                let alpha = project.captions.first { $0.scene == k }.map(project.captionAlpha) ?? 0
+                stamp(layer, alpha: alpha)
+            }
         } else {
             CaptionRenderer.drawAll(ctx: ctx, project: project, W: W, H: H)
         }
@@ -129,12 +155,19 @@ enum CollageRenderer {
     /// Photos decoded straight to the size each cell needs (never upscaled).
     static func decodePhotos(snapshot: ExportSnapshot, W: Double, H: Double) -> [String: CGImage] {
         let project = snapshot.project
-        let rects = project.cellRects(W: W, H: H)
+        // a motion design shows a photo at many sizes: decode it for the biggest
+        var biggest: [String: Int] = [:]
+        for pose in project.motionSamples() {
+            let rects = pose.cellRects(W: W, H: H)
+            for (i, cell) in pose.cells.enumerated() where i < rects.count && pose.cellAlpha(i) > 0.001 {
+                guard let id = cell.mediaId, let item = snapshot.items[id], item.kind == .photo else { continue }
+                let need = neededPhotoSize(srcW: item.width, srcH: item.height, cell: rects[i], view: cell.view)
+                biggest[id] = max(biggest[id] ?? 0, need.w, need.h)
+            }
+        }
         var out: [String: CGImage] = [:]
-        for (i, cell) in project.cells.enumerated() where i < rects.count {
-            guard let id = cell.mediaId, let item = snapshot.items[id], item.kind == .photo else { continue }
-            let need = neededPhotoSize(srcW: item.width, srcH: item.height, cell: rects[i], view: cell.view)
-            let maxPx = max(need.w, need.h)
+        for cell in project.cells.prefix(project.cellCount) {
+            guard let id = cell.mediaId, let item = snapshot.items[id], item.kind == .photo, let maxPx = biggest[id] else { continue }
             if let existing = out[id], max(existing.width, existing.height) >= maxPx { continue }
             guard let src = CGImageSourceCreateWithURL(item.url as CFURL, nil) else { continue }
             let opts: [CFString: Any] = [

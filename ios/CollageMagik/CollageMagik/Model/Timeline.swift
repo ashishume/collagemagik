@@ -74,6 +74,8 @@ func placedLanes(_ project: Project) -> [Lane] {
 
 /// Length of the collage: the end of its latest clip, up to 60 seconds.
 func totalDuration(_ project: Project) -> Double {
+    // a motion design lasts as long as its scenes; its videos repeat to fill it
+    if project.isMotion, let motion = project.motion { return clamp(motion.total, minClip, maxDuration) }
     let lanes = placedLanes(project)
     if lanes.isEmpty { return stillDuration }
     let end = lanes.flatMap { $0.clips.map(\.end) }.max() ?? stillDuration
