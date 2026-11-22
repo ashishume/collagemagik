@@ -6,6 +6,32 @@ import UIKit
 import UniformTypeIdentifiers
 import VideoToolbox
 
+#if DEBUG
+private final class ExportMeasurement: @unchecked Sendable {
+    private let started = CACurrentMediaTime()
+    private var peakBytes: UInt64 = 0
+
+    init() { sample() }
+
+    func sample() {
+        var info = task_vm_info_data_t()
+        var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<integer_t>.size)
+        let status = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+            }
+        }
+        if status == KERN_SUCCESS { peakBytes = max(peakBytes, info.phys_footprint) }
+    }
+
+    func finish(engine: String, width: Int, height: Int, fps: Int, frames: Int) {
+        sample()
+        NSLog("CM_EXPORT engine=%@ %d×%d fps=%d frames=%d seconds=%.3f peakMB=%.1f",
+              engine, width, height, fps, frames, CACurrentMediaTime() - started, Double(peakBytes) / 1_048_576)
+    }
+}
+#endif
+
 enum ExportQuality: String, CaseIterable, Identifiable {
     case standard, ultra
     var id: String { rawValue }
@@ -172,6 +198,9 @@ final class CollageExporter: @unchecked Sendable {
     // MARK: MP4
 
     func exportVideo(quality: ExportQuality, hdr: Bool = false, fps: Int = 30, progress: @escaping @Sendable (Double) -> Void) async throws -> URL {
+        #if DEBUG
+        let measurement = ExportMeasurement()
+        #endif
         self.fps = fps == 60 ? 60 : 30
         let (w, h) = size(quality: quality)
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("Collage-\(Int(Date().timeIntervalSince1970)).mp4")
@@ -303,6 +332,9 @@ final class CollageExporter: @unchecked Sendable {
                         return
                     }
                     frameIndex += 1
+                    #if DEBUG
+                    if frameIndex.isMultiple(of: 30) { measurement.sample() }
+                    #endif
                     progress(min(1, Double(frameIndex) / Double(frameCount)) * 0.97)
                 }
             }
@@ -343,6 +375,9 @@ final class CollageExporter: @unchecked Sendable {
             try? FileManager.default.removeItem(at: url)
             throw ExportFailure(writer.error?.localizedDescription ?? String(localized: "The export didn't finish."))
         }
+        #if DEBUG
+        measurement.finish(engine: "cpu", width: w, height: h, fps: self.fps, frames: frameIndex)
+        #endif
         progress(1)
         return url
     }

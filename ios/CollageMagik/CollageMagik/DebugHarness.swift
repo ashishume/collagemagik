@@ -165,16 +165,29 @@ enum DebugHarness {
                 store.project.lanes[li].clips = store.project.lanes[li].clips.map { setSpeed($0, sp) }
             }
         }
-        // CM_FIT=blur|#hex fits every picture whole in its cell with those sides
+        // CM_FIT=i fits one cell with blurred sides; blur or a hex colour applies to all cells.
         if let bars = env["CM_FIT"] {
-            for i in store.project.cells.indices { store.setCellView(i) { $0.fit = true; $0.fitBars = bars } }
+            if let i = Int(bars) {
+                store.setCellView(i) { $0.fit = true; $0.fitBars = fitBlur }
+            } else {
+                for i in store.project.cells.indices { store.setCellView(i) { $0.fit = true; $0.fitBars = bars } }
+            }
         }
+        if let i = env["CM_ROTATE"].flatMap(Int.init) { store.setCellView(i) { $0.rotation = 90 } }
+        if let i = env["CM_FLIP"].flatMap(Int.init) { store.setCellView(i) { $0.flip = true } }
+        if let parts = env["CM_ANGLE"]?.split(separator: ":"), parts.count == 2,
+           let i = Int(parts[0]), let degrees = Double(parts[1]) {
+            store.setCellView(i) { $0.angle = clamp(degrees, -45, 45) }
+        }
+        if let radius = env["CM_RADIUS"].flatMap(Double.init) { store.project.radius = radius }
+        if env["CM_BACKDROP"] == "blur" { store.project.backdrop.blurMediaId = store.items.first { $0.kind == .photo }?.id }
         if let s = env["CM_SELECT"], let i = Int(s) { store.selectCell(i); store.openPicture() }
         // CM_RESIZE=1 opens the selected picture's Resize options
         if env["CM_RESIZE"] != nil { store.resizeOpen = true }
         if env["CM_MUSIC"] != nil, let m = env["CM_MUSIC"] { await store.importMusic(URL(fileURLWithPath: m)) }
         if let c = env["CM_CROP"], let i = Int(c) { store.cropCell = i }
         if let e = env["CM_EXPORT"] {
+            store.playback.pause()
             let snapshot = ExportSnapshot(project: store.project, items: Dictionary(uniqueKeysWithValues: store.items.map { ($0.id, $0) }))
             let exporter = CollageExporter(snapshot: snapshot)
             let out = env["CM_OUT"] ?? "/tmp/cm-export"
