@@ -18,18 +18,26 @@ final class GPUFrameComposer: @unchecked Sendable {
     private let foreground: [CIImage]
     private let sceneCaptions: [(Int, CIImage)]
     private let photos: [Int: CIImage]
-    private let pieces = PrintPieceCache()
+    private let pieces: PrintPieceCache
+    private let useLocalPrintCoordinates: Bool
 
     init(snapshot: ExportSnapshot, photos: [String: CGImage], captions: CaptionLayers, width: Int, height: Int, hdr: Bool) throws {
         guard let device = MTLCreateSystemDefaultDevice() else { throw SetupError.metalUnavailable }
         let sRGB = CGColorSpace(name: CGColorSpace.sRGB)!
-        context = CIContext(mtlDevice: device, options: [
+        var options: [CIContextOption: Any] = [
             .workingColorSpace: hdr ? HDR.linearSpace : sRGB,
             .workingFormat: hdr ? CIFormat.RGBAh : CIFormat.RGBA8,
             .cacheIntermediates: false,
-        ])
+        ]
+        if width * height > 4_000_000 {
+            // Large graphs can tile their temporary textures. Leave room for the reader and writer pools.
+            options[.memoryTarget] = hdr ? 192 : 128
+        }
+        context = CIContext(mtlDevice: device, options: options)
         outputSpace = hdr ? HDR.hlgSpace : sRGB
         self.hdr = hdr
+        pieces = PrintPieceCache(hdr: hdr)
+        useLocalPrintCoordinates = !hdr && snapshot.project.isMotion && width * height > 4_000_000
         let canvas = CGRect(x: 0, y: 0, width: width, height: height)
         bounds = canvas
         let project = snapshot.project
@@ -139,54 +147,81 @@ final class GPUFrameComposer: @unchecked Sendable {
         destination.colorSpace = outputSpace
         let task = try context.startTask(toRender: canvas, from: bounds, to: destination, at: .zero)
         _ = try task.waitUntilCompleted()
+        if pieces.consumeEvictions() {
+            // Core Image can retain textures for raster pieces the LRU has already dropped during a transition.
+            context.clearCaches()
+        }
     }
 
     private func printPieces(
         index: Int, outer: PxRect, picture: PxRect, radius: Double, frame: PhotoFrame,
         color: String, edge: Double, unit: Double, cell: CellState, fitItem: MediaItem?
     ) throws -> PrintPieces? {
-        let H = bounds.height
         let pad = Self.printPadding(outer, frame: frame, unit: unit)
-        let padded = outer.cgRect.insetBy(dx: -pad, dy: -pad).integral
-        let box = outer.tilt == 0 ? padded.intersection(bounds) : padded
-        guard !box.isEmpty else { return nil }
+        let canvasBox = outer.cgRect.insetBy(dx: -pad, dy: -pad).integral
+        let visibleBox = outer.tilt == 0 ? canvasBox.intersection(bounds) : canvasBox
+        guard !visibleBox.isEmpty else { return nil }
+
+        var drawingOuter = outer
+        var drawingPicture = picture
+        let box: CGRect
+        let referenceHeight: Double
+        let offset: CGPoint
+        if useLocalPrintCoordinates {
+            // Sliding a large print across the canvas reuses its artwork, even when it crosses a canvas edge.
+            drawingOuter.x = 0
+            drawingOuter.y = 0
+            drawingPicture.x -= outer.x
+            drawingPicture.y -= outer.y
+            box = drawingOuter.cgRect.insetBy(dx: -pad, dy: -pad).integral
+            referenceHeight = 0
+            offset = CGPoint(x: outer.x, y: bounds.height - outer.y)
+        } else {
+            box = visibleBox
+            referenceHeight = bounds.height
+            offset = .zero
+        }
+
         let key = PrintPieceCache.Key(
-            index: index, frame: frame, color: color, fitBars: fitItem == nil ? nil : cell.fitBars,
+            index: frame == .torn || frame == .tape ? index : 0,
+            frame: frame, color: color, fitBars: fitItem == nil ? nil : cell.fitBars,
             blurMedia: cell.fitBars == fitBlur ? fitItem?.id : nil,
-            geometry: [box.width, box.height, outer.x - box.minX, outer.y - box.minY, outer.w, outer.h,
-                       picture.x - box.minX, picture.y - box.minY, picture.w, picture.h, radius, edge]
+            geometry: [box.width, box.height, drawingOuter.x - box.minX, drawingOuter.y - box.minY, outer.w, outer.h,
+                       drawingPicture.x - box.minX, drawingPicture.y - box.minY, picture.w, picture.h, radius, edge]
                 .map { Int(($0 * 2).rounded()) }
         )
-        let origin = Self.bottomLeft(box, height: H).origin
-        if let cached = pieces.value(for: key) { return cached.shifted(to: origin) }
-        let path = pictureClipPath(frame, rect: picture.cgRect, radius: radius)
+        let origin = Self.bottomLeft(box, height: referenceHeight).origin
+        if let cached = pieces.value(for: key) {
+            return cached.shifted(to: CGPoint(x: origin.x + offset.x, y: origin.y + offset.y))
+        }
+        let path = pictureClipPath(frame, rect: drawingPicture.cgRect, radius: radius)
         var result = PrintPieces()
         if frame != .none || fitItem != nil {
-            result.under = try Self.raster(box, height: H, hdr: hdr) { ctx in
-                CollageRenderer.drawPrintUnder(ctx, outer: outer, picture: picture, path: path, frame: frame,
+            result.under = try Self.raster(box, height: referenceHeight, hdr: hdr) { ctx in
+                CollageRenderer.drawPrintUnder(ctx, outer: drawingOuter, picture: drawingPicture, path: path, frame: frame,
                                                frameColor: color, edge: edge, seed: index, unit: unit)
                 if let fitItem {
                     ctx.addPath(path)
                     ctx.clip()
-                    BackdropRenderer.drawFitBars(ctx: ctx, rect: picture, cell: cell, item: fitItem)
+                    BackdropRenderer.drawFitBars(ctx: ctx, rect: drawingPicture, cell: cell, item: fitItem)
                 }
             }
         }
         switch frame {
         case .tape, .gallery, .date, .neon:
-            result.over = try Self.raster(box, height: H, hdr: hdr) { ctx in
-                FrameDecor.drawOver(ctx, frame: frame, outer: outer.cgRect, picture: picture.cgRect,
+            result.over = try Self.raster(box, height: referenceHeight, hdr: hdr) { ctx in
+                FrameDecor.drawOver(ctx, frame: frame, outer: drawingOuter.cgRect, picture: drawingPicture.cgRect,
                                     color: color, unit: unit, seed: index)
             }
         default:
             break
         }
-        if radius > 0 || frame.isShape || picture.cgRect != picture.cgRect.integral {
-            let maskBox = picture.cgRect.integral.intersection(box)
-            if !maskBox.isEmpty { result.mask = try Self.rasterMask(path, box: maskBox, height: H) }
+        if useLocalPrintCoordinates || radius > 0 || frame.isShape || picture.cgRect != picture.cgRect.integral {
+            let maskBox = drawingPicture.cgRect.integral.intersection(box)
+            if !maskBox.isEmpty { result.mask = try Self.rasterMask(path, box: maskBox, height: referenceHeight) }
         }
         pieces.insert(result.shifted(to: CGPoint(x: -origin.x, y: -origin.y)), for: key, hdr: hdr)
-        return result
+        return result.shifted(to: offset)
     }
 
     private static func printPadding(_ outer: PxRect, frame: PhotoFrame, unit: Double) -> Double {
@@ -284,10 +319,12 @@ private final class PrintPieceCache: @unchecked Sendable {
     private var entries: [Key: Entry] = [:]
     private var bytes = 0
     private var tick = 0
-    private let byteLimit = 96 * 1024 * 1024
+    private var evicted = false
+    private let byteLimit: Int
     private var warning: NSObjectProtocol?
 
-    init() {
+    init(hdr: Bool) {
+        byteLimit = (hdr ? 140 : 96) * 1024 * 1024
         warning = NotificationCenter.default.addObserver(forName: UIApplication.didReceiveMemoryWarningNotification,
                                                           object: nil, queue: nil) { [weak self] _ in self?.clear() }
     }
@@ -316,16 +353,25 @@ private final class PrintPieceCache: @unchecked Sendable {
             guard let (oldest, entry) = entries.min(by: { $0.value.accessed < $1.value.accessed }) else { break }
             entries.removeValue(forKey: oldest)
             bytes -= entry.bytes
+            evicted = true
         }
         tick += 1
         entries[key] = Entry(pieces: pieces, bytes: cost, accessed: tick)
         bytes += cost
     }
 
+    func consumeEvictions() -> Bool {
+        lock.withLock {
+            defer { evicted = false }
+            return evicted
+        }
+    }
+
     private func clear() {
-        lock.lock()
-        defer { lock.unlock() }
-        entries.removeAll()
-        bytes = 0
+        lock.withLock {
+            entries.removeAll()
+            bytes = 0
+            evicted = true
+        }
     }
 }

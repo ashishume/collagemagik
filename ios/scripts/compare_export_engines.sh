@@ -9,7 +9,7 @@ report=${CM_COMPARE_REPORT:-"$repo/ios/docs/gpu-export-results.md"}
 mode=${1:-compare}
 selection=${2:-}
 bundle=com.axpo.collagemagik
-mkdir -p "$work"
+mkdir -p "$work" "$(dirname "$report")"
 work=$(cd "$work" && pwd)
 case "$mode" in baseline|compare|against-baseline|cpu-parity) ;; *) echo "Usage: $0 [baseline|compare|against-baseline|cpu-parity] [case regex]" >&2; exit 2 ;; esac
 
@@ -49,13 +49,13 @@ render() {
     shift 3
     local output="$work/$name/$stem"
     mkdir -p "$work/$name"
-    rm -f "$output.mp4" "$output.log" "$output.metrics" "$output.status"
+    rm -f "$output.mp4" "$output.metrics" "$output.status"
     xcrun simctl terminate "$SIM_UDID" "$bundle" 2>/dev/null || true
     local vars=(SIMCTL_CHILD_CM_PRO=1 SIMCTL_CHILD_CM_NO_PREVIEW_COPY=1 "SIMCTL_CHILD_CM_OUT=$output" "SIMCTL_CHILD_CM_EXPORT_ENGINE=$engine"
         "SIMCTL_CHILD_CM_EXPORT_METRICS=$output.metrics" "SIMCTL_CHILD_CM_EXPORT_STATUS=$output.status")
     local arg launch pid
     for arg in "$@"; do vars+=("SIMCTL_CHILD_$arg"); done
-    launch=$(env "${vars[@]}" xcrun simctl launch --stderr="$output.log" "$SIM_UDID" "$bundle" -AppleLanguages '(en-US)' -cm.tour.seen.v1 YES) || return 1
+    launch=$(env "${vars[@]}" xcrun simctl launch "$SIM_UDID" "$bundle" -AppleLanguages '(en-US)' -cm.tour.seen.v1 YES) || return 1
     pid=${launch##* }
     local started=$SECONDS line='' logs=''
     while (( SECONDS - started < ${CM_COMPARE_TIMEOUT:-600} )); do
@@ -77,18 +77,34 @@ render() {
             printf '\n' >&2
             return 1
         fi
+        if ! kill -0 "$pid" 2>/dev/null; then
+            echo "$name $engine app process $pid exited before producing an export" >&2
+            return 1
+        fi
         sleep 1
     done
-    if [[ -z "$line" ]]; then echo "$name $engine timed out, see $output.log" >&2; return 1; fi
+    if [[ -z "$line" ]]; then
+        echo "$name $engine timed out. Check the simulator log for process $pid." >&2
+        return 1
+    fi
     printf '%s\n' "$line" > "$output.metrics"
 }
 
 row() {
     local name=$1 stem=$2 overall=${3:--} minimum=${4:--}
-    awk -v name="$name" -v all="$overall" -v min="$minimum" '
+    local line updated
+    line=$(awk -v name="$name" -v all="$overall" -v min="$minimum" '
         { split($2,e,"="); split($4,f,"="); split($6,s,"="); split($7,m,"=")
           printf "| %s | %s | %s/%s | %s | %s | %s | %s |\n", name,e[2],$3,f[2],s[2],m[2],all,min }
-    ' "$work/$name/$stem.metrics" >> "$report"
+    ' "$work/$name/$stem.metrics") || return 1
+    updated=$(mktemp "$report.XXXXXX") || return 1
+    # Insert into the matrix even when a completed report already has notes underneath it.
+    if ! awk -v row="$line" 'NR > 2 && !printed && !/^\|/ { print row; printed=1 }
+        { print } END { if (!printed) print row }' "$report" > "$updated"; then
+        rm -f "$updated"
+        return 1
+    fi
+    mv "$updated" "$report"
 }
 
 quality_failed=0
