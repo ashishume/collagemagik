@@ -298,6 +298,67 @@ let allTemplates: [DesignTemplate] = [
         ])
     ),
 
+    DesignTemplate(
+        id: "motion-side-by-side", name: String(localized: "Side by side"), category: .motion, mode: .collage,
+        format: .square, layoutId: "2-side", isLiving: true, gap: 20, radius: 14, bg: "#151a20",
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "2-stack", slots: [0, 1], length: 2.2, move: .drift),
+            MotionScene(layoutId: "2-side", slots: [0, 1], length: 3.2),
+        ], transitionLength: 0.8)
+    ),
+    DesignTemplate(
+        id: "motion-staircase", name: String(localized: "Staircase"), category: .motion, mode: .collage,
+        format: .story, layoutId: "3-stairs", isLiving: true, gap: 8, radius: 18, bg: "#172723",
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 1.5, move: .zoomIn),
+            MotionScene(layoutId: "2-overlap", slots: [0, 1], length: 1.6, transition: .slideUp),
+            MotionScene(layoutId: "3-stairs", slots: [0, 1, 2], length: 3.0, move: .drift, entrance: .rise),
+        ], transitionLength: 0.55)
+    ),
+    DesignTemplate(
+        id: "motion-lookbook", name: String(localized: "Lookbook"), category: .motion, mode: .collage,
+        format: .post, layoutId: "4-magazine", isLiving: true, gap: 10, bg: "#f1ece3",
+        frame: .border, frameColor: "#fffdf8", frameWidth: 10,
+        captions: [sceneCaption(caption(String(localized: "LOOKBOOK"), .magazine, y: 0.085, size: 66, color: "#211b18"), 3)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "2-side", slots: [0, 1], length: 1.4),
+            MotionScene(layoutId: "2-side", slots: [2, 3], length: 1.4, transition: .cut),
+            MotionScene(layoutId: "1-centre", slots: [1], length: 1.8, transition: .cut, move: .zoomOut),
+            MotionScene(layoutId: "4-magazine", slots: [1, 0, 2, 3], length: 3.4, entrance: .rise),
+        ], transitionLength: 0.45)
+    ),
+    DesignTemplate(
+        id: "motion-gallery-wall", name: String(localized: "Gallery wall"), category: .motion, mode: .collage,
+        format: .post, layoutId: "6-wall", isLiving: true, bg: "#ebe2d6",
+        frame: .gallery, frameColor: "#faf6ed", frameWidth: 14,
+        captions: [sceneCaption(caption(String(localized: "the good days"), .magazine, y: 0.82, size: 84, color: "#403329"), 2)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "3-rows", slots: [0, 1, 2], length: 1.8, move: .drift),
+            MotionScene(layoutId: "3-rows", slots: [3, 4, 5], length: 1.8, transition: .slideLeft, move: .drift),
+            MotionScene(layoutId: "6-wall", slots: [0, 1, 2, 3, 4, 5], length: 3.4, entrance: .drop),
+        ], transitionLength: 0.6)
+    ),
+    DesignTemplate(
+        id: "motion-pinboard", name: String(localized: "Pinboard"), category: .motion, mode: .collage,
+        format: .story, layoutId: "7-board", isLiving: true, bg: "#f4e2c3", backdrop: pattern(.grid),
+        frameColor: "#fff8e9", frameWidth: 12, cellFrames: [.tape, .instant, .border],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "2-pile", slots: [0, 1], length: 1.6, entrance: .drop),
+            MotionScene(layoutId: "4-zigzag", slots: [0, 1, 2, 3], length: 2.0, entrance: .drop),
+            MotionScene(layoutId: "7-board", slots: [0, 1, 2, 3, 4, 5, 6], length: 3.5, entrance: .drop),
+        ], transitionLength: 0.65)
+    ),
+    DesignTemplate(
+        id: "motion-heart-of-photos", name: String(localized: "Heart of photos"), category: .motion, mode: .collage,
+        format: .post, layoutId: "8-heart", isLiving: true, bg: "#f9e5e9",
+        frame: .circle,
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "2-side", slots: [0, 1], length: 1.6, move: .zoomOut),
+            MotionScene(layoutId: "4-cluster", slots: [0, 1, 2, 3], length: 1.8, entrance: .pop),
+            MotionScene(layoutId: "8-heart", slots: [2, 3, 4, 0, 5, 1, 6, 7], length: 3.6, entrance: .rise),
+        ], transitionLength: 0.65)
+    ),
+
     // MARK: With video (first: playing videos inside a collage is what the app is for)
     DesignTemplate(
         id: "v-hero-clip", name: String(localized: "Hero clip"), category: .video, mode: .collage, format: .story,

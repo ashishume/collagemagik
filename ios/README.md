@@ -65,7 +65,7 @@ editor's top bar shows it as a title instead of a switch. A carousel's dock read
 
 **Templates** (`Model/Templates.swift`, `UI/TemplateViews.swift`): a `DesignTemplate` is a design without pictures
 (layout or carousel style, size, gap, corners, background, frame, placeholder captions and stickers). `allTemplates`
-holds 94 (72 collage, 22 carousel) in 19 categories (a "With video" category comes first: its clips go into the first, biggest slots), including free-form ones (tossed and tilted prints, piles, fans, a heart of photos, pinboard, magazine, film strip, bubbles, staircase) and ones that set a filter or a different frame per photo (`filter`, `cellFrames`); add one by adding an entry. Previews are drawn by the real
+holds 108 (86 collage, 22 carousel) in 20 categories (the "With video" category puts clips in the first, biggest slots), including free-form ones (tossed and tilted prints, piles, fans, a heart of photos, pinboard, magazine, film strip, bubbles, staircase) and ones that set a filter or a different frame per photo (`filter`, `cellFrames`); add one by adding an entry. Previews are drawn by the real
 renderer (`TemplatePreview`), with sample scenes on Home and the person's own pictures in the editor
 (Layout / Slides → Templates). Picking one from Home starts a design with it and opens the photo picker; in the editor
 it re-lays the pictures already there, and Undo brings the previous design back. A collage template keeps its slots as
@@ -73,8 +73,9 @@ pictures are added (extras wait in the tray); a carousel template keeps its styl
 
 **Motion templates** lead the Collage tab in their own row (category Motion, a sparkles badge on the card, which plays
 the design itself): Weekend, Neon nights, Before & after, Postcards, Spotlight, Trio, Split open, Photo dump, Print drop,
-Film reel, Weekend recap and Shuffle. All are free. On the first import into a new one, videos go into the first slots
-in selection order and the design starts playing. Later imports and targeted replacements follow the normal editor
+Film reel, Weekend recap, Shuffle, Side by side, Staircase, Lookbook, Gallery wall, Pinboard and Heart of photos.
+All 18 are free. On the first import into a new one, videos go into the first slots in selection order and the design
+starts playing. Later imports and targeted replacements follow the normal editor
 behavior. Reduce Motion keeps the sample cards and initial playback still.
 
 **Motion templates** (`Model/Motion.swift`): a collage can carry a `Motion`, a list of scenes. Each scene has a layout,
