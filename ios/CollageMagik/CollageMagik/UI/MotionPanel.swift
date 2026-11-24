@@ -159,11 +159,7 @@ struct MotionPanel: View {
             GeometryReader { geo in
                 ZStack(alignment: .topLeading) {
                     ForEach(Array(rects.enumerated()), id: \.offset) { _, r in
-                        RoundedRectangle(cornerRadius: 2, style: .continuous)
-                            .fill(isOn ? Color.white : Color.white.opacity(0.5))
-                            .frame(width: max(2, geo.size.width * (r.w - 0.06)), height: max(2, geo.size.height * (r.h - 0.04)))
-                            .rotationEffect(.degrees(r.tilt))
-                            .offset(x: geo.size.width * (r.x + 0.03), y: geo.size.height * (r.y + 0.02))
+                        chipRect(r, in: geo.size, isOn: isOn)
                     }
                 }
             }
@@ -175,6 +171,18 @@ struct MotionPanel: View {
         }
         .frame(width: 52, height: 50)
         .glassEffect(isOn ? .regular.tint(Color.brand.opacity(0.7)).interactive() : .regular.interactive(), in: .rect(cornerRadius: 12))
+    }
+
+    private func chipRect(_ r: LayoutRect, in size: CGSize, isOn: Bool) -> some View {
+        let w: CGFloat = max(2, size.width * CGFloat(r.w - 0.06))
+        let h: CGFloat = max(2, size.height * CGFloat(r.h - 0.04))
+        let dx: CGFloat = size.width * CGFloat(r.x + 0.03)
+        let dy: CGFloat = size.height * CGFloat(r.y + 0.02)
+        return RoundedRectangle(cornerRadius: 2, style: .continuous)
+            .fill(isOn ? Color.white : Color.white.opacity(0.5))
+            .frame(width: w, height: h)
+            .rotationEffect(.degrees(r.tilt))
+            .offset(x: dx, y: dy)
     }
 
     private func actions(_ scenes: [MotionScene], current k: Int) -> some View {
