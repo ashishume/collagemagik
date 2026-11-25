@@ -8,6 +8,8 @@ import { TOTAL } from "./ad/cues";
 import { AdImage, Logo } from "./photos/AdImage";
 import { ASSET_SIZES, BANNER_SIZES, THEMES } from "./photos/sizes";
 import { PanClip } from "./tools/PanClip";
+import { AdNeon, NEON_TOTAL } from "./motion/AdNeon";
+import { AdSunny, SUNNY_TOTAL } from "./motion/AdSunny";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -26,6 +28,10 @@ export const RemotionRoot: React.FC = () => {
         <Composition id="Ad5Vertical" component={Ad5} durationInFrames={TOTAL5} fps={30} width={1080} height={1920} />
         <Composition id="Ad5Landscape" component={Ad5} durationInFrames={TOTAL5} fps={30} width={1920} height={1080} />
         <Composition id="Ad5Square" component={Ad5} durationInFrames={TOTAL5} fps={30} width={1080} height={1080} />
+      </Folder>
+      <Folder name="Motion-templates">
+        <Composition id="MotionNeon" component={AdNeon} durationInFrames={NEON_TOTAL} fps={30} width={1080} height={1920} />
+        <Composition id="MotionSunny" component={AdSunny} durationInFrames={SUNNY_TOTAL} fps={30} width={1080} height={1920} />
       </Folder>
       <Folder name="Image-assets">
         {THEMES.flatMap((theme) =>

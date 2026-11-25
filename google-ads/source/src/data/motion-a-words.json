@@ -1,0 +1,240 @@
+[
+  {
+    "text": "Your",
+    "startMs": 70,
+    "endMs": 400,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "photos?",
+    "startMs": 400,
+    "endMs": 1270,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Kinda.",
+    "startMs": 1270,
+    "endMs": 2540,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Still.",
+    "startMs": 2540,
+    "endMs": 3040,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Not",
+    "startMs": 3040,
+    "endMs": 3420,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "anymore.",
+    "startMs": 3420,
+    "endMs": 4460,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Pick",
+    "startMs": 4460,
+    "endMs": 4780,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "a",
+    "startMs": 4780,
+    "endMs": 4960,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "motion",
+    "startMs": 4860,
+    "endMs": 5170,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "template,",
+    "startMs": 5170,
+    "endMs": 5960,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "drop",
+    "startMs": 5960,
+    "endMs": 6140,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "in",
+    "startMs": 6110,
+    "endMs": 6290,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "your",
+    "startMs": 6240,
+    "endMs": 6510,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "photos",
+    "startMs": 6510,
+    "endMs": 6920,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "and",
+    "startMs": 6920,
+    "endMs": 7120,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "videos.",
+    "startMs": 7120,
+    "endMs": 7640,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Boom!",
+    "startMs": 7640,
+    "endMs": 8760,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "They",
+    "startMs": 8760,
+    "endMs": 9170,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "zoom,",
+    "startMs": 9170,
+    "endMs": 9630,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "they",
+    "startMs": 9630,
+    "endMs": 9980,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "slide,",
+    "startMs": 9980,
+    "endMs": 10570,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "they",
+    "startMs": 10570,
+    "endMs": 10940,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "pop,",
+    "startMs": 10940,
+    "endMs": 11420,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "and",
+    "startMs": 11420,
+    "endMs": 11600,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "your",
+    "startMs": 11500,
+    "endMs": 11730,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "clips",
+    "startMs": 11730,
+    "endMs": 12090,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "play",
+    "startMs": 12090,
+    "endMs": 12270,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "right",
+    "startMs": 12260,
+    "endMs": 12560,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "inside.",
+    "startMs": 12560,
+    "endMs": 13140,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Collage Magic.",
+    "startMs": 13140,
+    "endMs": 14730,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Make",
+    "startMs": 14730,
+    "endMs": 14910,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "your",
+    "startMs": 14810,
+    "endMs": 15060,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "memories",
+    "startMs": 15060,
+    "endMs": 15560,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "move.",
+    "startMs": 15560,
+    "endMs": 16020,
+    "timestampMs": null,
+    "confidence": 1
+  }
+]

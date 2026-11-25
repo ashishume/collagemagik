@@ -1,0 +1,352 @@
+[
+  {
+    "text": "Your",
+    "startMs": 70,
+    "endMs": 400,
+    "timestampMs": 260,
+    "confidence": 0.941844
+  },
+  {
+    "text": " photos",
+    "startMs": 400,
+    "endMs": 940,
+    "timestampMs": 720,
+    "confidence": 0.990095
+  },
+  {
+    "text": "?",
+    "startMs": 940,
+    "endMs": 1270,
+    "timestampMs": 1360,
+    "confidence": 0.865981
+  },
+  {
+    "text": " Kind",
+    "startMs": 1270,
+    "endMs": 1640,
+    "timestampMs": 1600,
+    "confidence": 0.484859
+  },
+  {
+    "text": "a",
+    "startMs": 1640,
+    "endMs": 1760,
+    "timestampMs": 1940,
+    "confidence": 0.65298
+  },
+  {
+    "text": ".",
+    "startMs": 1760,
+    "endMs": 2540,
+    "timestampMs": 2500,
+    "confidence": 0.189939
+  },
+  {
+    "text": " Still",
+    "startMs": 2540,
+    "endMs": 2710,
+    "timestampMs": 2680,
+    "confidence": 0.883097
+  },
+  {
+    "text": ".",
+    "startMs": 2710,
+    "endMs": 3040,
+    "timestampMs": 3380,
+    "confidence": 0.915213
+  },
+  {
+    "text": " Not",
+    "startMs": 3040,
+    "endMs": 3420,
+    "timestampMs": 3740,
+    "confidence": 0.996137
+  },
+  {
+    "text": " anymore",
+    "startMs": 3420,
+    "endMs": 4120,
+    "timestampMs": 4140,
+    "confidence": 0.953806
+  },
+  {
+    "text": ".",
+    "startMs": 4120,
+    "endMs": 4460,
+    "timestampMs": 4680,
+    "confidence": 0.780944
+  },
+  {
+    "text": " Pick",
+    "startMs": 4460,
+    "endMs": 4780,
+    "timestampMs": 4900,
+    "confidence": 0.990732
+  },
+  {
+    "text": " a",
+    "startMs": 4780,
+    "endMs": 4780,
+    "timestampMs": 5040,
+    "confidence": 0.998719
+  },
+  {
+    "text": " motion",
+    "startMs": 4780,
+    "endMs": 5170,
+    "timestampMs": 5280,
+    "confidence": 0.992561
+  },
+  {
+    "text": " template",
+    "startMs": 5170,
+    "endMs": 5690,
+    "timestampMs": 5720,
+    "confidence": 0.997845
+  },
+  {
+    "text": ",",
+    "startMs": 5690,
+    "endMs": 5960,
+    "timestampMs": 5940,
+    "confidence": 0.674544
+  },
+  {
+    "text": " drop",
+    "startMs": 5960,
+    "endMs": 6110,
+    "timestampMs": 6240,
+    "confidence": 0.83174
+  },
+  {
+    "text": " in",
+    "startMs": 6110,
+    "endMs": 6240,
+    "timestampMs": 6420,
+    "confidence": 0.99343
+  },
+  {
+    "text": " your",
+    "startMs": 6240,
+    "endMs": 6510,
+    "timestampMs": 6540,
+    "confidence": 0.990675
+  },
+  {
+    "text": " photos",
+    "startMs": 6510,
+    "endMs": 6920,
+    "timestampMs": 6800,
+    "confidence": 0.996662
+  },
+  {
+    "text": " and",
+    "startMs": 6920,
+    "endMs": 7120,
+    "timestampMs": 7020,
+    "confidence": 0.982435
+  },
+  {
+    "text": " videos",
+    "startMs": 7120,
+    "endMs": 7540,
+    "timestampMs": 7360,
+    "confidence": 0.996635
+  },
+  {
+    "text": ".",
+    "startMs": 7540,
+    "endMs": 7640,
+    "timestampMs": 7980,
+    "confidence": 0.382959
+  },
+  {
+    "text": " Boom",
+    "startMs": 7640,
+    "endMs": 8280,
+    "timestampMs": 8240,
+    "confidence": 0.946331
+  },
+  {
+    "text": "!",
+    "startMs": 8280,
+    "endMs": 8760,
+    "timestampMs": 9040,
+    "confidence": 0.825655
+  },
+  {
+    "text": " They",
+    "startMs": 8760,
+    "endMs": 9170,
+    "timestampMs": 9280,
+    "confidence": 0.997044
+  },
+  {
+    "text": " zoom",
+    "startMs": 9170,
+    "endMs": 9460,
+    "timestampMs": 9640,
+    "confidence": 0.98293
+  },
+  {
+    "text": ",",
+    "startMs": 9460,
+    "endMs": 9630,
+    "timestampMs": 9900,
+    "confidence": 0.943169
+  },
+  {
+    "text": " they",
+    "startMs": 9630,
+    "endMs": 9980,
+    "timestampMs": 10000,
+    "confidence": 0.992951
+  },
+  {
+    "text": " slide",
+    "startMs": 9980,
+    "endMs": 10420,
+    "timestampMs": 10500,
+    "confidence": 0.999567
+  },
+  {
+    "text": ",",
+    "startMs": 10420,
+    "endMs": 10570,
+    "timestampMs": 10700,
+    "confidence": 0.991187
+  },
+  {
+    "text": " they",
+    "startMs": 10570,
+    "endMs": 10940,
+    "timestampMs": 10780,
+    "confidence": 0.992612
+  },
+  {
+    "text": " pop",
+    "startMs": 10940,
+    "endMs": 11260,
+    "timestampMs": 11140,
+    "confidence": 0.999241
+  },
+  {
+    "text": ",",
+    "startMs": 11260,
+    "endMs": 11420,
+    "timestampMs": 11360,
+    "confidence": 0.580501
+  },
+  {
+    "text": " and",
+    "startMs": 11420,
+    "endMs": 11480,
+    "timestampMs": 11540,
+    "confidence": 0.784165
+  },
+  {
+    "text": " your",
+    "startMs": 11480,
+    "endMs": 11730,
+    "timestampMs": 11680,
+    "confidence": 0.996242
+  },
+  {
+    "text": " clips",
+    "startMs": 11730,
+    "endMs": 12090,
+    "timestampMs": 11920,
+    "confidence": 0.997712
+  },
+  {
+    "text": " play",
+    "startMs": 12090,
+    "endMs": 12260,
+    "timestampMs": 12200,
+    "confidence": 0.996911
+  },
+  {
+    "text": " right",
+    "startMs": 12260,
+    "endMs": 12560,
+    "timestampMs": 12500,
+    "confidence": 0.988016
+  },
+  {
+    "text": " inside",
+    "startMs": 12560,
+    "endMs": 12920,
+    "timestampMs": 12920,
+    "confidence": 0.996098
+  },
+  {
+    "text": ".",
+    "startMs": 12920,
+    "endMs": 13140,
+    "timestampMs": 13600,
+    "confidence": 0.973745
+  },
+  {
+    "text": " Coll",
+    "startMs": 13140,
+    "endMs": 13510,
+    "timestampMs": 13600,
+    "confidence": 0.81298
+  },
+  {
+    "text": "age",
+    "startMs": 13510,
+    "endMs": 13790,
+    "timestampMs": 13880,
+    "confidence": 0.996145
+  },
+  {
+    "text": " magic",
+    "startMs": 13790,
+    "endMs": 14250,
+    "timestampMs": 14300,
+    "confidence": 0.834852
+  },
+  {
+    "text": ".",
+    "startMs": 14250,
+    "endMs": 14730,
+    "timestampMs": 14740,
+    "confidence": 0.840398
+  },
+  {
+    "text": " Make",
+    "startMs": 14730,
+    "endMs": 14810,
+    "timestampMs": 14880,
+    "confidence": 0.801788
+  },
+  {
+    "text": " your",
+    "startMs": 14810,
+    "endMs": 15060,
+    "timestampMs": 15040,
+    "confidence": 0.993957
+  },
+  {
+    "text": " memories",
+    "startMs": 15060,
+    "endMs": 15560,
+    "timestampMs": 15400,
+    "confidence": 0.99834
+  },
+  {
+    "text": " move",
+    "startMs": 15560,
+    "endMs": 15800,
+    "timestampMs": 15780,
+    "confidence": 0.999296
+  },
+  {
+    "text": ".",
+    "startMs": 15800,
+    "endMs": 16020,
+    "timestampMs": 16000,
+    "confidence": 0.951577
+  }
+]

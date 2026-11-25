@@ -1,0 +1,415 @@
+[
+  {
+    "text": "300",
+    "startMs": 180,
+    "endMs": 1020,
+    "timestampMs": 760,
+    "confidence": 0.917387
+  },
+  {
+    "text": " photos",
+    "startMs": 1020,
+    "endMs": 1370,
+    "timestampMs": 1300,
+    "confidence": 0.987318
+  },
+  {
+    "text": " from",
+    "startMs": 1370,
+    "endMs": 1730,
+    "timestampMs": 1640,
+    "confidence": 0.993862
+  },
+  {
+    "text": " one",
+    "startMs": 1730,
+    "endMs": 2000,
+    "timestampMs": 2020,
+    "confidence": 0.835728
+  },
+  {
+    "text": " weekend",
+    "startMs": 2000,
+    "endMs": 2640,
+    "timestampMs": 2600,
+    "confidence": 0.937985
+  },
+  {
+    "text": "?",
+    "startMs": 2640,
+    "endMs": 2940,
+    "timestampMs": 3700,
+    "confidence": 0.735141
+  },
+  {
+    "text": " (",
+    "startMs": 2940,
+    "endMs": 3070,
+    "timestampMs": 3700,
+    "confidence": 0.44802
+  },
+  {
+    "text": "laughs",
+    "startMs": 3070,
+    "endMs": 3770,
+    "timestampMs": 3700,
+    "confidence": 0.382163
+  },
+  {
+    "text": ")",
+    "startMs": 3770,
+    "endMs": 3900,
+    "timestampMs": 3700,
+    "confidence": 0.97451
+  },
+  {
+    "text": " Same",
+    "startMs": 3900,
+    "endMs": 4520,
+    "timestampMs": 4440,
+    "confidence": 0.962724
+  },
+  {
+    "text": ".",
+    "startMs": 4520,
+    "endMs": 5000,
+    "timestampMs": 5080,
+    "confidence": 0.495995
+  },
+  {
+    "text": " Here",
+    "startMs": 5000,
+    "endMs": 5300,
+    "timestampMs": 5300,
+    "confidence": 0.972053
+  },
+  {
+    "text": "'s",
+    "startMs": 5300,
+    "endMs": 5450,
+    "timestampMs": 5400,
+    "confidence": 0.996428
+  },
+  {
+    "text": " the",
+    "startMs": 5450,
+    "endMs": 5660,
+    "timestampMs": 5540,
+    "confidence": 0.998868
+  },
+  {
+    "text": " trick",
+    "startMs": 5660,
+    "endMs": 6300,
+    "timestampMs": 5860,
+    "confidence": 0.999561
+  },
+  {
+    "text": ".",
+    "startMs": 6300,
+    "endMs": 6300,
+    "timestampMs": 6560,
+    "confidence": 0.791193
+  },
+  {
+    "text": " Tap",
+    "startMs": 6300,
+    "endMs": 6540,
+    "timestampMs": 6620,
+    "confidence": 0.991212
+  },
+  {
+    "text": " a",
+    "startMs": 6540,
+    "endMs": 6680,
+    "timestampMs": 6820,
+    "confidence": 0.994909
+  },
+  {
+    "text": " motion",
+    "startMs": 6680,
+    "endMs": 7090,
+    "timestampMs": 7060,
+    "confidence": 0.948739
+  },
+  {
+    "text": " template",
+    "startMs": 7090,
+    "endMs": 7900,
+    "timestampMs": 7600,
+    "confidence": 0.999235
+  },
+  {
+    "text": ",",
+    "startMs": 7900,
+    "endMs": 7960,
+    "timestampMs": 7880,
+    "confidence": 0.938058
+  },
+  {
+    "text": " mix",
+    "startMs": 7960,
+    "endMs": 8090,
+    "timestampMs": 8200,
+    "confidence": 0.524396
+  },
+  {
+    "text": " your",
+    "startMs": 8090,
+    "endMs": 8340,
+    "timestampMs": 8420,
+    "confidence": 0.997796
+  },
+  {
+    "text": " photos",
+    "startMs": 8340,
+    "endMs": 8740,
+    "timestampMs": 8740,
+    "confidence": 0.997881
+  },
+  {
+    "text": " and",
+    "startMs": 8740,
+    "endMs": 9000,
+    "timestampMs": 8960,
+    "confidence": 0.96444
+  },
+  {
+    "text": " videos",
+    "startMs": 9000,
+    "endMs": 9540,
+    "timestampMs": 9340,
+    "confidence": 0.997516
+  },
+  {
+    "text": ",",
+    "startMs": 9540,
+    "endMs": 9540,
+    "timestampMs": 9580,
+    "confidence": 0.845866
+  },
+  {
+    "text": " and",
+    "startMs": 9540,
+    "endMs": 9770,
+    "timestampMs": 9760,
+    "confidence": 0.99875
+  },
+  {
+    "text": " watch",
+    "startMs": 9770,
+    "endMs": 10180,
+    "timestampMs": 10040,
+    "confidence": 0.999203
+  },
+  {
+    "text": " them",
+    "startMs": 10180,
+    "endMs": 10470,
+    "timestampMs": 10300,
+    "confidence": 0.999424
+  },
+  {
+    "text": " glide",
+    "startMs": 10470,
+    "endMs": 10860,
+    "timestampMs": 10740,
+    "confidence": 0.998458
+  },
+  {
+    "text": " into",
+    "startMs": 10860,
+    "endMs": 11180,
+    "timestampMs": 11060,
+    "confidence": 0.99632
+  },
+  {
+    "text": " place",
+    "startMs": 11180,
+    "endMs": 11700,
+    "timestampMs": 11440,
+    "confidence": 0.999272
+  },
+  {
+    "text": " all",
+    "startMs": 11700,
+    "endMs": 11840,
+    "timestampMs": 11840,
+    "confidence": 0.792792
+  },
+  {
+    "text": " by",
+    "startMs": 11840,
+    "endMs": 12010,
+    "timestampMs": 12040,
+    "confidence": 0.998948
+  },
+  {
+    "text": " themselves",
+    "startMs": 12010,
+    "endMs": 12890,
+    "timestampMs": 12500,
+    "confidence": 0.99934
+  },
+  {
+    "text": ".",
+    "startMs": 12890,
+    "endMs": 13180,
+    "timestampMs": 13260,
+    "confidence": 0.759513
+  },
+  {
+    "text": " Your",
+    "startMs": 13180,
+    "endMs": 13470,
+    "timestampMs": 13440,
+    "confidence": 0.996991
+  },
+  {
+    "text": " videos",
+    "startMs": 13470,
+    "endMs": 13930,
+    "timestampMs": 13860,
+    "confidence": 0.998734
+  },
+  {
+    "text": " keep",
+    "startMs": 13930,
+    "endMs": 14260,
+    "timestampMs": 14140,
+    "confidence": 0.998784
+  },
+  {
+    "text": " playing",
+    "startMs": 14260,
+    "endMs": 14710,
+    "timestampMs": 14460,
+    "confidence": 0.999338
+  },
+  {
+    "text": " inside",
+    "startMs": 14710,
+    "endMs": 15380,
+    "timestampMs": 14920,
+    "confidence": 0.999033
+  },
+  {
+    "text": ".",
+    "startMs": 15380,
+    "endMs": 15380,
+    "timestampMs": 15440,
+    "confidence": 0.855438
+  },
+  {
+    "text": " No",
+    "startMs": 15380,
+    "endMs": 15540,
+    "timestampMs": 15720,
+    "confidence": 0.999009
+  },
+  {
+    "text": " editing",
+    "startMs": 15540,
+    "endMs": 16130,
+    "timestampMs": 16040,
+    "confidence": 0.999117
+  },
+  {
+    "text": " skills",
+    "startMs": 16130,
+    "endMs": 16670,
+    "timestampMs": 16540,
+    "confidence": 0.999462
+  },
+  {
+    "text": ",",
+    "startMs": 16670,
+    "endMs": 16900,
+    "timestampMs": 16880,
+    "confidence": 0.84682
+  },
+  {
+    "text": " no",
+    "startMs": 16900,
+    "endMs": 17060,
+    "timestampMs": 17180,
+    "confidence": 0.968599
+  },
+  {
+    "text": " stress",
+    "startMs": 17060,
+    "endMs": 17590,
+    "timestampMs": 17580,
+    "confidence": 0.99984
+  },
+  {
+    "text": ".",
+    "startMs": 17590,
+    "endMs": 18180,
+    "timestampMs": 18440,
+    "confidence": 0.99025
+  },
+  {
+    "text": " Coll",
+    "startMs": 18180,
+    "endMs": 18580,
+    "timestampMs": 18440,
+    "confidence": 0.813315
+  },
+  {
+    "text": "age",
+    "startMs": 18580,
+    "endMs": 18870,
+    "timestampMs": 18760,
+    "confidence": 0.995938
+  },
+  {
+    "text": " magic",
+    "startMs": 18870,
+    "endMs": 19360,
+    "timestampMs": 19240,
+    "confidence": 0.634915
+  },
+  {
+    "text": ".",
+    "startMs": 19360,
+    "endMs": 19680,
+    "timestampMs": 19820,
+    "confidence": 0.490145
+  },
+  {
+    "text": " Your",
+    "startMs": 19680,
+    "endMs": 20060,
+    "timestampMs": 19960,
+    "confidence": 0.905899
+  },
+  {
+    "text": " weekend",
+    "startMs": 20060,
+    "endMs": 20860,
+    "timestampMs": 20400,
+    "confidence": 0.986156
+  },
+  {
+    "text": " in",
+    "startMs": 20860,
+    "endMs": 20930,
+    "timestampMs": 21020,
+    "confidence": 0.47545
+  },
+  {
+    "text": " motion",
+    "startMs": 20930,
+    "endMs": 21510,
+    "timestampMs": 21480,
+    "confidence": 0.980812
+  },
+  {
+    "text": ".",
+    "startMs": 21510,
+    "endMs": 21820,
+    "timestampMs": 21760,
+    "confidence": 0.974054
+  }
+]

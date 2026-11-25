@@ -1,0 +1,296 @@
+[
+  {
+    "text": "300",
+    "startMs": 180,
+    "endMs": 1020,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "photos",
+    "startMs": 1020,
+    "endMs": 1370,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "from",
+    "startMs": 1370,
+    "endMs": 1730,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "one",
+    "startMs": 1730,
+    "endMs": 2000,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "weekend?",
+    "startMs": 2000,
+    "endMs": 2940,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Same.",
+    "startMs": 3900,
+    "endMs": 5000,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Here's",
+    "startMs": 5000,
+    "endMs": 5450,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "the",
+    "startMs": 5450,
+    "endMs": 5660,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "trick.",
+    "startMs": 5660,
+    "endMs": 6300,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Tap",
+    "startMs": 6300,
+    "endMs": 6540,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "a",
+    "startMs": 6540,
+    "endMs": 6720,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "motion",
+    "startMs": 6680,
+    "endMs": 7090,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "template,",
+    "startMs": 7090,
+    "endMs": 7960,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "mix",
+    "startMs": 7960,
+    "endMs": 8140,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "your",
+    "startMs": 8090,
+    "endMs": 8340,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "photos",
+    "startMs": 8340,
+    "endMs": 8740,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "and",
+    "startMs": 8740,
+    "endMs": 9000,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "videos,",
+    "startMs": 9000,
+    "endMs": 9540,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "and",
+    "startMs": 9540,
+    "endMs": 9770,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "watch",
+    "startMs": 9770,
+    "endMs": 10180,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "them",
+    "startMs": 10180,
+    "endMs": 10470,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "glide",
+    "startMs": 10470,
+    "endMs": 10860,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "into",
+    "startMs": 10860,
+    "endMs": 11180,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "place",
+    "startMs": 11180,
+    "endMs": 11700,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "all",
+    "startMs": 11700,
+    "endMs": 11880,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "by",
+    "startMs": 11840,
+    "endMs": 12020,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "themselves.",
+    "startMs": 12010,
+    "endMs": 13180,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Your",
+    "startMs": 13180,
+    "endMs": 13470,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "videos",
+    "startMs": 13470,
+    "endMs": 13930,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "keep",
+    "startMs": 13930,
+    "endMs": 14260,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "playing",
+    "startMs": 14260,
+    "endMs": 14710,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "inside.",
+    "startMs": 14710,
+    "endMs": 15380,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "No",
+    "startMs": 15380,
+    "endMs": 15560,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "editing",
+    "startMs": 15540,
+    "endMs": 16130,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "skills,",
+    "startMs": 16130,
+    "endMs": 16900,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "no",
+    "startMs": 16900,
+    "endMs": 17080,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "stress.",
+    "startMs": 17060,
+    "endMs": 18180,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Collage Magic.",
+    "startMs": 18180,
+    "endMs": 19680,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "Your",
+    "startMs": 19680,
+    "endMs": 20060,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "weekend",
+    "startMs": 20060,
+    "endMs": 20860,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "in",
+    "startMs": 20860,
+    "endMs": 21040,
+    "timestampMs": null,
+    "confidence": 1
+  },
+  {
+    "text": "motion.",
+    "startMs": 20940,
+    "endMs": 21820,
+    "timestampMs": null,
+    "confidence": 1
+  }
+]
