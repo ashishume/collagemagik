@@ -942,7 +942,8 @@ func templates(for mode: EditMode?, category: TemplateCategory? = nil) -> [Desig
 
 /// Pictures of templates for the browser: filled with the person's own pictures when there are some, otherwise with
 /// soft sample scenes. Drawn by the same renderer as the editor and exports, so a template looks exactly as it will.
-@MainActor
+/// Drawing happens off the main thread (the renderer is plain Core Graphics, as in exports), so a list of cards scrolls
+/// smoothly while their pictures are made.
 enum TemplatePreview {
     private static let cache = NSCache<NSString, UIImage>()
 
@@ -955,9 +956,10 @@ enum TemplatePreview {
         cache.object(forKey: key(t, pictures.filter { $0.kind == .photo }))
     }
 
+    /// Animation frames by template, priced in bytes: a motion card holds 10–50 frames, so a count limit kept too few.
     private static let motionCache: NSCache<NSString, NSArray> = {
         let cache = NSCache<NSString, NSArray>()
-        cache.countLimit = 8
+        cache.totalCostLimit = 96 * 1_048_576
         return cache
     }()
     static let motionFrameCount = 12
@@ -965,25 +967,37 @@ enum TemplatePreview {
     /// Seconds each frame of a card's animation stays up. A motion template's card plays the design itself, in real time.
     static func frameInterval(_ t: DesignTemplate) -> Double { t.motion == nil ? 0.16 : 0.2 }
 
+    static func cachedMotionFrames(_ t: DesignTemplate) -> [UIImage]? {
+        motionCache.object(forKey: t.id as NSString) as? [UIImage]
+    }
+
+    /// A card's animation frames. They are drawn once in the background and kept: a card that scrolls away before they
+    /// are ready leaves the work running, and one that comes back joins it instead of starting over.
     static func motionFrames(_ t: DesignTemplate) async -> [UIImage] {
-        if let frames = motionCache.object(forKey: t.id as NSString) as? [UIImage] { return frames }
-        var frames: [UIImage] = []
+        if let frames = cachedMotionFrames(t) { return frames }
+        return await MotionFrameJobs.shared.frames(for: t)
+    }
+
+    fileprivate static func renderMotionFrames(_ t: DesignTemplate) -> [UIImage] {
         let count = t.motion.map { max(2, Int(($0.total / frameInterval(t)).rounded())) } ?? motionFrameCount
+        var frames: [UIImage] = []
+        var bytes = 0
         for index in 0..<count {
-            guard !Task.isCancelled else { return [] }
             let phase = Double(index) * 2 * .pi / Double(count)
-            if let frame = draw(t, photos: [], phase: phase) { frames.append(frame) }
-            await Task.yield()
+            guard let frame = draw(t, photos: [], phase: phase) else { continue }
+            frames.append(frame)
+            bytes += frame.cgImage.map { $0.bytesPerRow * $0.height } ?? 0
         }
-        if !frames.isEmpty { motionCache.setObject(frames as NSArray, forKey: t.id as NSString) }
+        if !frames.isEmpty { motionCache.setObject(frames as NSArray, forKey: t.id as NSString, cost: bytes) }
         return frames
     }
 
-    static func image(_ t: DesignTemplate, pictures: [MediaItem] = []) -> UIImage? {
+    /// The card's still picture, drawn in the background the first time and kept.
+    static func image(_ t: DesignTemplate, pictures: [MediaItem] = []) async -> UIImage? {
         let photos = pictures.filter { $0.kind == .photo }
         let key = key(t, photos)
         if let hit = cache.object(forKey: key) { return hit }
-        let img = draw(t, photos: photos)
+        let img = await Task.detached(priority: .userInitiated) { draw(t, photos: photos) }.value
         if let img { cache.setObject(img, forKey: key) }
         return img
     }
@@ -1053,4 +1067,19 @@ enum TemplatePreview {
                              thumbnail: img, preview: img)
         }
     }()
+}
+
+/// One background drawing of a motion card's frames per template at a time, shared by every card that asks for it.
+private actor MotionFrameJobs {
+    static let shared = MotionFrameJobs()
+    private var running: [String: Task<[UIImage], Never>] = [:]
+
+    func frames(for t: DesignTemplate) async -> [UIImage] {
+        if let job = running[t.id] { return await job.value }
+        let job = Task.detached(priority: .utility) { TemplatePreview.renderMotionFrames(t) }
+        running[t.id] = job
+        let frames = await job.value
+        running[t.id] = nil
+        return frames
+    }
 }

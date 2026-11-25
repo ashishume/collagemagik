@@ -197,11 +197,8 @@ private struct LibraryCell: View {
             .aspectRatio(Double(entry.width) / Double(entry.height), contentMode: .fit)
             .frame(maxWidth: .infinity)
             .overlay {
-                if let img = library.thumbnail(for: entry) {
-                    Image(uiImage: img).resizable().scaledToFill()
-                } else {
-                    Rectangle().fill(.quaternary)
-                }
+                // decoded off the main thread at the size the tile shows, so scrolling never waits on a file
+                AsyncFileImage(url: library.thumbURL(for: entry), maxSide: 260, contentMode: .fill)
             }
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay(alignment: .bottomTrailing) {

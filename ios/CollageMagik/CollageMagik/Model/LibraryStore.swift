@@ -131,8 +131,6 @@ final class LibraryStore {
     /// Newest first.
     private(set) var entries: [LibraryEntry] = []
 
-    @ObservationIgnored private let thumbCache = NSCache<NSString, UIImage>()
-
     init() { load() }
 
     var totalBytes: Int64 { entries.reduce(0) { $0 + $1.bytes } }
@@ -141,12 +139,8 @@ final class LibraryStore {
     /// A carousel's slide pictures in order (a single collage has one).
     func urls(for entry: LibraryEntry) -> [URL] { entry.allFileNames.map(LibraryDisk.fileURL) }
 
-    func thumbnail(for entry: LibraryEntry) -> UIImage? {
-        if let hit = thumbCache.object(forKey: entry.id as NSString) { return hit }
-        guard let img = UIImage(contentsOfFile: LibraryDisk.fileURL(entry.thumbName).path) else { return nil }
-        thumbCache.setObject(img, forKey: entry.id as NSString)
-        return img
-    }
+    /// The entry's small picture, read off the main thread by `AsyncFileImage` in the grid.
+    func thumbURL(for entry: LibraryEntry) -> URL { LibraryDisk.fileURL(entry.thumbName) }
 
     // MARK: Changes
 
@@ -181,7 +175,6 @@ final class LibraryStore {
 
     func remove(_ entry: LibraryEntry) {
         entries.removeAll { $0.id == entry.id }
-        thumbCache.removeObject(forKey: entry.id as NSString)
         for name in entry.allFileNames + [entry.thumbName] { try? FileManager.default.removeItem(at: LibraryDisk.fileURL(name)) }
         persist()
     }
@@ -191,7 +184,6 @@ final class LibraryStore {
             for name in e.allFileNames + [e.thumbName] { try? FileManager.default.removeItem(at: LibraryDisk.fileURL(name)) }
         }
         entries = []
-        thumbCache.removeAllObjects()
         persist()
     }
 

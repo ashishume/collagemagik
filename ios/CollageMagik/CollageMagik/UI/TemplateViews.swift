@@ -43,13 +43,15 @@ struct TemplateCard: View {
                 }
                 .task(id: showsMotion) {
                     guard showsMotion, motionFrames.isEmpty else { return }
-                    motionFrames = await TemplatePreview.motionFrames(template)
+                    if let ready = TemplatePreview.cachedMotionFrames(template) { motionFrames = ready; return }
+                    let frames = await TemplatePreview.motionFrames(template)
+                    if !Task.isCancelled { motionFrames = frames }
                 }
-                // drawn after the card is on screen, so opening a list of 60+ templates never waits for all of them
+                // drawn in the background after the card is on screen, so a list of 60+ templates scrolls without waiting
                 .task(id: pictures.map(\.id)) {
                     guard TemplatePreview.cached(template, pictures: pictures) == nil else { return }
-                    await Task.yield()
-                    let img = TemplatePreview.image(template, pictures: pictures)
+                    let img = await TemplatePreview.image(template, pictures: pictures)
+                    guard !Task.isCancelled else { return }
                     withAnimation(.easeOut(duration: 0.15)) { image = img }
                 }
                 .overlay(alignment: .topLeading) {
@@ -85,7 +87,13 @@ struct TemplateCard: View {
             .resizable()
             .scaledToFit()
             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-            .shadow(color: .black.opacity(0.35), radius: 8, y: 4)
+            // the shadow is cast by a plain shape behind the picture: it stays the same while an animated card's
+            // frames change, so it isn't blurred again for every frame
+            .background {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(.black)
+                    .shadow(color: .black.opacity(0.35), radius: 8, y: 4)
+            }
             .padding(10)
             .accessibilityHidden(true)
     }
