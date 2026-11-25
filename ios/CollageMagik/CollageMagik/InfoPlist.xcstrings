@@ -11,7 +11,8 @@
             "value" : "Collage Magic"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "CFBundleName" : {
       "comment" : "Bundle name",
@@ -23,7 +24,8 @@
             "value" : "CollageMagik"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "NSPhotoLibraryAddUsageDescription" : {
       "comment" : "System permission prompt. Machine translations require native-language review.",
