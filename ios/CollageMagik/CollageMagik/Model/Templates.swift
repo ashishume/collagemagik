@@ -164,205 +164,7 @@ private func pattern(_ p: BackdropPattern) -> Backdrop { Backdrop(kind: .pattern
 /// Every template that ships with the app. Add one by adding an entry: the browser, previews and filters pick it up.
 let allTemplates: [DesignTemplate] = [
     // Motion templates: the pictures move through scenes. Clips go into the first slots; a picture in two scenes in a
-    // row glides between its places. The last scene shows every picture (it is the design's still look).
-    DesignTemplate(
-        id: "living-weekend", name: String(localized: "weekend"), category: .motion, tags: [.photoDump], mode: .collage,
-        format: .story, layoutId: "4-hero-prints", isLiving: true, bg: "#f0ddbe",
-        frameColor: "#fff6e5", frameWidth: 18, cellFrames: [.shadow, .instant, .instant, .instant],
-        captions: [caption(String(localized: "WEEKEND EDITION · NO. 12"), .typewriter, y: 0.05, size: 48, color: "#442b24")],
-        motion: Motion(scenes: [
-            MotionScene(layoutId: "1-centre", slots: [0], length: 2.4, move: .zoomIn, entrance: .pop),
-            MotionScene(layoutId: "4-hero-prints", slots: [0, 1, 2, 3], length: 4, transition: .fade, move: .zoomOut, entrance: .drop),
-        ])
-    ),
-    DesignTemplate(
-        id: "living-night", name: String(localized: "Neon nights"), category: .motion, tags: [.party, .friends], mode: .collage,
-        format: .story, layoutId: "3-big-top", isLiving: true, gap: 14, radius: 18, bg: "#120d29",
-        backdrop: gradient(5), frame: .neon, frameColor: "#a85eff", frameWidth: 16,
-        captions: [caption(String(localized: "NEON NIGHTS"), .poster, y: 0.55, size: 80, color: "#e5b6ff", look: .neon)],
-        motion: Motion(scenes: [
-            MotionScene(layoutId: "1-full", slots: [0], length: 2.2, move: .zoomIn),
-            MotionScene(layoutId: "1-full", slots: [1], length: 1.8, transition: .slideUp, move: .zoomIn),
-            MotionScene(layoutId: "1-full", slots: [2], length: 1.8, transition: .zoom, move: .zoomIn),
-            MotionScene(layoutId: "3-big-top", slots: [0, 1, 2], length: 3.6, transition: .fade, entrance: .pop),
-        ])
-    ),
-    DesignTemplate(
-        id: "living-before-after", name: String(localized: "Before & after"), category: .motion, tags: [.beforeAfter], mode: .collage,
-        format: .post, layoutId: "2-side", isLiving: true, gap: 24, radius: 14, bg: "#102327",
-        captions: [
-            sceneCaption(caption(String(localized: "Before"), .rounded, y: 0.88, size: 62, look: .plate), 0),
-            sceneCaption(caption(String(localized: "After"), .rounded, y: 0.88, size: 62, look: .plate), 1),
-            sceneCaption(caption(String(localized: "Before & after"), .rounded, y: 0.88, size: 62, look: .plate), 2),
-        ],
-        motion: Motion(scenes: [
-            MotionScene(layoutId: "1-full", slots: [0], length: 2.4, move: .drift),
-            MotionScene(layoutId: "1-full", slots: [1], length: 2.4, transition: .slideLeft, move: .drift),
-            MotionScene(layoutId: "2-side", slots: [0, 1], length: 3.4, transition: .fade, entrance: .rise),
-        ])
-    ),
-    DesignTemplate(
-        id: "living-postcard", name: String(localized: "Postcards"), category: .motion, tags: [.travel], mode: .collage,
-        format: .post, layoutId: "4-magazine", isLiving: true, bg: "#d5e7de", backdrop: pattern(.dots),
-        frameColor: "#fff9ea", frameWidth: 14, cellFrames: [.border, .stamp, .stamp, .stamp],
-        captions: [caption(String(localized: "greetings from"), .script, y: 0.08, size: 95, color: "#224d46", ornament: .swash)],
-        motion: Motion(scenes: [
-            MotionScene(layoutId: "1-full", slots: [0], length: 2.4, move: .zoomOut),
-            MotionScene(layoutId: "4-magazine", slots: [0, 1, 2, 3], length: 3.8, transition: .fade, move: .zoomIn, entrance: .pop),
-        ])
-    ),
-    DesignTemplate(
-        id: "motion-spotlight", name: String(localized: "Spotlight"), category: .motion, mode: .collage,
-        format: .story, layoutId: "3-big-top", isLiving: true, gap: 14, radius: 22, bg: "#0f0f14",
-        captions: [
-            sceneCaption(caption(String(localized: "the weekend"), .script, y: 0.82, size: 120), 0),
-            sceneCaption(caption(String(localized: "BEST BITS"), .poster, y: 0.92, size: 64, look: .plate), 2),
-        ],
-        motion: Motion(scenes: [
-            MotionScene(layoutId: "1-full", slots: [0], length: 2.6, move: .zoomIn),
-            MotionScene(layoutId: "2-stack", slots: [0, 1], length: 2.6, transition: .slideUp, move: .zoomIn),
-            MotionScene(layoutId: "3-big-top", slots: [0, 1, 2], length: 3.6, transition: .fade, move: .zoomOut, entrance: .pop),
-        ])
-    ),
-    DesignTemplate(
-        id: "motion-trio", name: String(localized: "Trio"), category: .motion, mode: .collage,
-        format: .story, layoutId: "3-rows", isLiving: true, gap: 10, radius: 16, bg: "#f4ecdc",
-        captions: [caption(String(localized: "three of a kind"), .typewriter, y: 0.05, size: 44, color: "#2b2118")],
-        motion: Motion(scenes: [
-            MotionScene(layoutId: "1-full", slots: [0], length: 2.2, move: .drift),
-            MotionScene(layoutId: "1-full", slots: [1], length: 2.2, transition: .slideLeft, move: .drift),
-            MotionScene(layoutId: "1-full", slots: [2], length: 2.2, transition: .zoom, move: .zoomIn),
-            MotionScene(layoutId: "3-rows", slots: [0, 1, 2], length: 3.4, transition: .fade, entrance: .rise),
-        ])
-    ),
-    DesignTemplate(
-        id: "motion-split", name: String(localized: "Split open"), category: .motion, mode: .collage,
-        format: .story, layoutId: "4-grid", isLiving: true, gap: 12, radius: 20, bg: "#16161c",
-        captions: [sceneCaption(caption(String(localized: "it all adds up"), .rounded, y: 0.5, size: 70, look: .plate), 2)],
-        motion: Motion(scenes: [
-            MotionScene(layoutId: "1-full", slots: [0], length: 2.2, move: .zoomIn),
-            MotionScene(layoutId: "2-stack", slots: [0, 1], length: 2.2, transition: .fade, move: .zoomIn),
-            MotionScene(layoutId: "4-grid", slots: [0, 1, 2, 3], length: 3.4, transition: .fade, move: .zoomOut),
-        ])
-    ),
-    DesignTemplate(
-        id: "motion-dump", name: String(localized: "Photo dump"), category: .motion, tags: [.photoDump], mode: .collage,
-        format: .story, layoutId: "6-grid", isLiving: true, gap: 8, radius: 10, bg: "#ffffff",
-        captions: [sceneCaption(caption(String(localized: "photo dump"), .marker, y: 0.5, size: 110, color: "#ffffff", rotation: -4), 6)],
-        motion: Motion(scenes: [
-            MotionScene(layoutId: "1-full", slots: [0], length: 0.8, transition: .cut, move: .zoomIn),
-            MotionScene(layoutId: "1-full", slots: [1], length: 0.8, transition: .cut, move: .zoomIn),
-            MotionScene(layoutId: "1-full", slots: [2], length: 0.8, transition: .cut, move: .zoomIn),
-            MotionScene(layoutId: "1-full", slots: [3], length: 0.8, transition: .cut, move: .zoomIn),
-            MotionScene(layoutId: "1-full", slots: [4], length: 0.8, transition: .cut, move: .zoomIn),
-            MotionScene(layoutId: "1-full", slots: [5], length: 0.8, transition: .cut, move: .zoomIn),
-            MotionScene(layoutId: "6-grid", slots: [0, 1, 2, 3, 4, 5], length: 3.4, transition: .fade, entrance: .pop),
-        ])
-    ),
-    DesignTemplate(
-        id: "motion-prints", name: String(localized: "Print drop"), category: .motion, tags: [.scrapbook], mode: .collage,
-        format: .post, layoutId: "4-tossed", isLiving: true, bg: "#e8dccb", backdrop: pattern(.grid),
-        frame: .instant, frameColor: "#fbfaf6", frameWidth: 16,
-        captions: [caption(String(localized: "developed today"), .note, y: 0.94, size: 54, color: "#4a3527")],
-        motion: Motion(scenes: [
-            MotionScene(layoutId: "1-tilt", slots: [0], length: 2.4, move: .zoomIn, entrance: .drop),
-            MotionScene(layoutId: "4-tossed", slots: [0, 1, 2, 3], length: 4, transition: .fade, entrance: .drop),
-        ])
-    ),
-    DesignTemplate(
-        id: "motion-film", name: String(localized: "Film reel"), category: .motion, tags: [.photoDump], mode: .collage,
-        format: .story, layoutId: "3-filmstrip", isLiving: true, bg: "#141416", frame: .film, frameColor: "#101016", frameWidth: 22,
-        filter: .film,
-        captions: [caption(String(localized: "roll 01"), .typewriter, y: 0.05, size: 40, color: "#ff9a3c")],
-        motion: Motion(scenes: [
-            MotionScene(layoutId: "3-filmstrip", slots: [0, 1, 2], length: 2.8, move: .drift, entrance: .rise),
-            MotionScene(layoutId: "1-centre", slots: [1], length: 2.4, transition: .zoom, move: .zoomIn),
-            MotionScene(layoutId: "3-filmstrip", slots: [2, 0, 1], length: 3.2, transition: .fade, move: .drift),
-        ])
-    ),
-    DesignTemplate(
-        id: "motion-recap", name: String(localized: "Weekend recap"), category: .motion, tags: [.photoDump], mode: .collage,
-        format: .story, layoutId: "5-hero", isLiving: true, gap: 10, radius: 14, bg: "#fdf1e4", backdrop: gradient(2),
-        captions: [
-            sceneCaption(caption(String(localized: "weekend\nrecap"), .poster, y: 0.18, size: 120, color: "#2b1a12"), 0),
-            sceneCaption(caption(String(localized: "see you next time"), .script, y: 0.5, size: 80), 1),
-        ],
-        motion: Motion(scenes: [
-            MotionScene(layoutId: "1-centre", slots: [0], length: 2.6, move: .zoomIn, entrance: .pop),
-            MotionScene(layoutId: "5-hero", slots: [0, 1, 2, 3, 4], length: 4.2, transition: .fade, move: .zoomOut, entrance: .rise),
-        ])
-    ),
-    DesignTemplate(
-        id: "motion-shuffle", name: String(localized: "Shuffle"), category: .motion, mode: .collage,
-        format: .square, layoutId: "4-big-top", isLiving: true, gap: 10, radius: 16, bg: "#1b1030", backdrop: gradient(4),
-        motion: Motion(scenes: [
-            MotionScene(layoutId: "4-grid", slots: [0, 1, 2, 3], length: 2.2, entrance: .pop),
-            MotionScene(layoutId: "4-grid", slots: [3, 0, 1, 2], length: 1.8, transition: .fade),
-            MotionScene(layoutId: "4-grid", slots: [2, 3, 0, 1], length: 1.8, transition: .fade),
-            MotionScene(layoutId: "4-big-top", slots: [0, 1, 2, 3], length: 3.2, transition: .fade, move: .zoomIn),
-        ])
-    ),
-
-    DesignTemplate(
-        id: "motion-side-by-side", name: String(localized: "Side by side"), category: .motion, mode: .collage,
-        format: .square, layoutId: "2-side", isLiving: true, gap: 20, radius: 14, bg: "#151a20",
-        motion: Motion(scenes: [
-            MotionScene(layoutId: "2-stack", slots: [0, 1], length: 2.2, move: .drift),
-            MotionScene(layoutId: "2-side", slots: [0, 1], length: 3.2),
-        ], transitionLength: 0.8)
-    ),
-    DesignTemplate(
-        id: "motion-staircase", name: String(localized: "Staircase"), category: .motion, mode: .collage,
-        format: .story, layoutId: "3-stairs", isLiving: true, gap: 8, radius: 18, bg: "#172723",
-        motion: Motion(scenes: [
-            MotionScene(layoutId: "1-centre", slots: [0], length: 1.5, move: .zoomIn),
-            MotionScene(layoutId: "2-overlap", slots: [0, 1], length: 1.6, transition: .slideUp),
-            MotionScene(layoutId: "3-stairs", slots: [0, 1, 2], length: 3.0, move: .drift, entrance: .rise),
-        ], transitionLength: 0.55)
-    ),
-    DesignTemplate(
-        id: "motion-lookbook", name: String(localized: "Lookbook"), category: .motion, tags: [.moodboard], mode: .collage,
-        format: .post, layoutId: "4-magazine", isLiving: true, gap: 10, bg: "#f1ece3",
-        frame: .border, frameColor: "#fffdf8", frameWidth: 10,
-        captions: [sceneCaption(caption(String(localized: "LOOKBOOK"), .magazine, y: 0.085, size: 66, color: "#211b18"), 3)],
-        motion: Motion(scenes: [
-            MotionScene(layoutId: "2-side", slots: [0, 1], length: 1.4),
-            MotionScene(layoutId: "2-side", slots: [2, 3], length: 1.4, transition: .cut),
-            MotionScene(layoutId: "1-centre", slots: [1], length: 1.8, transition: .cut, move: .zoomOut),
-            MotionScene(layoutId: "4-magazine", slots: [1, 0, 2, 3], length: 3.4, entrance: .rise),
-        ], transitionLength: 0.45)
-    ),
-    DesignTemplate(
-        id: "motion-gallery-wall", name: String(localized: "Gallery wall"), category: .motion, tags: [.minimal], mode: .collage,
-        format: .post, layoutId: "6-wall", isLiving: true, bg: "#ebe2d6",
-        frame: .gallery, frameColor: "#faf6ed", frameWidth: 14,
-        captions: [sceneCaption(caption(String(localized: "the good days"), .magazine, y: 0.82, size: 84, color: "#403329"), 2)],
-        motion: Motion(scenes: [
-            MotionScene(layoutId: "3-rows", slots: [0, 1, 2], length: 1.8, move: .drift),
-            MotionScene(layoutId: "3-rows", slots: [3, 4, 5], length: 1.8, transition: .slideLeft, move: .drift),
-            MotionScene(layoutId: "6-wall", slots: [0, 1, 2, 3, 4, 5], length: 3.4, entrance: .drop),
-        ], transitionLength: 0.6)
-    ),
-    DesignTemplate(
-        id: "motion-pinboard", name: String(localized: "Pinboard"), category: .motion, tags: [.moodboard], mode: .collage,
-        format: .story, layoutId: "7-board", isLiving: true, bg: "#f4e2c3", backdrop: pattern(.grid),
-        frameColor: "#fff8e9", frameWidth: 12, cellFrames: [.tape, .instant, .border],
-        motion: Motion(scenes: [
-            MotionScene(layoutId: "2-pile", slots: [0, 1], length: 1.6, entrance: .drop),
-            MotionScene(layoutId: "4-zigzag", slots: [0, 1, 2, 3], length: 2.0, entrance: .drop),
-            MotionScene(layoutId: "7-board", slots: [0, 1, 2, 3, 4, 5, 6], length: 3.5, entrance: .drop),
-        ], transitionLength: 0.65)
-    ),
-    DesignTemplate(
-        id: "motion-heart-of-photos", name: String(localized: "Heart of photos"), category: .motion, tags: [.love], mode: .collage,
-        format: .post, layoutId: "8-heart", isLiving: true, bg: "#f9e5e9",
-        frame: .circle,
-        motion: Motion(scenes: [
-            MotionScene(layoutId: "2-side", slots: [0, 1], length: 1.6, move: .zoomOut),
-            MotionScene(layoutId: "4-cluster", slots: [0, 1, 2, 3], length: 1.8, entrance: .pop),
-            MotionScene(layoutId: "8-heart", slots: [2, 3, 4, 0, 5, 1, 6, 7], length: 3.6, entrance: .rise),
-        ], transitionLength: 0.65)
-    ),
+    // row glides between its places. The last scene shows every picture (it is the design's still look). Newest first.
 
     // MARK: Themed motion templates (also listed under their theme through `tags`)
 
@@ -1062,6 +864,206 @@ let allTemplates: [DesignTemplate] = [
             MotionScene(layoutId: "2-stack", slots: [0, 1], length: 1.8, transition: .slideUp),
             MotionScene(layoutId: "4-grid", slots: [0, 1, 2, 3], length: 3.6, entrance: .slide),
         ])
+    ),
+
+    // MARK: The first motion templates
+    DesignTemplate(
+        id: "living-weekend", name: String(localized: "weekend"), category: .motion, tags: [.photoDump], mode: .collage,
+        format: .story, layoutId: "4-hero-prints", isLiving: true, bg: "#f0ddbe",
+        frameColor: "#fff6e5", frameWidth: 18, cellFrames: [.shadow, .instant, .instant, .instant],
+        captions: [caption(String(localized: "WEEKEND EDITION · NO. 12"), .typewriter, y: 0.05, size: 48, color: "#442b24")],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 2.4, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "4-hero-prints", slots: [0, 1, 2, 3], length: 4, transition: .fade, move: .zoomOut, entrance: .drop),
+        ])
+    ),
+    DesignTemplate(
+        id: "living-night", name: String(localized: "Neon nights"), category: .motion, tags: [.party, .friends], mode: .collage,
+        format: .story, layoutId: "3-big-top", isLiving: true, gap: 14, radius: 18, bg: "#120d29",
+        backdrop: gradient(5), frame: .neon, frameColor: "#a85eff", frameWidth: 16,
+        captions: [caption(String(localized: "NEON NIGHTS"), .poster, y: 0.55, size: 80, color: "#e5b6ff", look: .neon)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.2, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [1], length: 1.8, transition: .slideUp, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [2], length: 1.8, transition: .zoom, move: .zoomIn),
+            MotionScene(layoutId: "3-big-top", slots: [0, 1, 2], length: 3.6, transition: .fade, entrance: .pop),
+        ])
+    ),
+    DesignTemplate(
+        id: "living-before-after", name: String(localized: "Before & after"), category: .motion, tags: [.beforeAfter], mode: .collage,
+        format: .post, layoutId: "2-side", isLiving: true, gap: 24, radius: 14, bg: "#102327",
+        captions: [
+            sceneCaption(caption(String(localized: "Before"), .rounded, y: 0.88, size: 62, look: .plate), 0),
+            sceneCaption(caption(String(localized: "After"), .rounded, y: 0.88, size: 62, look: .plate), 1),
+            sceneCaption(caption(String(localized: "Before & after"), .rounded, y: 0.88, size: 62, look: .plate), 2),
+        ],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.4, move: .drift),
+            MotionScene(layoutId: "1-full", slots: [1], length: 2.4, transition: .slideLeft, move: .drift),
+            MotionScene(layoutId: "2-side", slots: [0, 1], length: 3.4, transition: .fade, entrance: .rise),
+        ])
+    ),
+    DesignTemplate(
+        id: "living-postcard", name: String(localized: "Postcards"), category: .motion, tags: [.travel], mode: .collage,
+        format: .post, layoutId: "4-magazine", isLiving: true, bg: "#d5e7de", backdrop: pattern(.dots),
+        frameColor: "#fff9ea", frameWidth: 14, cellFrames: [.border, .stamp, .stamp, .stamp],
+        captions: [caption(String(localized: "greetings from"), .script, y: 0.08, size: 95, color: "#224d46", ornament: .swash)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.4, move: .zoomOut),
+            MotionScene(layoutId: "4-magazine", slots: [0, 1, 2, 3], length: 3.8, transition: .fade, move: .zoomIn, entrance: .pop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-spotlight", name: String(localized: "Spotlight"), category: .motion, mode: .collage,
+        format: .story, layoutId: "3-big-top", isLiving: true, gap: 14, radius: 22, bg: "#0f0f14",
+        captions: [
+            sceneCaption(caption(String(localized: "the weekend"), .script, y: 0.82, size: 120), 0),
+            sceneCaption(caption(String(localized: "BEST BITS"), .poster, y: 0.92, size: 64, look: .plate), 2),
+        ],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.6, move: .zoomIn),
+            MotionScene(layoutId: "2-stack", slots: [0, 1], length: 2.6, transition: .slideUp, move: .zoomIn),
+            MotionScene(layoutId: "3-big-top", slots: [0, 1, 2], length: 3.6, transition: .fade, move: .zoomOut, entrance: .pop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-trio", name: String(localized: "Trio"), category: .motion, mode: .collage,
+        format: .story, layoutId: "3-rows", isLiving: true, gap: 10, radius: 16, bg: "#f4ecdc",
+        captions: [caption(String(localized: "three of a kind"), .typewriter, y: 0.05, size: 44, color: "#2b2118")],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.2, move: .drift),
+            MotionScene(layoutId: "1-full", slots: [1], length: 2.2, transition: .slideLeft, move: .drift),
+            MotionScene(layoutId: "1-full", slots: [2], length: 2.2, transition: .zoom, move: .zoomIn),
+            MotionScene(layoutId: "3-rows", slots: [0, 1, 2], length: 3.4, transition: .fade, entrance: .rise),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-split", name: String(localized: "Split open"), category: .motion, mode: .collage,
+        format: .story, layoutId: "4-grid", isLiving: true, gap: 12, radius: 20, bg: "#16161c",
+        captions: [sceneCaption(caption(String(localized: "it all adds up"), .rounded, y: 0.5, size: 70, look: .plate), 2)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.2, move: .zoomIn),
+            MotionScene(layoutId: "2-stack", slots: [0, 1], length: 2.2, transition: .fade, move: .zoomIn),
+            MotionScene(layoutId: "4-grid", slots: [0, 1, 2, 3], length: 3.4, transition: .fade, move: .zoomOut),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-dump", name: String(localized: "Photo dump"), category: .motion, tags: [.photoDump], mode: .collage,
+        format: .story, layoutId: "6-grid", isLiving: true, gap: 8, radius: 10, bg: "#ffffff",
+        captions: [sceneCaption(caption(String(localized: "photo dump"), .marker, y: 0.5, size: 110, color: "#ffffff", rotation: -4), 6)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 0.8, transition: .cut, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [1], length: 0.8, transition: .cut, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [2], length: 0.8, transition: .cut, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [3], length: 0.8, transition: .cut, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [4], length: 0.8, transition: .cut, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [5], length: 0.8, transition: .cut, move: .zoomIn),
+            MotionScene(layoutId: "6-grid", slots: [0, 1, 2, 3, 4, 5], length: 3.4, transition: .fade, entrance: .pop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-prints", name: String(localized: "Print drop"), category: .motion, tags: [.scrapbook], mode: .collage,
+        format: .post, layoutId: "4-tossed", isLiving: true, bg: "#e8dccb", backdrop: pattern(.grid),
+        frame: .instant, frameColor: "#fbfaf6", frameWidth: 16,
+        captions: [caption(String(localized: "developed today"), .note, y: 0.94, size: 54, color: "#4a3527")],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-tilt", slots: [0], length: 2.4, move: .zoomIn, entrance: .drop),
+            MotionScene(layoutId: "4-tossed", slots: [0, 1, 2, 3], length: 4, transition: .fade, entrance: .drop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-film", name: String(localized: "Film reel"), category: .motion, tags: [.photoDump], mode: .collage,
+        format: .story, layoutId: "3-filmstrip", isLiving: true, bg: "#141416", frame: .film, frameColor: "#101016", frameWidth: 22,
+        filter: .film,
+        captions: [caption(String(localized: "roll 01"), .typewriter, y: 0.05, size: 40, color: "#ff9a3c")],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "3-filmstrip", slots: [0, 1, 2], length: 2.8, move: .drift, entrance: .rise),
+            MotionScene(layoutId: "1-centre", slots: [1], length: 2.4, transition: .zoom, move: .zoomIn),
+            MotionScene(layoutId: "3-filmstrip", slots: [2, 0, 1], length: 3.2, transition: .fade, move: .drift),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-recap", name: String(localized: "Weekend recap"), category: .motion, tags: [.photoDump], mode: .collage,
+        format: .story, layoutId: "5-hero", isLiving: true, gap: 10, radius: 14, bg: "#fdf1e4", backdrop: gradient(2),
+        captions: [
+            sceneCaption(caption(String(localized: "weekend\nrecap"), .poster, y: 0.18, size: 120, color: "#2b1a12"), 0),
+            sceneCaption(caption(String(localized: "see you next time"), .script, y: 0.5, size: 80), 1),
+        ],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 2.6, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "5-hero", slots: [0, 1, 2, 3, 4], length: 4.2, transition: .fade, move: .zoomOut, entrance: .rise),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-shuffle", name: String(localized: "Shuffle"), category: .motion, mode: .collage,
+        format: .square, layoutId: "4-big-top", isLiving: true, gap: 10, radius: 16, bg: "#1b1030", backdrop: gradient(4),
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "4-grid", slots: [0, 1, 2, 3], length: 2.2, entrance: .pop),
+            MotionScene(layoutId: "4-grid", slots: [3, 0, 1, 2], length: 1.8, transition: .fade),
+            MotionScene(layoutId: "4-grid", slots: [2, 3, 0, 1], length: 1.8, transition: .fade),
+            MotionScene(layoutId: "4-big-top", slots: [0, 1, 2, 3], length: 3.2, transition: .fade, move: .zoomIn),
+        ])
+    ),
+
+    DesignTemplate(
+        id: "motion-side-by-side", name: String(localized: "Side by side"), category: .motion, mode: .collage,
+        format: .square, layoutId: "2-side", isLiving: true, gap: 20, radius: 14, bg: "#151a20",
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "2-stack", slots: [0, 1], length: 2.2, move: .drift),
+            MotionScene(layoutId: "2-side", slots: [0, 1], length: 3.2),
+        ], transitionLength: 0.8)
+    ),
+    DesignTemplate(
+        id: "motion-staircase", name: String(localized: "Staircase"), category: .motion, mode: .collage,
+        format: .story, layoutId: "3-stairs", isLiving: true, gap: 8, radius: 18, bg: "#172723",
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 1.5, move: .zoomIn),
+            MotionScene(layoutId: "2-overlap", slots: [0, 1], length: 1.6, transition: .slideUp),
+            MotionScene(layoutId: "3-stairs", slots: [0, 1, 2], length: 3.0, move: .drift, entrance: .rise),
+        ], transitionLength: 0.55)
+    ),
+    DesignTemplate(
+        id: "motion-lookbook", name: String(localized: "Lookbook"), category: .motion, tags: [.moodboard], mode: .collage,
+        format: .post, layoutId: "4-magazine", isLiving: true, gap: 10, bg: "#f1ece3",
+        frame: .border, frameColor: "#fffdf8", frameWidth: 10,
+        captions: [sceneCaption(caption(String(localized: "LOOKBOOK"), .magazine, y: 0.085, size: 66, color: "#211b18"), 3)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "2-side", slots: [0, 1], length: 1.4),
+            MotionScene(layoutId: "2-side", slots: [2, 3], length: 1.4, transition: .cut),
+            MotionScene(layoutId: "1-centre", slots: [1], length: 1.8, transition: .cut, move: .zoomOut),
+            MotionScene(layoutId: "4-magazine", slots: [1, 0, 2, 3], length: 3.4, entrance: .rise),
+        ], transitionLength: 0.45)
+    ),
+    DesignTemplate(
+        id: "motion-gallery-wall", name: String(localized: "Gallery wall"), category: .motion, tags: [.minimal], mode: .collage,
+        format: .post, layoutId: "6-wall", isLiving: true, bg: "#ebe2d6",
+        frame: .gallery, frameColor: "#faf6ed", frameWidth: 14,
+        captions: [sceneCaption(caption(String(localized: "the good days"), .magazine, y: 0.82, size: 84, color: "#403329"), 2)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "3-rows", slots: [0, 1, 2], length: 1.8, move: .drift),
+            MotionScene(layoutId: "3-rows", slots: [3, 4, 5], length: 1.8, transition: .slideLeft, move: .drift),
+            MotionScene(layoutId: "6-wall", slots: [0, 1, 2, 3, 4, 5], length: 3.4, entrance: .drop),
+        ], transitionLength: 0.6)
+    ),
+    DesignTemplate(
+        id: "motion-pinboard", name: String(localized: "Pinboard"), category: .motion, tags: [.moodboard], mode: .collage,
+        format: .story, layoutId: "7-board", isLiving: true, bg: "#f4e2c3", backdrop: pattern(.grid),
+        frameColor: "#fff8e9", frameWidth: 12, cellFrames: [.tape, .instant, .border],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "2-pile", slots: [0, 1], length: 1.6, entrance: .drop),
+            MotionScene(layoutId: "4-zigzag", slots: [0, 1, 2, 3], length: 2.0, entrance: .drop),
+            MotionScene(layoutId: "7-board", slots: [0, 1, 2, 3, 4, 5, 6], length: 3.5, entrance: .drop),
+        ], transitionLength: 0.65)
+    ),
+    DesignTemplate(
+        id: "motion-heart-of-photos", name: String(localized: "Heart of photos"), category: .motion, tags: [.love], mode: .collage,
+        format: .post, layoutId: "8-heart", isLiving: true, bg: "#f9e5e9",
+        frame: .circle,
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "2-side", slots: [0, 1], length: 1.6, move: .zoomOut),
+            MotionScene(layoutId: "4-cluster", slots: [0, 1, 2, 3], length: 1.8, entrance: .pop),
+            MotionScene(layoutId: "8-heart", slots: [2, 3, 4, 0, 5, 1, 6, 7], length: 3.6, entrance: .rise),
+        ], transitionLength: 0.65)
     ),
 
     // MARK: With video (first: playing videos inside a collage is what the app is for)

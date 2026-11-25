@@ -72,9 +72,9 @@ it re-lays the pictures already there, and Undo brings the previous design back.
 pictures are added (extras wait in the tray); a carousel template keeps its style as the slide count changes.
 
 **Motion templates** lead the Collage tab in their own row (category Motion, a sparkles badge on the card, which plays
-the design itself): Weekend, Neon nights, Before & after, Postcards, Spotlight, Trio, Split open, Photo dump, Print drop,
-Film reel, Weekend recap, Shuffle, Side by side, Staircase, Lookbook, Gallery wall, Pinboard and Heart of photos, plus
-53 themed ones: party (Party starter, Confetti pop, Dance floor, Disco fever, House party, Cheers), beach (Beach day,
+the design itself), newest first: the 53 themed ones listed below come before the first 18 (Weekend, Neon nights, Before & after, Postcards, Spotlight, Trio, Split open, Photo dump, Print drop,
+Film reel, Weekend recap, Shuffle, Side by side, Staircase, Lookbook, Gallery wall, Pinboard and Heart of photos). The
+themed ones: party (Party starter, Confetti pop, Dance floor, Disco fever, House party, Cheers), beach (Beach day,
 Salt water, Sunset waves, Beach club, Island time, Surf club, Poolside), love (Love letter, Heartbeat, Only you, Forever
 us, Rose petals, Then & now), date night (Date night, Dinner for two, Movie night, Coffee date, Under the stars, Picnic
 date), birthday, friends, travel, wedding, baby, pets, food, fitness, graduation, holidays (Countdown, Christmas magic,
