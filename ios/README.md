@@ -2,7 +2,7 @@
 
 Native SwiftUI port of the web app, built for iOS 26+ with Liquid Glass. Apple ID `6832640005`, bundle ID
 `com.axpo.collagemagik`. On the home screen and inside the app it is **Collage Magic** (renamed from "Insta Collage", since "Insta" is a term
-Meta treats as its brand). Current version: **1.0.5 (build 3)**.
+Meta treats as its brand). Current version: **1.0.6 (build 3)**.
 
 **App Store listing to set with the next version** (App Store Connect → the app → the new version → App Information):
 Name **Collage Magic**, Subtitle **Collage Maker & Editor**. The live listing still says "Insta Collage Maker & Editor" until
