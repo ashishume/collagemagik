@@ -186,6 +186,7 @@ enum DebugHarness {
         if env["CM_RESIZE"] != nil { store.resizeOpen = true }
         if env["CM_MUSIC"] != nil, let m = env["CM_MUSIC"] { await store.importMusic(URL(fileURLWithPath: m)) }
         if let c = env["CM_CROP"], let i = Int(c) { store.cropCell = i }
+        if let dir = env["CM_TEMPLATE_FRAMES"] { writeTemplateFrames(store, to: dir, only: env["CM_TEMPLATE_IDS"]) }
         if let e = env["CM_EXPORT"] {
             store.playback.pause()
             let snapshot = ExportSnapshot(project: store.project, items: Dictionary(uniqueKeysWithValues: store.items.map { ($0.id, $0) }))
@@ -256,6 +257,36 @@ enum DebugHarness {
                 NSLog("CM_DEBUG motion cell %d x=%.0f y=%.0f w=%.0f h=%.0f alpha=%.2f", i, r.x, r.y, r.w, r.h, store.shown.cellAlpha(i))
             }
         }
+    }
+
+    /// CM_TEMPLATE_FRAMES=dir: every motion template (CM_TEMPLATE_IDS=a,b for some) drawn with the loaded photos, or the
+    /// sample scenes, as one strip per template (dir/<id>.png): each scene just after it starts and once it has settled.
+    private static func writeTemplateFrames(_ store: CollageStore, to dir: String, only: String?) {
+        let ids = only.map { Set($0.split(separator: ",").map(String.init)) }
+        let photos = store.items.filter { $0.kind == .photo }
+        let items = photos.isEmpty ? TemplatePreview.samples : photos
+        let byId = Dictionary(items.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
+        for template in allTemplates where template.motion != nil && (ids?.contains(template.id) ?? true) {
+            let project = template.project(basedOn: Project(), pictures: (0..<template.slots).map { items[$0 % items.count].id })
+            guard let motion = project.motion else { continue }
+            let times = motion.scenes.indices.flatMap { k in [motion.starts[k] + 0.2, motion.settledTime(of: k)] }
+            let h = 400.0, w = (h * project.canvasWidth / project.canvasHeight).rounded(), pad = 8.0
+            guard let ctx = CollageRenderer.makeContext(width: Int((w + pad) * Double(times.count)), height: Int(h)) else { continue }
+            for (f, t) in times.enumerated() {
+                ctx.saveGState()
+                ctx.translateBy(x: (w + pad) * Double(f), y: 0)
+                ctx.clip(to: CGRect(x: 0, y: 0, width: w, height: h))
+                CollageRenderer.draw(ctx: ctx, W: w, H: h, snapshot: ExportSnapshot(project: project, items: byId), t: t) { id in
+                    byId[id].flatMap { ($0.fixedPreview ?? $0.thumbnail).cgImage }
+                }
+                ctx.restoreGState()
+            }
+            if let cg = ctx.makeImage() {
+                try? UIImage(cgImage: cg).pngData()?.write(to: URL(fileURLWithPath: dir).appendingPathComponent("\(template.id).png"))
+            }
+        }
+        NSLog("CM_DEBUG template frames written to %@", dir)
     }
 }
 #endif

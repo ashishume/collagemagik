@@ -65,7 +65,7 @@ editor's top bar shows it as a title instead of a switch. A carousel's dock read
 
 **Templates** (`Model/Templates.swift`, `UI/TemplateViews.swift`): a `DesignTemplate` is a design without pictures
 (layout or carousel style, size, gap, corners, background, frame, placeholder captions and stickers). `allTemplates`
-holds 108 (86 collage, 22 carousel) in 20 categories (the "With video" category puts clips in the first, biggest slots), including free-form ones (tossed and tilted prints, piles, fans, a heart of photos, pinboard, magazine, film strip, bubbles, staircase) and ones that set a filter or a different frame per photo (`filter`, `cellFrames`); add one by adding an entry. Previews are drawn by the real
+holds 161 (139 collage, 22 carousel) in 23 categories (the "With video" category puts clips in the first, biggest slots; `tags` lists a template under more categories, so a themed motion template also shows under Party, Beach, Love, Date night and so on), including free-form ones (tossed and tilted prints, piles, fans, a heart of photos, pinboard, magazine, film strip, bubbles, staircase) and ones that set a filter or a different frame per photo (`filter`, `cellFrames`); add one by adding an entry. Previews are drawn by the real
 renderer (`TemplatePreview`), with sample scenes on Home and the person's own pictures in the editor
 (Layout / Slides → Templates). Picking one from Home starts a design with it and opens the photo picker; in the editor
 it re-lays the pictures already there, and Undo brings the previous design back. A collage template keeps its slots as
@@ -73,14 +73,19 @@ pictures are added (extras wait in the tray); a carousel template keeps its styl
 
 **Motion templates** lead the Collage tab in their own row (category Motion, a sparkles badge on the card, which plays
 the design itself): Weekend, Neon nights, Before & after, Postcards, Spotlight, Trio, Split open, Photo dump, Print drop,
-Film reel, Weekend recap, Shuffle, Side by side, Staircase, Lookbook, Gallery wall, Pinboard and Heart of photos.
-All 18 are free. On the first import into a new one, videos go into the first slots in selection order and the design
+Film reel, Weekend recap, Shuffle, Side by side, Staircase, Lookbook, Gallery wall, Pinboard and Heart of photos, plus
+53 themed ones: party (Party starter, Confetti pop, Dance floor, Disco fever, House party, Cheers), beach (Beach day,
+Salt water, Sunset waves, Beach club, Island time, Surf club, Poolside), love (Love letter, Heartbeat, Only you, Forever
+us, Rose petals, Then & now), date night (Date night, Dinner for two, Movie night, Coffee date, Under the stars, Picnic
+date), birthday, friends, travel, wedding, baby, pets, food, fitness, graduation, holidays (Countdown, Christmas magic,
+Spooky season, Festival of lights) and everyday (Outfit of the day, Summer dump, Day in my life). All 71 are free. On the first import into a new one, videos go into the first slots in selection order and the design
 starts playing. Later imports and targeted replacements follow the normal editor
 behavior. Reduce Motion keeps the sample cards and initial playback still.
 
 **Motion templates** (`Model/Motion.swift`): a collage can carry a `Motion`, a list of scenes. Each scene has a layout,
 the slot (cell) shown in each of its places, a length, a transition in (cut, fade, slide left/up, zoom), a slow photo
-move (zoom in/out, drift) and an optional staggered entrance (pop, drop, rise). A slot in two scenes in a row glides
+move (zoom in/out, drift, or sway, which rocks and bobs the whole picture like a print on water) and an optional
+staggered entrance (pop, drop, rise, spin, slide in from the nearer side, slam down from big). A slot in two scenes in a row glides
 and resizes between its places. `Project.posed(at:)` gives the design as it is at time *t* (cells moved, faded and
 restacked through `MotionPose`, which `layout(for:)` uses); the preview (`store.shown`, posed at the playhead), every
 export and the template cards draw that copy, so they match. Videos play through scene changes and repeat to fill the
@@ -276,6 +281,7 @@ All are ignored in release builds.
 | `CM_AUTOLOAD=a,b` | Loads files one by one (`CM_BATCH` all at once, `CM_IMPORT` through the progress loader) |
 | `CM_MODE=carousel`, `CM_STYLE=flow`, `CM_OFFSET=1.1` | Carousel mode, style, and how far it is swiped |
 | `CM_START_TEMPLATE=id` | Applies a template before `CM_BATCH` and logs slot order and playback |
+| `CM_TEMPLATE_FRAMES=dir`, `CM_TEMPLATE_IDS=a,b` | Draws every motion template (or those ids) as a strip of key moments, `dir/<id>.png`, with the loaded photos or sample scenes |
 | `CM_LAYOUT=n`, `CM_SIZES=0.6,0.4` | Number of cells; moves the first borders as if dragged |
 | `CM_TAB=layout`, `CM_SELECT=i`, `CM_CROP=i`, `CM_PART=1` | Opens a tab, selects a cell, opens crop or Choose part |
 | `CM_CAPTIONS=1` | Adds sample captions |

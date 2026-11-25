@@ -9,15 +9,18 @@ enum MotionTransition: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
-/// Slow movement of the photos while a scene plays (videos move by themselves).
+/// Slow movement of the photos while a scene plays (videos move by themselves). `sway` rocks and bobs the whole
+/// picture, videos included, like a print floating on water: it suits prints and pictures with space around them.
 enum PhotoMove: String, Codable, CaseIterable, Identifiable {
-    case none, zoomIn, zoomOut, drift
+    case none, zoomIn, zoomOut, drift, sway
     var id: String { rawValue }
 }
 
-/// How the pictures new to a scene arrive one after another, instead of the scene's transition.
+/// How the pictures new to a scene arrive one after another, instead of the scene's transition. `spin` turns in
+/// from small, `slide` comes in from the nearer side (alternating for pictures in the middle), `slam` lands from big
+/// with a small bounce.
 enum MotionEntrance: String, Codable, CaseIterable, Identifiable {
-    case none, pop, drop, rise
+    case none, pop, drop, rise, spin, slide, slam
     var id: String { rawValue }
 }
 
@@ -154,8 +157,24 @@ extension Motion {
             case .pop: look.rect = base.scaled(0.55 + 0.45 * easeOutBack(p))
             case .drop: look.rect = base.moved(0, -(1 - easeOut(p)) * 0.3)
             case .rise: look.rect = base.moved(0, (1 - easeOut(p)) * 0.22)
+            case .spin:
+                look.rect = base.scaled(0.35 + 0.65 * easeOutBack(p))
+                look.rect.tilt = base.tilt + (1 - easeOut(p)) * (place.isMultiple(of: 2) ? -40 : 40)
+            case .slide:
+                let cx = base.x + base.w / 2
+                let side: Double = abs(cx - 0.5) < 0.05 ? (place.isMultiple(of: 2) ? -1 : 1) : (cx < 0.5 ? -1 : 1)
+                look.rect = base.moved(side * (1 - easeOut(p)) * 0.7, 0)
+            case .slam:
+                look.alpha = min(1, p * 4)
+                look.rect = base.scaled(1 + 0.5 * (1 - easeOutBack(p)))
             case .none: break
             }
+        }
+        if scene.move == .sway {
+            // each picture on its own beat, so a pile of prints never rocks in step
+            let beat = 2 * Double.pi * local / 3.2 + Double(place) * 1.7
+            look.rect.tilt += 2.4 * sin(beat)
+            look.rect = look.rect.moved(0, 0.007 * sin(beat * 0.5 + 0.8))
         }
         if !video {
             // keeps going a little through the next transition, so a photo never stops dead
@@ -164,7 +183,7 @@ extension Motion {
             case .zoomIn: look.zoom = 1 + 0.16 * q
             case .zoomOut: look.zoom = 1 + 0.16 * max(0, 1 - q)
             case .drift: look.zoom = 1.14; look.pan = clamp(-0.8 + 1.6 * q, -1, 1)
-            case .none: break
+            case .none, .sway: break
             }
         }
         return look

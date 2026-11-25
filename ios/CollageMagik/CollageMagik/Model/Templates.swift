@@ -5,8 +5,8 @@ import UIKit
 
 /// What a template is for, shown as chips in the Templates browser.
 enum TemplateCategory: String, CaseIterable, Identifiable {
-    case motion, video, photoDump, travel, birthday, love, wedding, baby, friends, pets, food, fitness, graduation, holidays, business,
-         quote, minimal, moodboard, beforeAfter, scrapbook
+    case motion, video, photoDump, party, beach, travel, birthday, love, dateNight, wedding, baby, friends, pets, food, fitness,
+         graduation, holidays, business, quote, minimal, moodboard, beforeAfter, scrapbook
 
     var id: String { rawValue }
     var title: String {
@@ -14,6 +14,9 @@ enum TemplateCategory: String, CaseIterable, Identifiable {
         case .motion: String(localized: "Motion")
         case .video: String(localized: "With video")
         case .photoDump: String(localized: "Photo dump")
+        case .party: String(localized: "Party")
+        case .beach: String(localized: "Beach")
+        case .dateNight: String(localized: "Date night")
         case .travel: String(localized: "Travel")
         case .birthday: String(localized: "Birthday")
         case .love: String(localized: "Love")
@@ -42,6 +45,8 @@ struct DesignTemplate: Identifiable {
     let id: String
     let name: String
     let category: TemplateCategory
+    /// More categories it shows under (a motion template stays in Motion and also shows under its theme).
+    var tags: [TemplateCategory] = []
     let mode: EditMode
     var format: FormatId = .post
     /// Collage: a layout id from `allLayouts` (its cell count is the number of slots). Carousel: the strip style; the
@@ -161,7 +166,7 @@ let allTemplates: [DesignTemplate] = [
     // Motion templates: the pictures move through scenes. Clips go into the first slots; a picture in two scenes in a
     // row glides between its places. The last scene shows every picture (it is the design's still look).
     DesignTemplate(
-        id: "living-weekend", name: String(localized: "weekend"), category: .motion, mode: .collage,
+        id: "living-weekend", name: String(localized: "weekend"), category: .motion, tags: [.photoDump], mode: .collage,
         format: .story, layoutId: "4-hero-prints", isLiving: true, bg: "#f0ddbe",
         frameColor: "#fff6e5", frameWidth: 18, cellFrames: [.shadow, .instant, .instant, .instant],
         captions: [caption(String(localized: "WEEKEND EDITION · NO. 12"), .typewriter, y: 0.05, size: 48, color: "#442b24")],
@@ -171,7 +176,7 @@ let allTemplates: [DesignTemplate] = [
         ])
     ),
     DesignTemplate(
-        id: "living-night", name: String(localized: "Neon nights"), category: .motion, mode: .collage,
+        id: "living-night", name: String(localized: "Neon nights"), category: .motion, tags: [.party, .friends], mode: .collage,
         format: .story, layoutId: "3-big-top", isLiving: true, gap: 14, radius: 18, bg: "#120d29",
         backdrop: gradient(5), frame: .neon, frameColor: "#a85eff", frameWidth: 16,
         captions: [caption(String(localized: "NEON NIGHTS"), .poster, y: 0.55, size: 80, color: "#e5b6ff", look: .neon)],
@@ -183,7 +188,7 @@ let allTemplates: [DesignTemplate] = [
         ])
     ),
     DesignTemplate(
-        id: "living-before-after", name: String(localized: "Before & after"), category: .motion, mode: .collage,
+        id: "living-before-after", name: String(localized: "Before & after"), category: .motion, tags: [.beforeAfter], mode: .collage,
         format: .post, layoutId: "2-side", isLiving: true, gap: 24, radius: 14, bg: "#102327",
         captions: [
             sceneCaption(caption(String(localized: "Before"), .rounded, y: 0.88, size: 62, look: .plate), 0),
@@ -197,7 +202,7 @@ let allTemplates: [DesignTemplate] = [
         ])
     ),
     DesignTemplate(
-        id: "living-postcard", name: String(localized: "Postcards"), category: .motion, mode: .collage,
+        id: "living-postcard", name: String(localized: "Postcards"), category: .motion, tags: [.travel], mode: .collage,
         format: .post, layoutId: "4-magazine", isLiving: true, bg: "#d5e7de", backdrop: pattern(.dots),
         frameColor: "#fff9ea", frameWidth: 14, cellFrames: [.border, .stamp, .stamp, .stamp],
         captions: [caption(String(localized: "greetings from"), .script, y: 0.08, size: 95, color: "#224d46", ornament: .swash)],
@@ -241,7 +246,7 @@ let allTemplates: [DesignTemplate] = [
         ])
     ),
     DesignTemplate(
-        id: "motion-dump", name: String(localized: "Photo dump"), category: .motion, mode: .collage,
+        id: "motion-dump", name: String(localized: "Photo dump"), category: .motion, tags: [.photoDump], mode: .collage,
         format: .story, layoutId: "6-grid", isLiving: true, gap: 8, radius: 10, bg: "#ffffff",
         captions: [sceneCaption(caption(String(localized: "photo dump"), .marker, y: 0.5, size: 110, color: "#ffffff", rotation: -4), 6)],
         motion: Motion(scenes: [
@@ -255,7 +260,7 @@ let allTemplates: [DesignTemplate] = [
         ])
     ),
     DesignTemplate(
-        id: "motion-prints", name: String(localized: "Print drop"), category: .motion, mode: .collage,
+        id: "motion-prints", name: String(localized: "Print drop"), category: .motion, tags: [.scrapbook], mode: .collage,
         format: .post, layoutId: "4-tossed", isLiving: true, bg: "#e8dccb", backdrop: pattern(.grid),
         frame: .instant, frameColor: "#fbfaf6", frameWidth: 16,
         captions: [caption(String(localized: "developed today"), .note, y: 0.94, size: 54, color: "#4a3527")],
@@ -265,7 +270,7 @@ let allTemplates: [DesignTemplate] = [
         ])
     ),
     DesignTemplate(
-        id: "motion-film", name: String(localized: "Film reel"), category: .motion, mode: .collage,
+        id: "motion-film", name: String(localized: "Film reel"), category: .motion, tags: [.photoDump], mode: .collage,
         format: .story, layoutId: "3-filmstrip", isLiving: true, bg: "#141416", frame: .film, frameColor: "#101016", frameWidth: 22,
         filter: .film,
         captions: [caption(String(localized: "roll 01"), .typewriter, y: 0.05, size: 40, color: "#ff9a3c")],
@@ -276,7 +281,7 @@ let allTemplates: [DesignTemplate] = [
         ])
     ),
     DesignTemplate(
-        id: "motion-recap", name: String(localized: "Weekend recap"), category: .motion, mode: .collage,
+        id: "motion-recap", name: String(localized: "Weekend recap"), category: .motion, tags: [.photoDump], mode: .collage,
         format: .story, layoutId: "5-hero", isLiving: true, gap: 10, radius: 14, bg: "#fdf1e4", backdrop: gradient(2),
         captions: [
             sceneCaption(caption(String(localized: "weekend\nrecap"), .poster, y: 0.18, size: 120, color: "#2b1a12"), 0),
@@ -316,7 +321,7 @@ let allTemplates: [DesignTemplate] = [
         ], transitionLength: 0.55)
     ),
     DesignTemplate(
-        id: "motion-lookbook", name: String(localized: "Lookbook"), category: .motion, mode: .collage,
+        id: "motion-lookbook", name: String(localized: "Lookbook"), category: .motion, tags: [.moodboard], mode: .collage,
         format: .post, layoutId: "4-magazine", isLiving: true, gap: 10, bg: "#f1ece3",
         frame: .border, frameColor: "#fffdf8", frameWidth: 10,
         captions: [sceneCaption(caption(String(localized: "LOOKBOOK"), .magazine, y: 0.085, size: 66, color: "#211b18"), 3)],
@@ -328,7 +333,7 @@ let allTemplates: [DesignTemplate] = [
         ], transitionLength: 0.45)
     ),
     DesignTemplate(
-        id: "motion-gallery-wall", name: String(localized: "Gallery wall"), category: .motion, mode: .collage,
+        id: "motion-gallery-wall", name: String(localized: "Gallery wall"), category: .motion, tags: [.minimal], mode: .collage,
         format: .post, layoutId: "6-wall", isLiving: true, bg: "#ebe2d6",
         frame: .gallery, frameColor: "#faf6ed", frameWidth: 14,
         captions: [sceneCaption(caption(String(localized: "the good days"), .magazine, y: 0.82, size: 84, color: "#403329"), 2)],
@@ -339,7 +344,7 @@ let allTemplates: [DesignTemplate] = [
         ], transitionLength: 0.6)
     ),
     DesignTemplate(
-        id: "motion-pinboard", name: String(localized: "Pinboard"), category: .motion, mode: .collage,
+        id: "motion-pinboard", name: String(localized: "Pinboard"), category: .motion, tags: [.moodboard], mode: .collage,
         format: .story, layoutId: "7-board", isLiving: true, bg: "#f4e2c3", backdrop: pattern(.grid),
         frameColor: "#fff8e9", frameWidth: 12, cellFrames: [.tape, .instant, .border],
         motion: Motion(scenes: [
@@ -349,7 +354,7 @@ let allTemplates: [DesignTemplate] = [
         ], transitionLength: 0.65)
     ),
     DesignTemplate(
-        id: "motion-heart-of-photos", name: String(localized: "Heart of photos"), category: .motion, mode: .collage,
+        id: "motion-heart-of-photos", name: String(localized: "Heart of photos"), category: .motion, tags: [.love], mode: .collage,
         format: .post, layoutId: "8-heart", isLiving: true, bg: "#f9e5e9",
         frame: .circle,
         motion: Motion(scenes: [
@@ -357,6 +362,706 @@ let allTemplates: [DesignTemplate] = [
             MotionScene(layoutId: "4-cluster", slots: [0, 1, 2, 3], length: 1.8, entrance: .pop),
             MotionScene(layoutId: "8-heart", slots: [2, 3, 4, 0, 5, 1, 6, 7], length: 3.6, entrance: .rise),
         ], transitionLength: 0.65)
+    ),
+
+    // MARK: Themed motion templates (also listed under their theme through `tags`)
+
+    // Party
+    DesignTemplate(
+        id: "motion-party-starter", name: String(localized: "Party starter"), category: .motion, tags: [.party], mode: .collage,
+        format: .story, layoutId: "4-grid", isLiving: true, gap: 12, radius: 18, backdrop: gradient(5),
+        frame: .neon, frameColor: "#ff4fd8", frameWidth: 14, filter: .vivid,
+        captions: [
+            sceneCaption(caption(String(localized: "night out"), .retro, y: 0.86, size: 100, color: "#ff4fd8", look: .neon), 0),
+            sceneCaption(caption(String(localized: "PARTY"), .poster, y: 0.5, size: 150, look: .outline, allCaps: true), 4),
+        ],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 1.2, move: .zoomIn, entrance: .slam),
+            MotionScene(layoutId: "1-full", slots: [1], length: 0.9, transition: .cut, move: .zoomIn, entrance: .slam),
+            MotionScene(layoutId: "1-full", slots: [2], length: 0.9, transition: .cut, move: .zoomIn, entrance: .slam),
+            MotionScene(layoutId: "1-full", slots: [3], length: 0.9, transition: .cut, move: .zoomIn, entrance: .slam),
+            MotionScene(layoutId: "4-grid", slots: [0, 1, 2, 3], length: 3.4, entrance: .spin),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-confetti-pop", name: String(localized: "Confetti pop"), category: .motion, tags: [.party, .birthday], mode: .collage,
+        format: .post, layoutId: "5-pile", isLiving: true, bg: "#1b1030", backdrop: pattern(.confetti),
+        frame: .instant, frameColor: "#ffffff", frameWidth: 16, filter: .vivid,
+        captions: [sceneCaption(caption(String(localized: "best night\nEVER"), .retro, y: 0.5, size: 110, color: "#ff4fd8", look: .neon,
+                                        mix: .tail, accent: .poster), 2)],
+        stickers: [emoji("🎉", x: 0.9, y: 0.06, w: 0.11, tilt: 12)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-tilt", slots: [0], length: 2.0, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "2-pile", slots: [0, 1], length: 1.8, entrance: .spin),
+            MotionScene(layoutId: "5-pile", slots: [0, 1, 2, 3, 4], length: 3.8, entrance: .spin),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-dance-floor", name: String(localized: "Dance floor"), category: .motion, tags: [.party], mode: .collage,
+        format: .story, layoutId: "6-grid", isLiving: true, gap: 8, radius: 10, bg: "#07070b",
+        frame: .neon, frameColor: "#3de0ff", frameWidth: 12, filter: .chrome,
+        captions: [sceneCaption(caption(String(localized: "DANCE ALL NIGHT"), .poster, y: 0.5, size: 96, color: "#3de0ff", look: .neon,
+                                        allCaps: true), 6)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 0.8, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "1-full", slots: [1], length: 0.7, transition: .cut, move: .zoomIn, entrance: .spin),
+            MotionScene(layoutId: "1-full", slots: [2], length: 0.7, transition: .cut, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "1-full", slots: [3], length: 0.7, transition: .cut, move: .zoomIn, entrance: .spin),
+            MotionScene(layoutId: "1-full", slots: [4], length: 0.7, transition: .cut, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "1-full", slots: [5], length: 0.7, transition: .cut, move: .zoomIn, entrance: .spin),
+            MotionScene(layoutId: "6-grid", slots: [0, 1, 2, 3, 4, 5], length: 3.4, entrance: .pop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-disco", name: String(localized: "Disco fever"), category: .motion, tags: [.party], mode: .collage,
+        format: .square, layoutId: "4-cluster", isLiving: true, backdrop: gradient(0), frame: .circle, filter: .vivid,
+        captions: [sceneCaption(caption(String(localized: "Disco fever"), .retro, y: 0.5, size: 100, color: "#ffd6f5", look: .neon), 4)],
+        stickers: [emoji("🪩", x: 0.88, y: 0.1, w: 0.13, tilt: 10)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "4-cluster", slots: [0, 1, 2, 3], length: 2.0, entrance: .spin),
+            MotionScene(layoutId: "4-cluster", slots: [3, 0, 1, 2], length: 1.3),
+            MotionScene(layoutId: "4-cluster", slots: [2, 3, 0, 1], length: 1.3),
+            MotionScene(layoutId: "4-cluster", slots: [1, 2, 3, 0], length: 1.3),
+            MotionScene(layoutId: "4-cluster", slots: [0, 1, 2, 3], length: 3.0, move: .zoomIn),
+        ], transitionLength: 0.9)
+    ),
+    DesignTemplate(
+        id: "motion-house-party", name: String(localized: "House party"), category: .motion, tags: [.party, .friends], mode: .collage,
+        format: .story, layoutId: "6-mix", isLiving: true, gap: 10, bg: "#ffd23f",
+        frame: .border, frameColor: "#101016", frameWidth: 10, filter: .vivid,
+        captions: [sceneCaption(caption(String(localized: "House party"), .poster, y: 0.56, size: 110, color: "#101016", look: .sticker,
+                                        rotation: -4, allCaps: true), 2)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "2-stack", slots: [0, 1], length: 1.8, entrance: .slide),
+            MotionScene(layoutId: "3-rows", slots: [0, 1, 2], length: 1.8, entrance: .slide),
+            MotionScene(layoutId: "6-mix", slots: [0, 1, 2, 3, 4, 5], length: 3.4, entrance: .slam),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-cheers", name: String(localized: "Cheers"), category: .motion, tags: [.party], mode: .collage,
+        format: .post, layoutId: "3-big-top", isLiving: true, gap: 16, radius: 12, backdrop: gradient(6),
+        frame: .shadow, filter: .warm,
+        captions: [
+            sceneCaption(caption(String(localized: "Cheers"), .script, y: 0.5, size: 130, ornament: .sparkles), 0),
+            sceneCaption(caption(String(localized: "good vibes"), .vows, y: 0.6, size: 90), 2),
+        ],
+        stickers: [emoji("🥂", x: 0.9, y: 0.08, w: 0.11, tilt: 12)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "2-side", slots: [0, 1], length: 2.2, entrance: .slide),
+            MotionScene(layoutId: "1-centre", slots: [2], length: 2.0, transition: .zoom, move: .zoomIn),
+            MotionScene(layoutId: "3-big-top", slots: [2, 0, 1], length: 3.6, move: .zoomOut, entrance: .rise),
+        ])
+    ),
+
+    // Beach
+    DesignTemplate(
+        id: "motion-beach-day", name: String(localized: "Beach day"), category: .motion, tags: [.beach], mode: .collage,
+        format: .story, layoutId: "4-tossed", isLiving: true, backdrop: gradient(3),
+        frame: .instant, frameColor: "#fff9ee", frameWidth: 16, filter: .warm,
+        captions: [
+            sceneCaption(caption(String(localized: "Beach day"), .hand, y: 0.9, size: 110, rotation: -4), 0),
+            sceneCaption(caption(String(localized: "summer memories"), .hand, y: 0.5, size: 76, color: "#ff7a59", look: .label, rotation: -4), 2),
+        ],
+        stickers: [emoji("☀️", x: 0.88, y: 0.035, w: 0.1), emoji("🐚", x: 0.12, y: 0.965, w: 0.09, tilt: -10)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-tilt", slots: [0], length: 2.2, move: .sway, entrance: .drop),
+            MotionScene(layoutId: "3-tossed", slots: [0, 1, 2], length: 2.4, move: .sway, entrance: .slide),
+            MotionScene(layoutId: "4-tossed", slots: [0, 1, 2, 3], length: 3.6, move: .sway, entrance: .drop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-salt-water", name: String(localized: "Salt water"), category: .motion, tags: [.beach], mode: .collage,
+        format: .post, layoutId: "4-band", isLiving: true, gap: 14, radius: 20, backdrop: gradient(4), filter: .cool,
+        captions: [
+            sceneCaption(caption(String(localized: "Salt water"), .script, y: 0.84, size: 130), 0),
+            sceneCaption(caption(String(localized: "summer"), .dreamy, y: 0.5, size: 110, color: "#0b6e7a", look: .sticker), 2),
+        ],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.4, move: .drift),
+            MotionScene(layoutId: "2-side", slots: [0, 1], length: 2.2, transition: .slideLeft, move: .drift),
+            MotionScene(layoutId: "4-band", slots: [0, 1, 2, 3], length: 3.4, entrance: .rise),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-sunset-waves", name: String(localized: "Sunset waves"), category: .motion, tags: [.beach, .travel], mode: .collage,
+        format: .story, layoutId: "3-rows", isLiving: true, gap: 12, radius: 24, backdrop: gradient(1), filter: .warm,
+        captions: [
+            sceneCaption(caption(String(localized: "golden hour"), .romance, y: 0.86, size: 120, color: "#fff3e0"), 0),
+            sceneCaption(caption(String(localized: "Sunset waves"), .script, y: 0.333, size: 96, color: "#fff3e0", look: .plate), 2),
+        ],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.6, move: .zoomOut),
+            MotionScene(layoutId: "1-full", slots: [1], length: 2.2, transition: .slideUp, move: .zoomOut),
+            MotionScene(layoutId: "3-rows", slots: [0, 1, 2], length: 3.6, entrance: .slide),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-beach-club", name: String(localized: "Beach club"), category: .motion, tags: [.beach], mode: .collage,
+        format: .square, layoutId: "3-cols", isLiving: true, gap: 18, radius: 80, bg: "#f7efe0", backdrop: pattern(.stripes),
+        filter: .vivid,
+        captions: [sceneCaption(caption(String(localized: "Beach club"), .retro, y: 0.5, size: 96, color: "#e2552b", look: .sticker,
+                                        rotation: -6), 1)],
+        stickers: [emoji("🌴", x: 0.12, y: 0.1, w: 0.13, tilt: -8), emoji("☀️", x: 0.88, y: 0.1, w: 0.13)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 2.2, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "3-cols", slots: [1, 0, 2], length: 3.6, entrance: .slide),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-island-time", name: String(localized: "Island time"), category: .motion, tags: [.beach, .travel], mode: .collage,
+        format: .post, layoutId: "6-wall", isLiving: true, bg: "#0f6e6e",
+        frame: .stamp, frameColor: "#fff8ea", frameWidth: 16, filter: .vintage,
+        captions: [
+            sceneCaption(caption(String(localized: "Island time"), .note, y: 0.87, size: 80, color: "#fff8ea", rotation: -3), 1),
+            sceneCaption(caption(String(localized: "wish you were here"), .script, y: 0.83, size: 90, color: "#fff8ea"), 2),
+        ],
+        stickers: [emoji("🌴", x: 0.9, y: 0.92, w: 0.12, tilt: 8)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-tilt", slots: [0], length: 2.2, move: .drift, entrance: .drop),
+            MotionScene(layoutId: "3-fan", slots: [1, 0, 2], length: 2.6, move: .sway, entrance: .rise),
+            MotionScene(layoutId: "6-wall", slots: [0, 1, 2, 3, 4, 5], length: 3.6, entrance: .drop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-surf-club", name: String(localized: "Surf club"), category: .motion, tags: [.beach], mode: .collage,
+        format: .story, layoutId: "4-big-top", isLiving: true, gap: 8, bg: "#f4e9d8", filter: .film,
+        captions: [sceneCaption(caption(String(localized: "Surf club"), .poster, y: 0.55, size: 120, color: "#e2552b", look: .sticker,
+                                        allCaps: true), 2)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 1.8, move: .drift),
+            MotionScene(layoutId: "2-stack", slots: [0, 1], length: 1.8, transition: .slideUp, move: .drift),
+            MotionScene(layoutId: "4-big-top", slots: [0, 1, 2, 3], length: 3.6, entrance: .slide),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-poolside", name: String(localized: "Poolside"), category: .motion, tags: [.beach, .friends], mode: .collage,
+        format: .square, layoutId: "4-offset", isLiving: true, bg: "#3ec6e0",
+        frame: .tape, frameColor: "#ffffff", frameWidth: 12, filter: .vivid,
+        captions: [sceneCaption(caption(String(localized: "Poolside"), .retro, x: 0.2, y: 0.84, size: 72, color: "#ff5fa2", look: .sticker,
+                                        rotation: -6), 0)],
+        stickers: [emoji("🍹", x: 0.91, y: 0.05, w: 0.08, tilt: 10)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "2-overlap", slots: [0, 1], length: 2.4, move: .sway, entrance: .slide),
+            MotionScene(layoutId: "4-offset", slots: [0, 1, 2, 3], length: 3.6, entrance: .rise),
+        ])
+    ),
+
+    // Love
+    DesignTemplate(
+        id: "motion-love-letter", name: String(localized: "Love letter"), category: .motion, tags: [.love, .dateNight], mode: .collage,
+        format: .post, layoutId: "3-tossed", isLiving: true, bg: "#f7e6e3", backdrop: pattern(.hearts),
+        frameColor: "#ffffff", frameWidth: 16, cellFrames: [.instant, .instant, .tape], filter: .warm,
+        captions: [
+            sceneCaption(caption(String(localized: "with love"), .signature, y: 0.9, size: 100, color: "#b23a5b"), 0),
+            sceneCaption(caption(String(localized: "you & me"), .signature, x: 0.8, y: 0.14, size: 80, color: "#b23a5b", rotation: 8), 2),
+        ],
+        stickers: [shape("heart.fill", color: "#e2557a", x: 0.86, y: 0.88, w: 0.08, tilt: 12)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-tilt", slots: [0], length: 2.4, move: .zoomIn, entrance: .drop),
+            MotionScene(layoutId: "2-pile", slots: [0, 1], length: 2.2, move: .sway, entrance: .drop),
+            MotionScene(layoutId: "3-tossed", slots: [0, 1, 2], length: 3.8, move: .sway, entrance: .drop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-heartbeat", name: String(localized: "Heartbeat"), category: .motion, tags: [.love], mode: .collage,
+        format: .post, layoutId: "4-cluster", isLiving: true, backdrop: gradient(7), frame: .heart, filter: .vivid,
+        captions: [sceneCaption(caption(String(localized: "be mine"), .script, y: 0.042, size: 76), 3)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 1.0, move: .zoomIn, entrance: .slam),
+            MotionScene(layoutId: "1-centre", slots: [1], length: 1.0, transition: .cut, move: .zoomIn, entrance: .slam),
+            MotionScene(layoutId: "1-centre", slots: [2], length: 1.0, transition: .cut, move: .zoomIn, entrance: .slam),
+            MotionScene(layoutId: "4-cluster", slots: [0, 1, 2, 3], length: 3.8, move: .sway, entrance: .pop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-only-you", name: String(localized: "Only you"), category: .motion, tags: [.love, .dateNight], mode: .collage,
+        format: .square, layoutId: "2-overlap", isLiving: true, bg: "#1a1418",
+        frame: .border, frameColor: "#ffffff", frameWidth: 12, filter: .fade,
+        captions: [
+            sceneCaption(caption(String(localized: "you, always"), .signature, y: 0.86, size: 100, color: "#ffd6e7"), 0),
+            sceneCaption(caption(String(localized: "you + me"), .signature, x: 0.2, y: 0.84, size: 84, color: "#ffd6e7", rotation: -6), 2),
+        ],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.4, move: .drift),
+            MotionScene(layoutId: "1-full", slots: [1], length: 2.2, transition: .slideLeft, move: .drift),
+            MotionScene(layoutId: "2-overlap", slots: [0, 1], length: 3.6, entrance: .pop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-forever-us", name: String(localized: "Forever us"), category: .motion, tags: [.love, .wedding], mode: .collage,
+        format: .story, layoutId: "3-cols", isLiving: true, gap: 18, bg: "#fbf3ef", frame: .arch, filter: .warm,
+        captions: [sceneCaption(caption(String(localized: "forever"), .signature, y: 0.9, size: 130, color: "#b23a5b"), 0)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 2.4, move: .zoomOut, entrance: .rise),
+            MotionScene(layoutId: "2-side", slots: [0, 1], length: 2.2, entrance: .rise),
+            MotionScene(layoutId: "3-cols", slots: [0, 1, 2], length: 3.6, entrance: .rise),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-rose-petals", name: String(localized: "Rose petals"), category: .motion, tags: [.love], mode: .collage,
+        format: .post, layoutId: "4-zigzag", isLiving: true, backdrop: gradient(2), frame: .heart, filter: .warm,
+        captions: [sceneCaption(caption(String(localized: "love"), .romance, x: 0.24, y: 0.88, size: 90, color: "#b23a5b"), 1)],
+        stickers: [emoji("🌹", x: 0.8, y: 0.12, w: 0.1, tilt: 12)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 2.2, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "4-zigzag", slots: [0, 1, 2, 3], length: 3.8, move: .sway, entrance: .drop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-then-now", name: String(localized: "Then & now"), category: .motion, tags: [.love, .beforeAfter], mode: .collage,
+        format: .story, layoutId: "2-stack", isLiving: true, gap: 10, bg: "#120d0f", filter: .film,
+        captions: [
+            sceneCaption(caption(String(localized: "then"), .script, y: 0.86, size: 140), 0),
+            sceneCaption(caption(String(localized: "now"), .script, y: 0.86, size: 140), 1),
+            sceneCaption(caption(String(localized: "forever"), .signature, y: 0.5, size: 110, color: "#ffd6e7", look: .plate), 2),
+        ],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.4, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [1], length: 2.4, transition: .slideUp, move: .zoomIn),
+            MotionScene(layoutId: "2-stack", slots: [0, 1], length: 3.4, entrance: .rise),
+        ])
+    ),
+
+    // Date night
+    DesignTemplate(
+        id: "motion-date-night", name: String(localized: "Date night"), category: .motion, tags: [.dateNight, .love], mode: .collage,
+        format: .story, layoutId: "3-big-top", isLiving: true, gap: 10, radius: 14, bg: "#140d12", filter: .film,
+        captions: [
+            sceneCaption(caption(String(localized: "Date night"), .vows, y: 0.85, size: 120, ornament: .heart), 0),
+            sceneCaption(caption(String(localized: "just us"), .signature, y: 0.6, size: 100, color: "#ff6fa8", look: .neon), 2),
+        ],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.2, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [1], length: 2.0, transition: .zoom, move: .zoomIn),
+            MotionScene(layoutId: "3-big-top", slots: [1, 0, 2], length: 3.6, move: .zoomOut, entrance: .rise),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-dinner-for-two", name: String(localized: "Dinner for two"), category: .motion, tags: [.dateNight, .food], mode: .collage,
+        format: .post, layoutId: "3-big-left", isLiving: true, gap: 14, bg: "#2a1a14",
+        frame: .gallery, frameColor: "#f6ead7", frameWidth: 14, filter: .warm,
+        captions: [sceneCaption(caption(String(localized: "Dinner for two"), .serif, y: 0.1, size: 70, color: "#f6ead7"), 1)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "2-side", slots: [0, 1], length: 2.4, entrance: .slide),
+            MotionScene(layoutId: "1-centre", slots: [2], length: 2.0, transition: .zoom, move: .zoomIn),
+            MotionScene(layoutId: "3-big-left", slots: [2, 0, 1], length: 3.6, entrance: .rise),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-movie-night", name: String(localized: "Movie night"), category: .motion, tags: [.dateNight, .friends], mode: .collage,
+        format: .post, layoutId: "4-big-top", isLiving: true, gap: 12, bg: "#7a0d12",
+        frame: .border, frameColor: "#f6e7c1", frameWidth: 10, filter: .film,
+        captions: [
+            sceneCaption(caption(String(localized: "NOW SHOWING"), .poster, y: 0.1, size: 66, color: "#ffd84d", allCaps: true), 0),
+            sceneCaption(caption(String(localized: "Movie night"), .retro, y: 0.55, size: 100, color: "#ffd84d", look: .neon), 2),
+        ],
+        stickers: [emoji("🍿", x: 0.9, y: 0.93, w: 0.11, tilt: 10)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 2.2, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "2-stack", slots: [0, 1], length: 1.8, transition: .slideUp),
+            MotionScene(layoutId: "4-big-top", slots: [0, 1, 2, 3], length: 3.6, entrance: .slam),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-coffee-date", name: String(localized: "Coffee date"), category: .motion, tags: [.dateNight, .food], mode: .collage,
+        format: .post, layoutId: "3-cascade", isLiving: true, bg: "#e9dccb", backdrop: pattern(.dots),
+        frameColor: "#fbfaf6", frameWidth: 14, cellFrames: [.instant, .tape, .instant], filter: .warm,
+        captions: [
+            sceneCaption(caption(String(localized: "Coffee date"), .hand, y: 0.9, size: 90, color: "#5a3a28", rotation: -3), 0),
+            sceneCaption(caption(String(localized: "little things"), .diary, x: 0.2, y: 0.85, size: 64, color: "#5a3a28", rotation: -4), 2),
+        ],
+        stickers: [emoji("☕️", x: 0.86, y: 0.12, w: 0.12, tilt: 10)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-tilt", slots: [0], length: 2.2, entrance: .drop),
+            MotionScene(layoutId: "2-pile", slots: [0, 1], length: 2.2, move: .sway, entrance: .drop),
+            MotionScene(layoutId: "3-cascade", slots: [0, 1, 2], length: 3.6, entrance: .rise),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-under-the-stars", name: String(localized: "Under the stars"), category: .motion, tags: [.dateNight, .travel], mode: .collage,
+        format: .story, layoutId: "3-stairs", isLiving: true, backdrop: gradient(5), frame: .circle, filter: .cool,
+        captions: [
+            sceneCaption(caption(String(localized: "Under the stars"), .dreamy, y: 0.9, size: 96, color: "#e5d6ff"), 0),
+            sceneCaption(caption(String(localized: "Under the stars"), .dreamy, x: 0.22, y: 0.84, size: 50, color: "#e5d6ff"), 1),
+        ],
+        stickers: [emoji("🌙", x: 0.82, y: 0.1, w: 0.12, tilt: -12)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 2.4, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "3-stairs", slots: [0, 1, 2], length: 3.8, move: .sway, entrance: .pop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-picnic-date", name: String(localized: "Picnic date"), category: .motion, tags: [.dateNight, .food], mode: .collage,
+        format: .post, layoutId: "5-scrapbook", isLiving: true, bg: "#f6efe2", backdrop: pattern(.checks),
+        frameColor: "#ffffff", frameWidth: 16, cellFrames: [.instant, .tape], filter: .warm,
+        captions: [sceneCaption(caption(String(localized: "Picnic date"), .hand, x: 0.82, y: 0.2, size: 64, color: "#c0392b", rotation: 6), 0)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "2-pile", slots: [0, 1], length: 2.4, move: .sway, entrance: .drop),
+            MotionScene(layoutId: "5-scrapbook", slots: [0, 1, 2, 3, 4], length: 3.8, entrance: .drop),
+        ])
+    ),
+
+    // Birthday
+    DesignTemplate(
+        id: "motion-birthday-bash", name: String(localized: "Birthday bash"), category: .motion, tags: [.birthday, .party], mode: .collage,
+        format: .post, layoutId: "5-hero", isLiving: true, gap: 14, radius: 12, bg: "#ffe3ec", backdrop: pattern(.confetti),
+        frame: .border, frameColor: "#ffffff", frameWidth: 12, filter: .vivid,
+        captions: [
+            sceneCaption(caption(String(localized: "Happy Birthday"), .script, y: 0.1, size: 78, color: "#d6336c", ornament: .sparkles), 0),
+            sceneCaption(caption(String(localized: "bring cake"), .marker, y: 0.4, size: 70, color: "#d6336c", look: .sticker, rotation: -4), 2),
+        ],
+        stickers: [emoji("🎂", x: 0.9, y: 0.92, w: 0.12, tilt: 8)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 2.2, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "3-fan", slots: [1, 0, 2], length: 2.2, entrance: .spin),
+            MotionScene(layoutId: "5-hero", slots: [0, 1, 2, 3, 4], length: 3.6, entrance: .pop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-make-a-wish", name: String(localized: "Make a wish"), category: .motion, tags: [.birthday], mode: .collage,
+        format: .story, layoutId: "4-band", isLiving: true, backdrop: gradient(8), frame: .circle, filter: .warm,
+        captions: [
+            sceneCaption(caption(String(localized: "Make a wish"), .dreamy, y: 0.88, size: 110, color: "#6c4dff"), 0),
+            sceneCaption(caption(String(localized: "Happy Birthday"), .script, y: 0.5, size: 100, ornament: .sparkles), 1),
+        ],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 2.6, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "4-band", slots: [0, 1, 2, 3], length: 3.8, entrance: .pop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-birthday-wall", name: String(localized: "Birthday wall"), category: .motion, tags: [.birthday, .party], mode: .collage,
+        format: .square, layoutId: "6-wall", isLiving: true, backdrop: gradient(1),
+        frame: .instant, frameColor: "#ffffff", frameWidth: 14, filter: .vivid,
+        captions: [sceneCaption(caption(String(localized: "it's my\nBIRTHDAY"), .poster, y: 0.84, size: 100, look: .neon, mix: .lead,
+                                        accent: .retro), 2)],
+        stickers: [emoji("🎈", x: 0.1, y: 0.86, w: 0.12, tilt: -10), emoji("🎉", x: 0.9, y: 0.86, w: 0.12, tilt: 12)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "2-side", slots: [0, 1], length: 1.8, entrance: .spin),
+            MotionScene(layoutId: "4-tossed", slots: [0, 1, 2, 3], length: 1.8, entrance: .spin),
+            MotionScene(layoutId: "6-wall", slots: [0, 1, 2, 3, 4, 5], length: 3.6, entrance: .drop),
+        ])
+    ),
+
+    // Friends
+    DesignTemplate(
+        id: "motion-squad-goals", name: String(localized: "Squad goals"), category: .motion, tags: [.friends], mode: .collage,
+        format: .square, layoutId: "6-wide", isLiving: true, gap: 6, bg: "#18181c", filter: .vivid,
+        captions: [sceneCaption(caption(String(localized: "the squad"), .marker, y: 0.5, size: 90, look: .label), 6)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 1.0, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [1], length: 0.8, transition: .zoom, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [2], length: 0.8, transition: .zoom, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [3], length: 0.8, transition: .zoom, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [4], length: 0.8, transition: .zoom, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [5], length: 0.8, transition: .zoom, move: .zoomIn),
+            MotionScene(layoutId: "6-wide", slots: [0, 1, 2, 3, 4, 5], length: 3.2, entrance: .pop),
+        ], transitionLength: 0.3)
+    ),
+    DesignTemplate(
+        id: "motion-besties", name: String(localized: "Besties"), category: .motion, tags: [.friends], mode: .collage,
+        format: .post, layoutId: "2-pile", isLiving: true, backdrop: gradient(8),
+        frameColor: "#ffffff", frameWidth: 16, cellFrames: [.instant, .tape], filter: .warm,
+        captions: [
+            sceneCaption(caption(String(localized: "Besties"), .marker, y: 0.5, size: 120, color: "#ff5fa2", look: .label, rotation: -4), 0),
+            sceneCaption(caption(String(localized: "us, lately"), .vows, x: 0.82, y: 0.18, size: 76, color: "#3d2c8d", rotation: 8), 1),
+        ],
+        stickers: [emoji("💫", x: 0.14, y: 0.92, w: 0.1)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "2-side", slots: [0, 1], length: 2.4, entrance: .slide),
+            MotionScene(layoutId: "2-pile", slots: [0, 1], length: 3.6, move: .sway),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-road-trip", name: String(localized: "Road trip"), category: .motion, tags: [.friends, .travel], mode: .collage,
+        format: .story, layoutId: "4-zigzag", isLiving: true, bg: "#f2e3c6", backdrop: pattern(.dots),
+        frameColor: "#fbfaf6", frameWidth: 14, cellFrames: [.stamp, .instant, .stamp, .instant], filter: .vintage,
+        captions: [
+            sceneCaption(caption(String(localized: "Road trip"), .poster, y: 0.88, size: 110, color: "#e2552b", look: .label, allCaps: true), 0),
+            sceneCaption(caption(String(localized: "day 1"), .hand, x: 0.78, y: 0.12, size: 64, color: "#2b4a8b", rotation: 6), 3),
+            sceneCaption(caption(String(localized: "day 2"), .hand, x: 0.22, y: 0.4, size: 64, color: "#2b4a8b", rotation: -6), 3),
+            sceneCaption(caption(String(localized: "day 3"), .hand, x: 0.78, y: 0.61, size: 64, color: "#2b4a8b", rotation: 6), 3),
+            sceneCaption(caption(String(localized: "day 4"), .hand, x: 0.22, y: 0.86, size: 64, color: "#2b4a8b", rotation: -6), 3),
+        ],
+        stickers: [emoji("🚗", x: 0.1, y: 0.965, w: 0.08, tilt: -8)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 1.8, move: .drift),
+            MotionScene(layoutId: "1-full", slots: [1], length: 1.8, transition: .slideLeft, move: .drift),
+            MotionScene(layoutId: "1-full", slots: [2], length: 1.8, transition: .slideLeft, move: .drift),
+            MotionScene(layoutId: "4-zigzag", slots: [0, 1, 2, 3], length: 3.8, entrance: .slide),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-festival", name: String(localized: "Festival"), category: .motion, tags: [.friends, .party], mode: .collage,
+        format: .story, layoutId: "6-stairs", isLiving: true, gap: 10, radius: 14, backdrop: gradient(1),
+        frame: .neon, frameColor: "#ffd23f", frameWidth: 12, filter: .vivid,
+        captions: [
+            sceneCaption(caption(String(localized: "LIVE"), .poster, y: 0.86, size: 160, color: "#ffd23f", look: .neon, allCaps: true), 1),
+            sceneCaption(caption(String(localized: "Festival"), .retro, y: 0.4, size: 130, color: "#ff4fd8", look: .neon), 2),
+        ],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "3-cols", slots: [0, 1, 2], length: 2.0, entrance: .slam),
+            MotionScene(layoutId: "1-full", slots: [1], length: 1.8, transition: .zoom, move: .zoomIn),
+            MotionScene(layoutId: "6-stairs", slots: [1, 0, 2, 3, 4, 5], length: 3.6, entrance: .drop),
+        ])
+    ),
+
+    // Travel and outdoors
+    DesignTemplate(
+        id: "motion-wanderlust", name: String(localized: "Wanderlust"), category: .motion, tags: [.travel], mode: .collage,
+        format: .story, layoutId: "5-hero", isLiving: true, gap: 10, radius: 16, backdrop: gradient(10), filter: .film,
+        captions: [
+            sceneCaption(caption(String(localized: "Wanderlust"), .script, y: 0.85, size: 140, ornament: .swash), 0),
+            sceneCaption(caption(String(localized: "where we went"), .magazine, y: 0.4, size: 70, look: .plate), 2),
+        ],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.6, move: .drift),
+            MotionScene(layoutId: "2-stack", slots: [0, 1], length: 2.2, transition: .slideUp, move: .drift),
+            MotionScene(layoutId: "5-hero", slots: [0, 1, 2, 3, 4], length: 3.6, entrance: .rise),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-passport", name: String(localized: "Passport stamps"), category: .motion, tags: [.travel], mode: .collage,
+        format: .post, layoutId: "4-tossed", isLiving: true, bg: "#e9dfcf", backdrop: pattern(.grid),
+        frame: .stamp, frameColor: "#fbfaf6", frameWidth: 16, filter: .vintage,
+        captions: [sceneCaption(caption(String(localized: "par avion"), .typewriter, y: 0.5, size: 48, color: "#2b4a8b", look: .label,
+                                        rotation: -6), 2)],
+        stickers: [shape("seal.fill", color: "#c0392b", x: 0.88, y: 0.93, w: 0.1, tilt: 12)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-tilt", slots: [0], length: 1.8, entrance: .slam),
+            MotionScene(layoutId: "2-pile", slots: [0, 1], length: 1.8, entrance: .slam),
+            MotionScene(layoutId: "4-tossed", slots: [0, 1, 2, 3], length: 3.6, entrance: .slam),
+        ], transitionLength: 0.5)
+    ),
+    DesignTemplate(
+        id: "motion-into-the-wild", name: String(localized: "Into the wild"), category: .motion, tags: [.travel], mode: .collage,
+        format: .post, layoutId: "3-big-left", isLiving: true, gap: 12, bg: "#1f2a1f",
+        frame: .border, frameColor: "#efe6d2", frameWidth: 10, filter: .cool,
+        captions: [sceneCaption(caption(String(localized: "Into the wild"), .engraved, y: 0.86, size: 80, color: "#efe6d2", allCaps: true), 0)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.6, move: .zoomOut),
+            MotionScene(layoutId: "1-full", slots: [1], length: 2.2, move: .zoomOut),
+            MotionScene(layoutId: "3-big-left", slots: [0, 1, 2], length: 3.6, entrance: .slide),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-city-lights", name: String(localized: "City lights"), category: .motion, tags: [.travel, .party], mode: .collage,
+        format: .story, layoutId: "3-cols", isLiving: true, gap: 12, backdrop: gradient(5),
+        frame: .neon, frameColor: "#3de0ff", frameWidth: 10, filter: .chrome,
+        captions: [sceneCaption(caption(String(localized: "City lights"), .poster, y: 0.88, size: 110, color: "#ffd84d", look: .neon,
+                                        allCaps: true), 0)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.0, move: .zoomIn),
+            MotionScene(layoutId: "2-side", slots: [0, 1], length: 2.0, transition: .slideUp),
+            MotionScene(layoutId: "3-cols", slots: [0, 1, 2], length: 3.6, entrance: .rise),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-snow-days", name: String(localized: "Snow days"), category: .motion, tags: [.holidays, .travel], mode: .collage,
+        format: .square, layoutId: "5-scrapbook", isLiving: true, bg: "#e9f1f8", backdrop: pattern(.dots),
+        frame: .instant, frameColor: "#ffffff", frameWidth: 14, filter: .cool,
+        captions: [sceneCaption(caption(String(localized: "Snow days"), .hand, x: 0.26, y: 0.49, size: 64, color: "#2b4a8b", rotation: -4), 1)],
+        stickers: [emoji("❄️", x: 0.5, y: 0.975, w: 0.06)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-tilt", slots: [0], length: 2.2, move: .zoomIn, entrance: .drop),
+            MotionScene(layoutId: "5-scrapbook", slots: [0, 1, 2, 3, 4], length: 3.8, move: .sway, entrance: .drop),
+        ])
+    ),
+
+    // Wedding
+    DesignTemplate(
+        id: "motion-just-married", name: String(localized: "Just married"), category: .motion, tags: [.wedding, .love], mode: .collage,
+        format: .post, layoutId: "3-big-top", isLiving: true, gap: 16, radius: 6, bg: "#fbf7f2", frame: .shadow, filter: .fade,
+        captions: [
+            sceneCaption(caption(String(localized: "Just married"), .vows, y: 0.1, size: 92, color: "#8a6d3b", ornament: .heart), 0),
+            sceneCaption(caption(String(localized: "forever"), .signature, y: 0.6, size: 110), 2),
+        ],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 2.6, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "2-side", slots: [1, 2], length: 2.2, entrance: .rise),
+            MotionScene(layoutId: "3-big-top", slots: [0, 1, 2], length: 3.6, move: .zoomOut, entrance: .rise),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-first-dance", name: String(localized: "First dance"), category: .motion, tags: [.wedding, .love], mode: .collage,
+        format: .story, layoutId: "3-big-bottom", isLiving: true, gap: 10, bg: "#0e0d0c", filter: .mono,
+        captions: [sceneCaption(caption(String(localized: "First dance"), .vows, y: 0.86, size: 120), 0)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.8, move: .zoomIn),
+            MotionScene(layoutId: "1-full", slots: [1], length: 2.4, move: .zoomOut),
+            MotionScene(layoutId: "3-big-bottom", slots: [0, 2, 1], length: 3.6, entrance: .rise),
+        ], transitionLength: 1.0)
+    ),
+    DesignTemplate(
+        id: "motion-ever-after", name: String(localized: "Ever after"), category: .motion, tags: [.wedding], mode: .collage,
+        format: .post, layoutId: "4-magazine", isLiving: true, gap: 10, bg: "#f6efe7", filter: .fade,
+        captions: [sceneCaption(caption(String(localized: "happily ever after"), .signature, y: 0.09, size: 76, color: "#8a6d3b"), 1)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.6, move: .drift),
+            MotionScene(layoutId: "4-magazine", slots: [0, 1, 2, 3], length: 3.8, entrance: .rise),
+        ])
+    ),
+
+    // Baby, pets, food, fitness, graduation
+    DesignTemplate(
+        id: "motion-little-one", name: String(localized: "Little one"), category: .motion, tags: [.baby], mode: .collage,
+        format: .post, layoutId: "4-offset", isLiving: true, bg: "#eef6ff", backdrop: pattern(.dots), frame: .circle,
+        captions: [sceneCaption(caption(String(localized: "hello, little one"), .dreamy, y: 0.9, size: 84, color: "#b05c7a"), 0)],
+        stickers: [emoji("⭐️", x: 0.92, y: 0.04, w: 0.07, tilt: 12), emoji("⭐️", x: 0.08, y: 0.97, w: 0.06, tilt: -10)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 2.4, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "4-offset", slots: [0, 1, 2, 3], length: 3.8, move: .sway, entrance: .pop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-paw-prints", name: String(localized: "Paw prints"), category: .motion, tags: [.pets], mode: .collage,
+        format: .square, layoutId: "3-tossed", isLiving: true, bg: "#fff4e0", backdrop: pattern(.dots),
+        frameColor: "#fbfaf6", frameWidth: 14, cellFrames: [.instant, .tape, .stamp], filter: .warm,
+        captions: [sceneCaption(caption(String(localized: "my best friend"), .hand, x: 0.78, y: 0.14, size: 52, color: "#6b3e1f", rotation: 6), 1)],
+        stickers: [emoji("🐾", x: 0.86, y: 0.88, w: 0.1, tilt: 12)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-tilt", slots: [0], length: 2.0, move: .zoomIn, entrance: .drop),
+            MotionScene(layoutId: "3-tossed", slots: [0, 1, 2], length: 3.8, move: .sway, entrance: .drop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-zoomies", name: String(localized: "Zoomies"), category: .motion, tags: [.pets], mode: .collage,
+        format: .story, layoutId: "4-big-top", isLiving: true, gap: 10, radius: 20, backdrop: gradient(6), filter: .vivid,
+        captions: [sceneCaption(caption(String(localized: "Zoomies"), .marker, y: 0.55, size: 120, color: "#101016", look: .sticker,
+                                        rotation: -6), 4)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 0.9, move: .zoomIn, entrance: .slam),
+            MotionScene(layoutId: "1-full", slots: [1], length: 0.9, transition: .cut, move: .zoomIn, entrance: .slide),
+            MotionScene(layoutId: "1-full", slots: [2], length: 0.9, transition: .cut, move: .zoomIn, entrance: .slide),
+            MotionScene(layoutId: "1-full", slots: [3], length: 0.9, transition: .cut, move: .zoomIn, entrance: .slam),
+            MotionScene(layoutId: "4-big-top", slots: [0, 1, 2, 3], length: 3.4, entrance: .slide),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-brunch-club", name: String(localized: "Brunch club"), category: .motion, tags: [.food, .friends], mode: .collage,
+        format: .square, layoutId: "5-cross", isLiving: true, bg: "#f4ead8", backdrop: pattern(.checks), frame: .circle, filter: .warm,
+        captions: [sceneCaption(caption(String(localized: "Brunch club"), .note, x: 0.17, y: 0.17, size: 50, color: "#a3392b", rotation: -8), 1)],
+        stickers: [emoji("🍳", x: 0.83, y: 0.17, w: 0.14, tilt: 10), emoji("🥐", x: 0.17, y: 0.83, w: 0.14, tilt: -10),
+                   emoji("☕️", x: 0.83, y: 0.83, w: 0.14, tilt: 8)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 2.2, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "5-cross", slots: [1, 2, 0, 3, 4], length: 3.8, entrance: .spin),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-beast-mode", name: String(localized: "Beast mode"), category: .motion, tags: [.fitness], mode: .collage,
+        format: .story, layoutId: "3-rows", isLiving: true, gap: 8, bg: "#0d0d0f", filter: .chrome,
+        captions: [sceneCaption(caption(String(localized: "Beast mode"), .poster, y: 0.333, size: 110, color: "#d7ff3b", look: .outline,
+                                        allCaps: true), 3)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 0.8, move: .zoomIn, entrance: .slam),
+            MotionScene(layoutId: "1-full", slots: [1], length: 0.8, transition: .cut, move: .zoomIn, entrance: .slam),
+            MotionScene(layoutId: "1-full", slots: [2], length: 0.8, transition: .cut, move: .zoomIn, entrance: .slam),
+            MotionScene(layoutId: "3-rows", slots: [0, 1, 2], length: 3.2, entrance: .slide),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-grad-day", name: String(localized: "Grad day"), category: .motion, tags: [.graduation], mode: .collage,
+        format: .post, layoutId: "3-big-top", isLiving: true, gap: 14, radius: 10, bg: "#13233f",
+        frame: .border, frameColor: "#e8c36a", frameWidth: 10,
+        captions: [
+            sceneCaption(caption(String(localized: "Class of 2026"), .poster, y: 0.1, size: 70, color: "#e8c36a", allCaps: true), 0),
+            sceneCaption(caption(String(localized: "we did it!"), .script, y: 0.6, size: 110, ornament: .sparkles), 1),
+        ],
+        stickers: [emoji("🎓", x: 0.9, y: 0.08, w: 0.12, tilt: 12)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 2.2, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "3-big-top", slots: [0, 1, 2], length: 3.8, entrance: .spin),
+        ])
+    ),
+
+    // Holidays
+    DesignTemplate(
+        id: "motion-countdown", name: String(localized: "Countdown"), category: .motion, tags: [.holidays, .party], mode: .collage,
+        format: .story, layoutId: "4-grid", isLiving: true, gap: 10, radius: 16, backdrop: gradient(5), filter: .vivid,
+        captions: [
+            sceneCaption(caption("3", .poster, y: 0.5, size: 240, look: .outline), 0),
+            sceneCaption(caption("2", .poster, y: 0.5, size: 240, look: .outline), 1),
+            sceneCaption(caption("1", .poster, y: 0.5, size: 240, look: .outline), 2),
+            sceneCaption(caption(String(localized: "Happy New Year"), .script, y: 0.5, size: 88, ornament: .sparkles), 3),
+        ],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 1.0, move: .zoomIn, entrance: .slam),
+            MotionScene(layoutId: "1-full", slots: [1], length: 1.0, transition: .cut, move: .zoomIn, entrance: .slam),
+            MotionScene(layoutId: "1-full", slots: [2], length: 1.0, transition: .cut, move: .zoomIn, entrance: .slam),
+            MotionScene(layoutId: "4-grid", slots: [0, 1, 2, 3], length: 3.8, entrance: .spin),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-christmas-magic", name: String(localized: "Christmas magic"), category: .motion, tags: [.holidays], mode: .collage,
+        format: .post, layoutId: "6-wall", isLiving: true, backdrop: gradient(10),
+        frame: .instant, frameColor: "#fffaf0", frameWidth: 14, filter: .warm,
+        captions: [
+            sceneCaption(caption(String(localized: "Merry Christmas"), .script, y: 0.1, size: 84, ornament: .sparkles), 0),
+            sceneCaption(caption(String(localized: "Merry Christmas"), .script, y: 0.83, size: 84, ornament: .sparkles), 1),
+        ],
+        stickers: [emoji("🎄", x: 0.88, y: 0.92, w: 0.12), emoji("🎁", x: 0.12, y: 0.92, w: 0.11, tilt: -8)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 2.2, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "6-wall", slots: [0, 1, 2, 3, 4, 5], length: 3.8, move: .sway, entrance: .drop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-spooky-season", name: String(localized: "Spooky season"), category: .motion, tags: [.holidays, .party], mode: .collage,
+        format: .story, layoutId: "3-cascade", isLiving: true, bg: "#120a05",
+        frame: .torn, frameColor: "#f2e6d0", frameWidth: 14, filter: .noir,
+        captions: [
+            sceneCaption(caption(String(localized: "Spooky season"), .chalk, y: 0.86, size: 110, color: "#ff7a1a"), 0),
+            sceneCaption(caption(String(localized: "Spooky season"), .chalk, x: 0.2, y: 0.84, size: 58, color: "#ff7a1a"), 2),
+        ],
+        stickers: [emoji("🎃", x: 0.84, y: 0.12, w: 0.14, tilt: 10)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 1.6, move: .zoomIn, entrance: .slam),
+            MotionScene(layoutId: "1-full", slots: [1], length: 1.4, transition: .cut, move: .zoomIn, entrance: .slam),
+            MotionScene(layoutId: "3-cascade", slots: [0, 1, 2], length: 3.6, entrance: .drop),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-festival-of-lights", name: String(localized: "Festival of lights"), category: .motion, tags: [.holidays], mode: .collage,
+        format: .post, layoutId: "5-sandwich", isLiving: true, gap: 14, radius: 16, bg: "#2a0f2e",
+        frame: .neon, frameColor: "#ffd23f", frameWidth: 12, filter: .warm,
+        captions: [sceneCaption(caption(String(localized: "Happy Diwali"), .vows, y: 0.1, size: 90, color: "#fff3c4", ornament: .sparkles), 0)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-centre", slots: [0], length: 2.2, move: .zoomIn, entrance: .pop),
+            MotionScene(layoutId: "5-sandwich", slots: [1, 2, 0, 3, 4], length: 3.8, entrance: .pop),
+        ])
+    ),
+
+    // Everyday
+    DesignTemplate(
+        id: "motion-ootd", name: String(localized: "Outfit of the day"), category: .motion, tags: [.moodboard], mode: .collage,
+        format: .story, layoutId: "3-cols", isLiving: true, gap: 10, bg: "#f1ece3", filter: .chrome,
+        captions: [sceneCaption(caption("OOTD", .magazine, y: 0.07, size: 120), 3)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 1.4, move: .zoomOut),
+            MotionScene(layoutId: "1-full", slots: [1], length: 1.2, transition: .slideLeft, move: .zoomOut),
+            MotionScene(layoutId: "1-full", slots: [2], length: 1.2, transition: .slideLeft, move: .zoomOut),
+            MotionScene(layoutId: "3-cols", slots: [0, 1, 2], length: 3.4, entrance: .slam),
+        ])
+    ),
+    DesignTemplate(
+        id: "motion-summer-dump", name: String(localized: "Summer dump"), category: .motion, tags: [.photoDump, .beach], mode: .collage,
+        format: .post, layoutId: "9-grid", isLiving: true, gap: 8, radius: 10, bg: "#ffffff", filter: .warm,
+        captions: [sceneCaption(caption(String(localized: "summer"), .dreamy, y: 0.5, size: 140), 9)],
+        motion: Motion(scenes: (0..<9).map { i -> MotionScene in
+            MotionScene(layoutId: "1-full", slots: [i], length: 0.55, transition: .cut, move: .zoomIn)
+        } + [MotionScene(layoutId: "9-grid", slots: Array(0..<9), length: 3.4, entrance: .pop)])
+    ),
+    DesignTemplate(
+        id: "motion-day-in-my-life", name: String(localized: "Day in my life"), category: .motion, tags: [.video, .photoDump], mode: .collage,
+        format: .story, layoutId: "4-grid", isLiving: true, gap: 8, radius: 14, bg: "#111114",
+        captions: [sceneCaption(caption(String(localized: "day in my life"), .marker, y: 0.88, size: 80, look: .label), 0)],
+        stickers: [shape("play.circle.fill", color: "#ffffff", x: 0.92, y: 0.04, w: 0.08)],
+        motion: Motion(scenes: [
+            MotionScene(layoutId: "1-full", slots: [0], length: 2.0),
+            MotionScene(layoutId: "2-stack", slots: [0, 1], length: 1.8, transition: .slideUp),
+            MotionScene(layoutId: "4-grid", slots: [0, 1, 2, 3], length: 3.6, entrance: .slide),
+        ])
     ),
 
     // MARK: With video (first: playing videos inside a collage is what the app is for)
@@ -429,13 +1134,13 @@ let allTemplates: [DesignTemplate] = [
         stickers: [emoji("🎉", x: 0.1, y: 0.08, w: 0.13, tilt: -10), emoji("🎂", x: 0.9, y: 0.92, w: 0.13, tilt: 8)]
     ),
     DesignTemplate(
-        id: "c-party", name: String(localized: "Party night"), category: .birthday, mode: .collage, format: .story,
+        id: "c-party", name: String(localized: "Party night"), category: .birthday, tags: [.party], mode: .collage, format: .story,
         layoutId: "6-grid", gap: 10, radius: 20, backdrop: gradient(5),
         captions: [caption(String(localized: "PARTY"), .poster, y: 0.5, size: 140, look: .outline, allCaps: true)],
         stickers: [emoji("🎈", x: 0.88, y: 0.06, w: 0.14, tilt: 12)]
     ),
     DesignTemplate(
-        id: "c-you-and-me", name: String(localized: "You & me"), category: .love, mode: .collage, format: .post,
+        id: "c-you-and-me", name: String(localized: "You & me"), category: .love, tags: [.dateNight], mode: .collage, format: .post,
         layoutId: "2-side", gap: 22, radius: 22, backdrop: gradient(7),
         captions: [caption(String(localized: "you & me"), .vows, y: 0.9, size: 96, ornament: .heart)],
         stickers: [emoji("❤️", x: 0.5, y: 0.08, w: 0.1)]
@@ -599,7 +1304,7 @@ let allTemplates: [DesignTemplate] = [
         stickers: [emoji("📌", x: 0.3, y: 0.07, w: 0.08), emoji("🌿", x: 0.9, y: 0.8, w: 0.1, tilt: 12)]
     ),
     DesignTemplate(
-        id: "c-summer-tape", name: String(localized: "Summer memories"), category: .travel, mode: .collage, format: .post,
+        id: "c-summer-tape", name: String(localized: "Summer memories"), category: .travel, tags: [.beach], mode: .collage, format: .post,
         layoutId: "4-tossed", backdrop: gradient(2), frame: .tape, frameColor: "#fffaf2", frameWidth: 14, filter: .warm,
         captions: [caption(String(localized: "summer memories"), .vows, y: 0.475, size: 80, color: "#ffffff", look: .plate, rotation: -4)],
         stickers: [emoji("☀️", x: 0.92, y: 0.05, w: 0.1)]
@@ -640,17 +1345,17 @@ let allTemplates: [DesignTemplate] = [
         captions: [caption(String(localized: "step by step"), .serif, x: 0.26, y: 0.82, size: 52, color: "#1b1b1f")]
     ),
     DesignTemplate(
-        id: "c-pip", name: String(localized: "Picture in picture"), category: .love, mode: .collage, format: .post,
+        id: "c-pip", name: String(localized: "Picture in picture"), category: .love, tags: [.dateNight], mode: .collage, format: .post,
         layoutId: "2-overlap", bg: "#1a1418", frame: .border, frameColor: "#ffffff", frameWidth: 12,
         captions: [caption(String(localized: "you, always"), .signature, x: 0.2, y: 0.86, size: 74, color: "#ffd6e7")]
     ),
     DesignTemplate(
-        id: "c-golden-hour", name: String(localized: "Golden hour"), category: .travel, mode: .collage, format: .story,
+        id: "c-golden-hour", name: String(localized: "Golden hour"), category: .travel, tags: [.beach], mode: .collage, format: .story,
         layoutId: "4-offset", radius: 22, backdrop: gradient(1), filter: .warm,
         captions: [caption(String(localized: "golden hour"), .romance, x: 0.5, y: 0.965, size: 92, color: "#fff3e0")]
     ),
     DesignTemplate(
-        id: "c-neon-grid", name: String(localized: "Neon nights"), category: .friends, mode: .collage, format: .story,
+        id: "c-neon-grid", name: String(localized: "Neon nights"), category: .friends, tags: [.party], mode: .collage, format: .story,
         layoutId: "4-grid", gap: 48, bg: "#07070b", frame: .neon, frameColor: "#ff4fd8",
         captions: [caption(String(localized: "NEON NIGHTS"), .poster, x: 0.5, y: 0.5, size: 110, color: "#3de0ff", look: .neon, allCaps: true)]
     ),
@@ -698,7 +1403,7 @@ let allTemplates: [DesignTemplate] = [
         stickers: [emoji("🌼", x: 0.12, y: 0.86, w: 0.1, tilt: -12), emoji("🌼", x: 0.88, y: 0.84, w: 0.08, tilt: 14)]
     ),
     DesignTemplate(
-        id: "c-two-of-us", name: String(localized: "Two of us"), category: .love, mode: .collage, format: .post,
+        id: "c-two-of-us", name: String(localized: "Two of us"), category: .love, tags: [.dateNight], mode: .collage, format: .post,
         layoutId: "2-pile", bg: "#f6e8e4", backdrop: pattern(.hearts), frameColor: "#ffffff", frameWidth: 16,
         cellFrames: [.instant, .tape],
         captions: [caption(String(localized: "you + me"), .signature, x: 0.83, y: 0.2, size: 76, color: "#b23a5b", rotation: 8)],
@@ -759,7 +1464,7 @@ let allTemplates: [DesignTemplate] = [
         ]
     ),
     DesignTemplate(
-        id: "c-party-fan", name: String(localized: "Party fan"), category: .birthday, mode: .collage, format: .story,
+        id: "c-party-fan", name: String(localized: "Party fan"), category: .birthday, tags: [.party], mode: .collage, format: .story,
         layoutId: "3-fan", backdrop: gradient(5), frame: .neon, frameColor: "#ffd23f", filter: .vivid,
         captions: [
             caption(String(localized: "it's my\nBIRTHDAY"), .poster, x: 0.5, y: 0.12, size: 120, color: "#ffffff", look: .neon, mix: .lead, accent: .retro),
@@ -783,7 +1488,7 @@ let allTemplates: [DesignTemplate] = [
         ]
     ),
     DesignTemplate(
-        id: "c-neon-pile", name: String(localized: "Concert night"), category: .friends, mode: .collage, format: .story,
+        id: "c-neon-pile", name: String(localized: "Concert night"), category: .friends, tags: [.party], mode: .collage, format: .story,
         layoutId: "5-pile", bg: "#07070b", frame: .neon, frameColor: "#ff4fd8", filter: .chrome,
         captions: [caption(String(localized: "LIVE"), .poster, x: 0.5, y: 0.5, size: 150, color: "#3de0ff", look: .neon, allCaps: true, vertical: false)],
         stickers: [emoji("🎸", x: 0.9, y: 0.95, w: 0.09, tilt: 14), emoji("⚡️", x: 0.1, y: 0.95, w: 0.08)]
@@ -853,7 +1558,7 @@ let allTemplates: [DesignTemplate] = [
         stickers: [emoji("🗺️", x: 1.5, y: 0.9, w: 0.12, tilt: 8), emoji("📍", x: 0.85, y: 0.12, w: 0.08)]
     ),
     DesignTemplate(
-        id: "k-neon-wave", name: String(localized: "Neon wave"), category: .friends, mode: .carousel,
+        id: "k-neon-wave", name: String(localized: "Neon wave"), category: .friends, tags: [.party], mode: .carousel,
         style: .wave, bg: "#07070b", frame: .neon, frameColor: "#3de0ff",
         captions: [caption(String(localized: "night out"), .retro, x: 0.5, y: 0.9, size: 92, color: "#ff4fd8", look: .neon)]
     ),
@@ -913,7 +1618,7 @@ let allTemplates: [DesignTemplate] = [
         stickers: [shape("seal.fill", color: "#c0392b", x: 0.9, y: 0.08, w: 0.1, tilt: 12)]
     ),
     DesignTemplate(
-        id: "k-party-wall", name: String(localized: "Party wall"), category: .birthday, mode: .carousel,
+        id: "k-party-wall", name: String(localized: "Party wall"), category: .birthday, tags: [.party], mode: .carousel,
         style: .wall, gap: 18, bg: "#1b1030", backdrop: pattern(.confetti), frameColor: "#ffffff", frameWidth: 10,
         cellFrames: [.instant, .shadow, .neon], filter: .vivid,
         captions: [caption(String(localized: "best night\nEVER"), .retro, x: 0.5, y: 0.5, size: 140, color: "#ff4fd8", look: .neon, mix: .tail, accent: .poster)]
@@ -927,7 +1632,7 @@ let allTemplates: [DesignTemplate] = [
         ]
     ),
     DesignTemplate(
-        id: "k-wave", name: String(localized: "Summer wave"), category: .friends, mode: .carousel,
+        id: "k-wave", name: String(localized: "Summer wave"), category: .friends, tags: [.beach], mode: .carousel,
         style: .wave, radius: 18, backdrop: gradient(6),
         captions: [caption(String(localized: "summer"), .dreamy, x: 0.5, y: 0.1, size: 96, color: "#5a3a00")],
         stickers: [emoji("☀️", x: 0.9, y: 0.12, w: 0.12)]
@@ -935,7 +1640,9 @@ let allTemplates: [DesignTemplate] = [
 ]
 
 func templates(for mode: EditMode?, category: TemplateCategory? = nil) -> [DesignTemplate] {
-    allTemplates.filter { (mode == nil || $0.mode == mode) && (category == nil || $0.category == category) }
+    allTemplates.filter { t in
+        (mode == nil || t.mode == mode) && (category.map { t.category == $0 || t.tags.contains($0) } ?? true)
+    }
 }
 
 // MARK: - Previews

@@ -44,6 +44,7 @@ SIMCTL_CHILD_CM_PRO=1 SIMCTL_CHILD_CM_AUTOLOAD=a.jpg,b.jpg xcrun simctl launch b
 | `CM_LAYOUT=n`, `CM_SIZES=0.6,0.4` | Number of cells; moves the first borders as if dragged |
 | `CM_TAB=layout`, `CM_SELECT=i`, `CM_CROP=i`, `CM_PART=1` | Opens a tab, selects a cell, opens crop or Choose part |
 | `CM_CAPTIONS=1` | Adds sample captions |
+| `CM_TEMPLATE_FRAMES=dir`, `CM_TEMPLATE_IDS=a,b` | Draws each motion template's key moments into `dir/<id>.png` to review them |
 | `CM_EXPORT=video\|png\|ultra`, `CM_OUT=/path` | Exports without the UI |
 | `CM_EXPORT_ENGINE=cpu\|gpu` | Selects the video export engine and logs timing and peak memory as `CM_EXPORT` |
 | `CM_EXPORT_CANCEL=s` | Cancels a harness export s seconds in |

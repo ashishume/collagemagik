@@ -30,6 +30,7 @@ extension PhotoMove {
         case .zoomIn: String(localized: "Zoom in")
         case .zoomOut: String(localized: "Zoom out")
         case .drift: String(localized: "Drift")
+        case .sway: String(localized: "Sway")
         }
     }
     var symbol: String {
@@ -38,6 +39,7 @@ extension PhotoMove {
         case .zoomIn: "arrow.up.left.and.arrow.down.right"
         case .zoomOut: "arrow.down.right.and.arrow.up.left"
         case .drift: "arrow.left.and.right"
+        case .sway: "wind"
         }
     }
 }
@@ -49,6 +51,9 @@ extension MotionEntrance {
         case .pop: String(localized: "Pop")
         case .drop: String(localized: "Drop")
         case .rise: String(localized: "Rise")
+        case .spin: String(localized: "Spin")
+        case .slide: String(localized: "Slide in")
+        case .slam: String(localized: "Slam")
         }
     }
     var symbol: String {
@@ -57,6 +62,9 @@ extension MotionEntrance {
         case .pop: "sparkle"
         case .drop: "arrow.down.to.line"
         case .rise: "arrow.up.to.line"
+        case .spin: "arrow.clockwise"
+        case .slide: "arrow.right.to.line"
+        case .slam: "burst"
         }
     }
 }
