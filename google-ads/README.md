@@ -9,13 +9,31 @@ google-ads/
 │   ├── v2/
 │   ├── v3/
 │   ├── v4/
-│   └── v5/  (current)
+│   ├── v5/
+│   └── v6/  (motion templates, current)
 └── photos/      Images (v1 and v2 were deleted: they said "Insta Collage")
     └── v3/  (current)
         ├── image-assets/     App, Demand Gen and Responsive Display images
         ├── display-banners/  Fixed-size Display image ads (all under 150 KB)
         └── logos/            Square 1:1 and landscape 4:1 logos
 ```
+
+## v6 video: motion templates, "Every vibe, in motion" (28 Nov 2026)
+
+`output/v6/collagemagik-motion-vibes-vertical-9x16-1080x1920.mp4` (vertical 9:16, 16.6 s, -14 LUFS). Short ad for
+the motion templates, made to look nothing like the Neon/Sunny motion ads: no phone mock-up. Each theme gets its own
+colour world and a floating collage whose pictures arrive with that theme's motion: party = slam ("BOUNCE!"), beach =
+slide ("GLIDE"), date night = pop ("POP!"), then a fast flip through Trips (zoom, "Wanderlust"), Birthdays (spin,
+"Birthday bash"), Weddings (rise, "Just married") and Pets (drop, "Zoomies"); a wall of real template names counts up
+to "70+ motion templates"; photos and playing videos fly into one design ("DONE ✓"); end card "Every vibe, in motion."
+Scenes open with an iris wipe; display font Unbounded; subtitles with a yellow highlighter on the spoken word.
+
+- Voiceover: `source/voiceover-script-v6.md`, ElevenLabs "Kristen - upbeat social media influencer" (eleven_v4),
+  sped up 1.25x with ffmpeg to fit ~15 s: `source/public/audio/vo-motion-v6.mp3` (raw takes in `source/assets-raw/v6/`).
+- Word timings: `node scripts/transcribe.mjs assets-raw/v6/vo-v6-16k.wav src/data/motion-v6-captions.json`, then
+  `node scripts/merge-v6-words.mjs`. Beats are in `B` at the top of `source/src/motion6/AdVibes.tsx`.
+- Render: `npx remotion render MotionVibes ../output/v6/<name>.mp4 --codec=h264 --crf=18` from `source/`, then
+  normalise with ffmpeg `loudnorm=I=-14:TP=-1.5`. Same music track as earlier ads.
 
 ## v5 HTML5 display ads (17 Nov 2026)
 

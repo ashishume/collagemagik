@@ -10,6 +10,7 @@ import { ASSET_SIZES, BANNER_SIZES, THEMES } from "./photos/sizes";
 import { PanClip } from "./tools/PanClip";
 import { AdNeon, NEON_TOTAL } from "./motion/AdNeon";
 import { AdSunny, SUNNY_TOTAL } from "./motion/AdSunny";
+import { AdVibes, VIBES_TOTAL } from "./motion6/AdVibes";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -32,6 +33,7 @@ export const RemotionRoot: React.FC = () => {
       <Folder name="Motion-templates">
         <Composition id="MotionNeon" component={AdNeon} durationInFrames={NEON_TOTAL} fps={30} width={1080} height={1920} />
         <Composition id="MotionSunny" component={AdSunny} durationInFrames={SUNNY_TOTAL} fps={30} width={1080} height={1920} />
+        <Composition id="MotionVibes" component={AdVibes} durationInFrames={VIBES_TOTAL} fps={30} width={1080} height={1920} />
       </Folder>
       <Folder name="Image-assets">
         {THEMES.flatMap((theme) =>

@@ -1,0 +1,387 @@
+[
+  {
+    "text": "Party",
+    "startMs": 100,
+    "endMs": 410,
+    "timestampMs": 360,
+    "confidence": 0.897
+  },
+  {
+    "text": " night",
+    "startMs": 410,
+    "endMs": 820,
+    "timestampMs": 560,
+    "confidence": 0.850703
+  },
+  {
+    "text": ",",
+    "startMs": 820,
+    "endMs": 980,
+    "timestampMs": 960,
+    "confidence": 0.348483
+  },
+  {
+    "text": " make",
+    "startMs": 980,
+    "endMs": 1310,
+    "timestampMs": 1060,
+    "confidence": 0.977698
+  },
+  {
+    "text": " it",
+    "startMs": 1310,
+    "endMs": 1470,
+    "timestampMs": 1240,
+    "confidence": 0.998034
+  },
+  {
+    "text": " bounce",
+    "startMs": 1470,
+    "endMs": 2010,
+    "timestampMs": 1640,
+    "confidence": 0.999434
+  },
+  {
+    "text": ".",
+    "startMs": 2010,
+    "endMs": 2160,
+    "timestampMs": 2020,
+    "confidence": 0.494732
+  },
+  {
+    "text": " Beach",
+    "startMs": 2160,
+    "endMs": 2430,
+    "timestampMs": 2240,
+    "confidence": 0.554687
+  },
+  {
+    "text": " day",
+    "startMs": 2430,
+    "endMs": 2600,
+    "timestampMs": 2520,
+    "confidence": 0.942376
+  },
+  {
+    "text": ",",
+    "startMs": 2600,
+    "endMs": 2780,
+    "timestampMs": 2960,
+    "confidence": 0.938174
+  },
+  {
+    "text": " let",
+    "startMs": 2780,
+    "endMs": 3000,
+    "timestampMs": 2980,
+    "confidence": 0.960396
+  },
+  {
+    "text": " it",
+    "startMs": 3000,
+    "endMs": 3170,
+    "timestampMs": 3160,
+    "confidence": 0.998264
+  },
+  {
+    "text": " glide",
+    "startMs": 3170,
+    "endMs": 3630,
+    "timestampMs": 3480,
+    "confidence": 0.986359
+  },
+  {
+    "text": ".",
+    "startMs": 3630,
+    "endMs": 3940,
+    "timestampMs": 4100,
+    "confidence": 0.991017
+  },
+  {
+    "text": " Date",
+    "startMs": 3940,
+    "endMs": 4180,
+    "timestampMs": 4180,
+    "confidence": 0.487135
+  },
+  {
+    "text": " night",
+    "startMs": 4180,
+    "endMs": 4640,
+    "timestampMs": 4400,
+    "confidence": 0.986049
+  },
+  {
+    "text": ",",
+    "startMs": 4640,
+    "endMs": 4650,
+    "timestampMs": 4720,
+    "confidence": 0.968005
+  },
+  {
+    "text": " make",
+    "startMs": 4650,
+    "endMs": 5110,
+    "timestampMs": 4880,
+    "confidence": 0.939264
+  },
+  {
+    "text": " it",
+    "startMs": 5110,
+    "endMs": 5190,
+    "timestampMs": 5080,
+    "confidence": 0.992006
+  },
+  {
+    "text": " pop",
+    "startMs": 5190,
+    "endMs": 5460,
+    "timestampMs": 5380,
+    "confidence": 0.981103
+  },
+  {
+    "text": ".",
+    "startMs": 5460,
+    "endMs": 5870,
+    "timestampMs": 5960,
+    "confidence": 0.962227
+  },
+  {
+    "text": " Tri",
+    "startMs": 5870,
+    "endMs": 5960,
+    "timestampMs": 6040,
+    "confidence": 0.536445
+  },
+  {
+    "text": "ps",
+    "startMs": 5960,
+    "endMs": 6140,
+    "timestampMs": 6240,
+    "confidence": 0.997525
+  },
+  {
+    "text": ",",
+    "startMs": 6140,
+    "endMs": 6240,
+    "timestampMs": 6400,
+    "confidence": 0.952484
+  },
+  {
+    "text": " birth",
+    "startMs": 6240,
+    "endMs": 6600,
+    "timestampMs": 6520,
+    "confidence": 0.986607
+  },
+  {
+    "text": "days",
+    "startMs": 6600,
+    "endMs": 6830,
+    "timestampMs": 6760,
+    "confidence": 0.9981
+  },
+  {
+    "text": ",",
+    "startMs": 6830,
+    "endMs": 6960,
+    "timestampMs": 6940,
+    "confidence": 0.993936
+  },
+  {
+    "text": " weddings",
+    "startMs": 6960,
+    "endMs": 7580,
+    "timestampMs": 7200,
+    "confidence": 0.997725
+  },
+  {
+    "text": ",",
+    "startMs": 7580,
+    "endMs": 7610,
+    "timestampMs": 7580,
+    "confidence": 0.672624
+  },
+  {
+    "text": " even",
+    "startMs": 7610,
+    "endMs": 7870,
+    "timestampMs": 7780,
+    "confidence": 0.996445
+  },
+  {
+    "text": " your",
+    "startMs": 7870,
+    "endMs": 8130,
+    "timestampMs": 7960,
+    "confidence": 0.996316
+  },
+  {
+    "text": " pets",
+    "startMs": 8130,
+    "endMs": 8280,
+    "timestampMs": 8240,
+    "confidence": 0.999235
+  },
+  {
+    "text": ".",
+    "startMs": 8280,
+    "endMs": 8830,
+    "timestampMs": 8800,
+    "confidence": 0.771555
+  },
+  {
+    "text": " 70",
+    "startMs": 8830,
+    "endMs": 8970,
+    "timestampMs": 9100,
+    "confidence": 0.936155
+  },
+  {
+    "text": " plus",
+    "startMs": 8970,
+    "endMs": 9250,
+    "timestampMs": 9380,
+    "confidence": 0.563066
+  },
+  {
+    "text": " motion",
+    "startMs": 9250,
+    "endMs": 9620,
+    "timestampMs": 9780,
+    "confidence": 0.974786
+  },
+  {
+    "text": " templates",
+    "startMs": 9620,
+    "endMs": 10230,
+    "timestampMs": 10200,
+    "confidence": 0.994856
+  },
+  {
+    "text": ".",
+    "startMs": 10230,
+    "endMs": 10560,
+    "timestampMs": 10580,
+    "confidence": 0.970362
+  },
+  {
+    "text": " Drop",
+    "startMs": 10560,
+    "endMs": 10720,
+    "timestampMs": 10760,
+    "confidence": 0.897637
+  },
+  {
+    "text": " in",
+    "startMs": 10720,
+    "endMs": 10840,
+    "timestampMs": 10920,
+    "confidence": 0.959053
+  },
+  {
+    "text": " photos",
+    "startMs": 10840,
+    "endMs": 11230,
+    "timestampMs": 11120,
+    "confidence": 0.991692
+  },
+  {
+    "text": " and",
+    "startMs": 11230,
+    "endMs": 11280,
+    "timestampMs": 11340,
+    "confidence": 0.930648
+  },
+  {
+    "text": " videos",
+    "startMs": 11280,
+    "endMs": 11920,
+    "timestampMs": 11640,
+    "confidence": 0.952372
+  },
+  {
+    "text": ",",
+    "startMs": 11920,
+    "endMs": 11920,
+    "timestampMs": 11920,
+    "confidence": 0.692078
+  },
+  {
+    "text": " done",
+    "startMs": 11920,
+    "endMs": 12280,
+    "timestampMs": 12260,
+    "confidence": 0.987008
+  },
+  {
+    "text": ".",
+    "startMs": 12280,
+    "endMs": 12710,
+    "timestampMs": 12900,
+    "confidence": 0.969703
+  },
+  {
+    "text": " Coll",
+    "startMs": 12710,
+    "endMs": 12910,
+    "timestampMs": 12900,
+    "confidence": 0.732301
+  },
+  {
+    "text": "age",
+    "startMs": 12910,
+    "endMs": 13180,
+    "timestampMs": 13180,
+    "confidence": 0.99646
+  },
+  {
+    "text": " magic",
+    "startMs": 13180,
+    "endMs": 13630,
+    "timestampMs": 13600,
+    "confidence": 0.58412
+  },
+  {
+    "text": ".",
+    "startMs": 13630,
+    "endMs": 14080,
+    "timestampMs": 14080,
+    "confidence": 0.668667
+  },
+  {
+    "text": " Every",
+    "startMs": 14080,
+    "endMs": 14350,
+    "timestampMs": 14320,
+    "confidence": 0.995129
+  },
+  {
+    "text": " vibe",
+    "startMs": 14350,
+    "endMs": 14890,
+    "timestampMs": 14580,
+    "confidence": 0.933921
+  },
+  {
+    "text": " in",
+    "startMs": 14890,
+    "endMs": 14920,
+    "timestampMs": 15060,
+    "confidence": 0.773336
+  },
+  {
+    "text": " motion",
+    "startMs": 14920,
+    "endMs": 15440,
+    "timestampMs": 15340,
+    "confidence": 0.993161
+  },
+  {
+    "text": ".",
+    "startMs": 15440,
+    "endMs": 15520,
+    "timestampMs": 15500,
+    "confidence": 0.977456
+  }
+]

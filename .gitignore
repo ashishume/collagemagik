@@ -14,3 +14,6 @@ ios/**/build/
 
 # Apple private keys (APNs / Sign in with Apple) never go in the repo
 *.p8
+
+# Rendered ad videos: re-render from google-ads/source (see google-ads/README.md)
+google-ads/output/
